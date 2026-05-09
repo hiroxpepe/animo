@@ -34,3 +34,7 @@ Thumbs.db
 
 # Node (for tooling)
 node_modules/
+
+# Logs
+*.txt
+project_all_code.md

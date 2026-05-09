@@ -52,7 +52,7 @@ Most game AI mixes *what* the agent does with *why* it does it. Animo separates 
 ## Status
 
 🟢 **Phase 1 — Design Complete**
-🔥 **Phase 2 — Schema and Test Foundation (next)**
+🔥 **Phase 2 — Schema and Test Foundation (in progress)**
 
 ```mermaid
 flowchart LR
@@ -269,6 +269,34 @@ flowchart LR
 
 ---
 
+## JSON Schema
+
+Every `animo.json` is checked against `Schemas/animo.schema.json` (JSON Schema **Draft-07**) before the runtime Validator ever runs. The schema covers types, structure, ranges, and patterns; the runtime Validator handles cross-field semantics, cycle detection, and template placeholders (see §13.6 of the spec).
+
+```mermaid
+flowchart LR
+  JSON["animo.json"]
+  Schema["Schemas/animo.schema.json<br/><b>Draft-07</b><br/>type / structure / range / pattern"]
+  Validator["Animo.Core.Validator<br/><b>semantics</b><br/>cross-field / cycles / templates"]
+  Engine["Engine accepts"]
+  JSON --> Schema --> Validator --> Engine
+  style Schema fill:#e8f4f8,stroke:#0369a1
+  style Validator fill:#fef3c7,stroke:#ca8a04
+  style Engine fill:#dcfce7,stroke:#16a34a
+```
+
+Three reference personas live under `examples/`:
+
+| Sample | Style | Notes |
+|---|---|---|
+| `goblin_scout.json` | Zelda-style monster | multi-kind (`goblin` + `scout`), standard 8 Needs, threshold with hysteresis |
+| `tanukichi.json` | Animal Crossing-style NPC | three-kind cascade (`villager` + `energetic`), binding without thresholds |
+| `shiori.json` | Tokimeki-style heroine | custom Needs (`anger`, `longing`, `jealousy`), three-kind cascade, two thresholds |
+
+All three validate Green; a 25-case negative test confirms the schema rejects malformed input as expected (including empty `thresholds[]`, out-of-range needs, non-snake_case keys, and unknown fields).
+
+---
+
 ## Validator: 33 Rules (A000–A032)
 
 Every `animo.json` goes through 33 validator rules before the engine ever touches it.
@@ -318,8 +346,8 @@ The full list is in [§13 of the spec](docs/animo_spec_v0.1.4_EN.md).
 | Phase | Goal | Status |
 |---|---|---|
 | Phase 0 | Concept (v0.1.0) | ✅ Done |
-| **Phase 1** | **Design (v0.1.4)** | ✅ **Done — you are here** |
-| Phase 2 | Schema + Red tests (v0.2.0-test) | 🔥 Next |
+| **Phase 1** | **Design (v0.1.4)** | ✅ **Done** |
+| Phase 2 | Schema + Red tests (v0.2.0-test) | 🔥 In progress |
 | Phase 3 | Implementation (v0.3.0-impl) | ⬜ |
 | Phase 4 | Unity integration (v0.4.0-unity) | ⬜ |
 | Phase 5 | Stabilize (v1.0.0) | ⬜ |

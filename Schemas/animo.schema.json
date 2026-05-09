@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/hiroxpepe/animo/schemas/animo.schema.json",
+  "title": "Animo JSON",
+  "description": "Schema for animo.json. Defines Maslow-driven Utility AI personas and kinds. Reference: animo_spec_v0.1.4_EN.md §7, §13. The schema covers types, structure, ranges, and patterns; semantic checks (cross-field, cycle detection, etc.) are performed by Animo.Core.Validator (rules A000–A032).",
+
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "personas"],
+
+  "properties": {
+    "schema_version": {
+      "$ref": "#/definitions/schema_version"
+    },
+    "kinds": {
+      "type": "array",
+      "description": "Type definitions reusable across personas. Optional. (A011a: a Persona without kind_ids must define its own actions.)",
+      "items": { "$ref": "#/definitions/kind" }
+    },
+    "personas": {
+      "type": "array",
+      "description": "Individual agent definitions. At least one is required (A001).",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/persona" }
+    }
+  },
+
+  "definitions": {
+    "schema_version": {
+      "type": "string",
+      "description": "Supported versions are \"1.3\" and \"1.4\" (A000, A021).",
+      "enum": ["1.3", "1.4"]
+    },
+
+    "snake_case_id": {
+      "type": "string",
+      "description": "snake_case identifier (A002, A003, A018). Allowed: a-z / 0-9 / _. First char must be a letter. No double underscore. No trailing underscore. Max 128 chars.",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
+
+    "need_value": {
+      "type": "number",
+      "description": "Need value in [0.0, 100.0] (A005).",
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+
+    "rate_value": {
+      "type": "number",
+      "description": "Need change rate per second. No hard min/max in spec (negative = grows toward 0; positive = grows toward 100). LLM cheat sheet (§19.3) suggests typical values 0.1 – 10.0."
+    },
+
+    "coefficient": {
+      "type": "number",
+      "description": "Influence coefficient in [-1.0, 1.0] (A012).",
+      "minimum": -1.0,
+      "maximum": 1.0
+    },
+
+    "suppression_factor": {
+      "type": "number",
+      "description": "Tier suppression factor in [0.0, 1.0] (A006).",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+
+    "tier": {
+      "type": "integer",
+      "description": "Maslow tier in [1, 5] (A007). 1 = physiological, 2 = safety, 3 = social, 4 = esteem, 5 = self-actualization.",
+      "minimum": 1,
+      "maximum": 5
+    },
+
+    "exponent": {
+      "type": "number",
+      "description": "Action urgency exponent in [0.1, 5.0] (A008).",
+      "minimum": 0.1,
+      "maximum": 5.0
+    },
+
+    "needs_map": {
+      "type": "object",
+      "description": "Need values per Need key. Keys must be snake_case identifiers (free Need names allowed; the 8 standard names — hunger, fatigue, fear, loneliness, confidence, curiosity, idle, frustration — are cataloged in Animo.Const). Values are in [0.0, 100.0] (A005). additionalProperties:false ensures non-string keys are rejected, but patternProperties enforces snake_case on every key.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": { "$ref": "#/definitions/need_value" }
+      }
+    },
+
+    "rates_map": {
+      "type": "object",
+      "description": "Rate values per Need key. Keys must be snake_case identifiers. Values are unbounded numbers (typical range per §19.3).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": { "$ref": "#/definitions/rate_value" }
+      }
+    },
+
+    "suppression": {
+      "type": "object",
+      "description": "Tier-level suppression factors. Only tier2..tier5 are allowed (A006). All omitted means no dynamic suppression at the corresponding tier.",
+      "additionalProperties": false,
+      "properties": {
+        "tier2": { "$ref": "#/definitions/suppression_factor" },
+        "tier3": { "$ref": "#/definitions/suppression_factor" },
+        "tier4": { "$ref": "#/definitions/suppression_factor" },
+        "tier5": { "$ref": "#/definitions/suppression_factor" }
+      }
+    },
+
+    "influence": {
+      "type": "object",
+      "description": "A directed need-to-need effect (A012, A025). Cycles are detected by the runtime Validator (A025).",
+      "additionalProperties": false,
+      "required": ["source", "target", "coefficient"],
+      "properties": {
+        "source":      { "$ref": "#/definitions/snake_case_id" },
+        "target":      { "$ref": "#/definitions/snake_case_id" },
+        "coefficient": { "$ref": "#/definitions/coefficient" }
+      }
+    },
+
+    "action": {
+      "type": "object",
+      "description": "An action definition. As of v0.1.1, 'need' is required (A022) and 'base_score' is removed.",
+      "additionalProperties": false,
+      "required": ["id", "need", "tier", "exponent"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Action identifier. Free-form non-empty string (A009). PascalCase recommended (e.g. Flee, SearchFood).",
+          "minLength": 1
+        },
+        "need":     { "$ref": "#/definitions/snake_case_id" },
+        "tier":     { "$ref": "#/definitions/tier" },
+        "exponent": { "$ref": "#/definitions/exponent" }
+      }
+    },
+
+    "commitment": {
+      "type": "object",
+      "description": "Action continuation bonus (v0.1.3+). The 'decay' field was removed in v0.1.3. The whole object may be omitted; default bonus is 0.0.",
+      "additionalProperties": false,
+      "properties": {
+        "bonus": {
+          "type": "number",
+          "description": "Score bonus added to the currently chosen action every frame. Does not decay over time. Recommended 5–20. Above 30 raises a Warning (A028).",
+          "minimum": 0.0
+        }
+      }
+    },
+
+    "threshold": {
+      "type": "object",
+      "description": "Two-stage threshold trigger for Germio Bus publishing (v0.1.1). 'reset_threshold' is optional; default = trigger_threshold - 5.0. (A010, A015, A023.)",
+      "additionalProperties": false,
+      "required": ["need", "trigger_threshold", "trigger"],
+      "properties": {
+        "need":              { "$ref": "#/definitions/snake_case_id" },
+        "trigger_threshold": {
+          "type": "number",
+          "description": "Need value at or above which the trigger fires (A010). Range [0.0, 100.0].",
+          "minimum": 0.0,
+          "maximum": 100.0
+        },
+        "reset_threshold": {
+          "type": "number",
+          "description": "Need value at or below which the trigger re-arms. Optional; default trigger_threshold - 5.0. Must be strictly less than trigger_threshold (A023).",
+          "minimum": 0.0,
+          "maximum": 100.0
+        },
+        "trigger": {
+          "type": "string",
+          "description": "Germio Bus event template. Allowed placeholder: {agent_id} (A015). Plain strings without placeholders are also allowed.",
+          "minLength": 1
+        }
+      }
+    },
+
+    "binding": {
+      "type": "object",
+      "description": "Germio integration binding. May be omitted (A016 raises Warning when omitted).",
+      "additionalProperties": false,
+      "properties": {
+        "on_action_change": {
+          "type": "string",
+          "description": "Bus event template fired on action change. Allowed placeholders: {agent_id}, {behavior} (A014). Default (when omitted): \"animo_{agent_id}_{behavior}\".",
+          "minLength": 1
+        },
+        "thresholds": {
+          "type": "array",
+          "description": "Two-stage threshold triggers. If you do not need any threshold, omit the 'thresholds' key entirely instead of supplying an empty array.",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/threshold" }
+        }
+      }
+    },
+
+    "kind": {
+      "type": "object",
+      "description": "Type definition. Cascades into a Persona via 'kind_ids'. Only 'kind_id' is required; every other field is optional.",
+      "additionalProperties": false,
+      "required": ["kind_id"],
+      "properties": {
+        "kind_id":     { "$ref": "#/definitions/snake_case_id" },
+        "rates":       { "$ref": "#/definitions/rates_map" },
+        "suppression": { "$ref": "#/definitions/suppression" },
+        "influences": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/influence" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        },
+        "commitment": { "$ref": "#/definitions/commitment" },
+        "binding":    { "$ref": "#/definitions/binding" }
+      }
+    },
+
+    "persona": {
+      "type": "object",
+      "description": "Individual agent definition. Inherits from each kind in 'kind_ids' in order, then applies its own overrides. (See §8 cascading. A011a: if 'kind_ids' is empty or omitted, the Persona must define at least one Action.)",
+      "additionalProperties": false,
+      "required": ["agent_id"],
+      "properties": {
+        "agent_id":     { "$ref": "#/definitions/snake_case_id" },
+        "persona_name": {
+          "type": "string",
+          "description": "Human-readable display name. Optional. No format restriction; UTF-8 free text.",
+          "minLength": 1
+        },
+        "kind_ids": {
+          "type": "array",
+          "description": "Ordered list of kind_ids to compose. Last-wins merge, followed by Persona's own overrides. Each id must exist in 'kinds' (A004; checked by runtime Validator).",
+          "items": { "$ref": "#/definitions/snake_case_id" }
+        },
+        "needs":       { "$ref": "#/definitions/needs_map" },
+        "rates":       { "$ref": "#/definitions/rates_map" },
+        "suppression": { "$ref": "#/definitions/suppression" },
+        "influences": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/influence" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        },
+        "commitment": { "$ref": "#/definitions/commitment" },
+        "binding":    { "$ref": "#/definitions/binding" }
+      }
+    }
+  }
+}
