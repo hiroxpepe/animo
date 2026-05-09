@@ -1,0 +1,21 @@
+{
+    "name": "Animo.Tests.EditMode",
+    "rootNamespace": "Animo.Tests.EditMode",
+    "references": [
+        "Animo",
+        "Animo.Tests.MiniUnity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
