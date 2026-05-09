@@ -325,6 +325,44 @@ The asmdef declares `"references": []` and `"noEngineReferences": true`; the har
 
 ---
 
+## Red Baseline (Phase 2-3)
+
+Before any production logic is written, the test suite is built **Red-first**. Every decision table from the spec — every Validator rule, every Composer cascade case, every `Engine.Live` step, every numeric / empty / volume / time edge — has a `[Test]` method that *will* pass once Phase 3 implements the underlying class. Until then, every test is Red, and that is the point.
+
+```mermaid
+flowchart LR
+  Plan["docs/test_plan_v0.1.4.md<br/>decision tables"]
+  Tests["Tests~/EditModeTests/<br/>183 [Test] methods"]
+  Run["dotnet test"]
+  Result["183 Failed / 0 Passed<br/>(Red baseline)"]
+  Phase3["Phase 3<br/>implement classes"]
+  Green["Tests turn Green<br/>one rule at a time"]
+  Plan --> Tests --> Run --> Result
+  Result -.->|"v0.2.0-red-baseline tag"| Phase3
+  Phase3 --> Green
+  style Result fill:#fecaca,stroke:#dc2626
+  style Green fill:#dcfce7,stroke:#16a34a
+```
+
+The breakdown matches the spec's decomposition (§13 Validator rules, §10 Composer, §9 Engine, §4.6.3 Edge catalog):
+
+| Layer | Files | Tests |
+|---|---|---|
+| Validator (A000–A032, A020 split into a/b/c) | 35 | 92 |
+| Composer (deep copy, cascade, fill, multi-kind) | 4 | 24 |
+| Engine (5 steps + Maslow / Commitment / Lock / ForceReset) | 9 | 44 |
+| Edge cases (numeric, empty/null, volume, time) | 4 | 23 |
+| **Total** | **52** | **183** |
+
+The 4 MiniUnity self-tests are the only Green tests at this stage. Combined runner output:
+```
+Tests run: 187, Passed: 4, Failed: 183
+```
+
+That output, captured at this commit, is the **v0.2.0-red-baseline** snapshot.
+
+---
+
 ## Validator: 33 Rules (A000–A032)
 
 Every `animo.json` goes through 33 validator rules before the engine ever touches it.
