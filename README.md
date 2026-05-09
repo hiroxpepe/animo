@@ -297,6 +297,34 @@ All three validate Green; a 25-case negative test confirms the schema rejects ma
 
 ---
 
+## Test Harness: MiniUnity
+
+`Animo.Core` and `Animo.Model` must be testable in **pure C#**, without booting Unity. The `Animo.Tests.MiniUnity` harness provides Unity-shaped stand-ins (`MockGameObject`, `MockMonoBehaviour`, `MockBus`, `MockTime`, `MockScene`) so EditMode-style tests can drive `Awake → Update → OnDestroy` directly from a `dotnet test` runner.
+
+```mermaid
+flowchart LR
+  Test["NUnit test"]
+  Scene["MockScene"]
+  Obj["MockGameObject"]
+  Comp["MockMonoBehaviour subclass<br/>(your Animo.Agent under test)"]
+  Time["MockTime<br/>virtual clock"]
+  Bus["MockBus<br/>records Publish calls"]
+  Test -->|"Tick(dt)"| Scene
+  Scene -->|"sets deltaTime"| Time
+  Scene -->|"Update()"| Obj
+  Obj -->|"Update()"| Comp
+  Comp -.->|"Publish(signal_id)"| Bus
+  Test -->|"Assert published_signals"| Bus
+  style Comp fill:#fef3c7,stroke:#ca8a04
+  style Bus fill:#e8d5ff,stroke:#7e3ff2
+```
+
+The harness ships with four self-tests (lifecycle order, `MockBus` recording, `MockTime.Step` advancement, destroyed-object pruning) that **must pass** before any higher-level test is trusted; without them, Phase 2-3 would be Red-on-unverified-foundation.
+
+The asmdef declares `"references": []` and `"noEngineReferences": true`; the harness contains zero `using UnityEngine` lines. Unity ignores the entire `Tests~/` folder, so the harness exists purely for the `dotnet` build.
+
+---
+
 ## Validator: 33 Rules (A000–A032)
 
 Every `animo.json` goes through 33 validator rules before the engine ever touches it.

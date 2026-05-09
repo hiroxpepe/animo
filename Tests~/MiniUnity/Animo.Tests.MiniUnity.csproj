@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Animo.Tests.MiniUnity</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- This project mirrors what Unity will build via Animo.Tests.MiniUnity.asmdef.
+         Keeping it as a separate .NET library lets Animo.Core be tested in pure C#
+         without loading Unity. -->
+  </PropertyGroup>
+</Project>
