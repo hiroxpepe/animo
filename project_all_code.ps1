@@ -46,6 +46,12 @@ $files = Get-ChildItem -Path $repo -Recurse -File | Where-Object {
     ($_.Extension -match "\.(md|json)$" -and $_.DirectoryName -match "[\\/]docs([\\/]|$)") -or
     # JSON fixtures and schemas (test data, validation schemas)
     ($_.Extension -eq ".json" -and $_.DirectoryName -match "[\\/](Fixtures|Schemas)([\\/]|$)") -or
+    # JSON sample personas under examples/
+    ($_.Extension -eq ".json" -and $_.DirectoryName -match "[\\/]examples([\\/]|$)") -or
+    # validate_examples.mjs: only at repo root
+    ($_.Name -eq "validate_examples.mjs" -and $_.DirectoryName -eq $repo) -or
+    # validation_log.txt: only at repo root
+    ($_.Name -eq "validation_log.txt" -and $_.DirectoryName -eq $repo) -or
     # csproj for the test project
     $_.Extension -eq ".csproj"
 } | Sort-Object FullName
@@ -97,6 +103,8 @@ foreach ($f in $files) {
         "\.json$"   { "json" }
         "\.md$"     { "markdown" }
         "\.csproj$" { "xml" }
+        "\.mjs$"    { "javascript" }
+        "\.txt$"    { "" }
         default     { "" }
     }
 

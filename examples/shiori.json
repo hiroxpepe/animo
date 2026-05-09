@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.4",
+  "kinds": [
+    {
+      "kind_id": "heroine",
+      "rates": {
+        "loneliness":  1.5,
+        "longing":     1.2,
+        "anger":      -1.5,
+        "jealousy":   -0.5,
+        "frustration":-0.8,
+        "idle":        0.5
+      },
+      "suppression": {
+        "tier2": 0.30,
+        "tier3": 0.50,
+        "tier4": 0.70,
+        "tier5": 0.90
+      },
+      "actions": [
+        { "id": "Confront", "need": "anger",       "tier": 2, "exponent": 2.0 },
+        { "id": "Withdraw", "need": "loneliness",  "tier": 3, "exponent": 1.5 },
+        { "id": "Demand",   "need": "longing",     "tier": 4, "exponent": 1.8 },
+        { "id": "Sulk",     "need": "frustration", "tier": 2, "exponent": 1.5 },
+        { "id": "Daydream", "need": "idle",        "tier": 5, "exponent": 1.0 }
+      ],
+      "commitment": { "bonus": 12 },
+      "binding": {
+        "on_action_change": "animo_{agent_id}_{behavior}",
+        "thresholds": [
+          {
+            "need":              "anger",
+            "trigger_threshold": 75,
+            "reset_threshold":   60,
+            "trigger":           "animo_{agent_id}_anger_burst"
+          },
+          {
+            "need":              "longing",
+            "trigger_threshold": 85,
+            "trigger":           "animo_{agent_id}_longing_peak"
+          }
+        ]
+      }
+    },
+    {
+      "kind_id": "anxious",
+      "influences": [
+        { "source": "loneliness",  "target": "anger",      "coefficient":  0.60 },
+        { "source": "loneliness",  "target": "longing",    "coefficient":  0.80 },
+        { "source": "frustration", "target": "anger",      "coefficient":  0.50 },
+        { "source": "frustration", "target": "confidence", "coefficient": -0.40 },
+        { "source": "jealousy",    "target": "anger",      "coefficient":  0.55 }
+      ]
+    },
+    {
+      "kind_id": "a_type",
+      "suppression": {
+        "tier2": 0.10,
+        "tier3": 0.20
+      }
+    }
+  ],
+  "personas": [
+    {
+      "agent_id":     "shiori",
+      "persona_name": "Shiori — Anxious Heroine",
+      "kind_ids":     ["heroine", "anxious", "a_type"],
+      "needs": {
+        "loneliness":  70,
+        "longing":     65,
+        "anger":       40,
+        "jealousy":    50,
+        "frustration": 30,
+        "idle":        20
+      }
+    }
+  ]
+}
