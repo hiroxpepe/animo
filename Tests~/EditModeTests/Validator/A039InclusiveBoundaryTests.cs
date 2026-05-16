@@ -1,0 +1,36 @@
+// Copyright (c) STUDIO MeowToon. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+#nullable enable
+
+using System.IO;
+using NUnit.Framework;
+
+namespace Animo.Tests.EditMode.ValidatorTests {
+    /// <summary>
+    /// Spec-content test for Q-S122 (v0.1.5): §13 A039 pseudocode
+    /// uses `&lt;= 1.0f` (inclusive) so the boundary case (78.0 and
+    /// 79.0, diff exactly 1.0) fires the Warning per the existing
+    /// test's intent.
+    /// </summary>
+    /// <author>h.adachi (STUDIO MeowToon)</author>
+    [TestFixture]
+    public class A039InclusiveBoundaryTests {
+        [Test] public void Case01_SpecEN_A039PseudocodeInclusive() {
+            var roots = new[] {
+                "/home/claude/animo_full/animo",
+                System.Environment.CurrentDirectory,
+                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
+            };
+            string? path = null;
+            foreach (var r in roots) {
+                var p = Path.Combine(r, "docs", "animo_spec_v0.1.5_EN.md");
+                if (File.Exists(p)) { path = p; break; }
+            }
+            Assert.That(path, Is.Not.Null, "Q-S122: spec EN must exist.");
+            var text = File.ReadAllText(path!);
+            Assert.That(text, Does.Contain("(next.trigger_threshold - prev.trigger_threshold) <= 1.0f"),
+                "Q-S122: A039 pseudocode must use <= (inclusive) so 78/79 boundary fires.");
+        }
+    }
+}

@@ -1,0 +1,38 @@
+// Copyright (c) STUDIO MeowToon. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+#nullable enable
+
+using System.IO;
+using NUnit.Framework;
+
+namespace Animo.Tests.EditMode.ValidatorTests {
+    /// <summary>
+    /// Spec-content test for Q-S105 (v0.1.5): A039 pseudocode in §13
+    /// uses `trigger_threshold` (the float field), not `trigger`
+    /// (the string event-name field). Pre-Q-S105 the pseudocode wrote
+    /// `next.trigger - prev.trigger` — naive Phase 3 transcription
+    /// would hit a "cannot subtract string from string" CS error.
+    /// </summary>
+    /// <author>h.adachi (STUDIO MeowToon)</author>
+    [TestFixture]
+    public class A039PseudocodeTriggerThresholdTests {
+        [Test] public void Case01_SpecEN_A039PseudocodeUsesTriggerThreshold() {
+            var roots = new[] {
+                "/home/claude/animo_full/animo",
+                System.Environment.CurrentDirectory,
+                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
+            };
+            string? path = null;
+            foreach (var r in roots) {
+                var p = Path.Combine(r, "docs", "animo_spec_v0.1.5_EN.md");
+                if (File.Exists(p)) { path = p; break; }
+            }
+            Assert.That(path, Is.Not.Null, "Q-S105: spec EN must exist.");
+            var text = File.ReadAllText(path!);
+            Assert.That(text, Does.Contain("next.trigger_threshold - prev.trigger_threshold"),
+                "Q-S105: A039 pseudocode must subtract trigger_threshold (float), " +
+                "not trigger (string event-name).");
+        }
+    }
+}

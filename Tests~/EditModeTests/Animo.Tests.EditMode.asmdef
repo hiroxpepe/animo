@@ -3,6 +3,7 @@
     "rootNamespace": "Animo.Tests.EditMode",
     "references": [
         "Animo",
+        "Animo.Tools",
         "Animo.Tests.MiniUnity"
     ],
     "includePlatforms": [

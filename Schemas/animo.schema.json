@@ -1,50 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/hiroxpepe/animo/schemas/animo.schema.json",
-  "title": "Animo JSON",
-  "description": "Schema for animo.json. Defines Maslow-driven Utility AI personas and kinds. Reference: animo_spec_v0.1.4_EN.md §7, §13. The schema covers types, structure, ranges, and patterns; semantic checks (cross-field, cycle detection, etc.) are performed by Animo.Core.Validator (rules A000–A032).",
+  "$id": "https://animo.studiomeowtoon.com/schemas/v0.1.5/animo.schema.json",
+  "title": "Animo Persona/Kind Definition (v0.1.5)",
+  "description": "JSON Schema for animo.json. Validates STRUCTURE (types, required fields, snake_case keys, enums) at the ajv gate; SEMANTIC range constraints (numeric bounds) are intentionally delegated to the C# Validator (A005-A012, A034, etc.) so authoring errors produce human-readable diagnostics instead of cryptic ajv messages. (v0.1.5, Q-S108 first applied to reset_threshold; Q-S121 generalized to all range constraints.)",
 
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "personas"],
-
   "properties": {
     "schema_version": {
-      "$ref": "#/definitions/schema_version"
+      "type": "string",
+      "description": "Schema version. Backward-compat: 1.3 / 1.4 / 1.5 all accepted; older versions rejected (A024).",
+      "enum": ["1.3", "1.4", "1.5"]
     },
-    "kinds": {
-      "type": "array",
-      "description": "Type definitions reusable across personas. Optional. (A011a: a Persona without kind_ids must define its own actions.)",
-      "items": { "$ref": "#/definitions/kind" }
-    },
-    "personas": {
-      "type": "array",
-      "description": "Individual agent definitions. At least one is required (A001).",
-      "minItems": 1,
-      "items": { "$ref": "#/definitions/persona" }
-    }
+    "kinds":    { "type": "array", "items": { "$ref": "#/definitions/kind"    } },
+    "personas": { "type": "array", "items": { "$ref": "#/definitions/persona" }, "minItems": 1 }
   },
 
   "definitions": {
-    "schema_version": {
-      "type": "string",
-      "description": "Supported versions are \"1.3\" and \"1.4\" (A000, A021).",
-      "enum": ["1.3", "1.4"]
-    },
 
     "snake_case_id": {
       "type": "string",
-      "description": "snake_case identifier (A002, A003, A018). Allowed: a-z / 0-9 / _. First char must be a letter. No double underscore. No trailing underscore. Max 128 chars.",
-      "minLength": 1,
-      "maxLength": 128,
+      "description": "snake_case identifier (lowercase, digits, underscore separators). Must start with a letter. Pattern enforces this gate; A001/A002/A003 in C# Validator give human-readable diagnostics for which field carries the offending value.",
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
     },
 
     "need_value": {
       "type": "number",
-      "description": "Need value in [0.0, 100.0] (A005).",
-      "minimum": 0.0,
-      "maximum": 100.0
+      "description": "(v0.1.5, Q-S121) Need value. Spec range [0.0, 100.0] (A005) is enforced by the C# Validator at parse time, not here. Schema-level minimum/maximum would silently dead-code A005 (cryptic ajv reject before the human-readable Error reaches the LLM author). See Q-S108 for the original observation; Q-S121 generalizes the principle."
     },
 
     "rate_value": {
@@ -54,38 +37,52 @@
 
     "coefficient": {
       "type": "number",
-      "description": "Influence coefficient in [-1.0, 1.0] (A012).",
-      "minimum": -1.0,
-      "maximum": 1.0
+      "description": "(v0.1.5, Q-S121) Influence coefficient. Spec range [-1.0, 1.0] (A012) is enforced by the C# Validator. See `need_value` description for rationale."
     },
 
     "suppression_factor": {
       "type": "number",
-      "description": "Tier suppression factor in [0.0, 1.0] (A006).",
-      "minimum": 0.0,
-      "maximum": 1.0
+      "description": "(v0.1.5, Q-S121) Tier suppression factor. Spec range [0.0, 1.0] (A006) is enforced by the C# Validator. See `need_value` description for rationale."
     },
 
     "tier": {
       "type": "integer",
-      "description": "Maslow tier in [1, 5] (A007). 1 = physiological, 2 = safety, 3 = social, 4 = esteem, 5 = self-actualization.",
-      "minimum": 1,
-      "maximum": 5
+      "description": "(v0.1.5, Q-S121) Maslow tier. Spec range [1, 5] (A007) is enforced by the C# Validator. 1 = physiological, 2 = safety, 3 = social, 4 = esteem, 5 = self-actualization. See `need_value` description for rationale."
     },
 
     "exponent": {
       "type": "number",
-      "description": "Action urgency exponent in [0.1, 5.0] (A008).",
-      "minimum": 0.1,
-      "maximum": 5.0
+      "description": "(v0.1.5, Q-S121) Action urgency exponent. Spec range [0.1, 5.0] (A008) is enforced by the C# Validator. See `need_value` description for rationale."
     },
 
     "needs_map": {
       "type": "object",
-      "description": "Need values per Need key. Keys must be snake_case identifiers (free Need names allowed; the 8 standard names — hunger, fatigue, fear, loneliness, confidence, curiosity, idle, frustration — are cataloged in Animo.Const). Values are in [0.0, 100.0] (A005). additionalProperties:false ensures non-string keys are rejected, but patternProperties enforces snake_case on every key.",
+      "description": "Need values per Need key. Keys must be snake_case identifiers (free Need names allowed; the 8 standard names — hunger, fatigue, fear, loneliness, confidence, curiosity, idle, frustration — are cataloged in Animo.Const). Values are numbers; range enforcement (A005, [0.0, 100.0]) lives in the C# Validator (Q-S121). additionalProperties:false ensures non-string keys are rejected, but patternProperties enforces snake_case on every key.",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": { "$ref": "#/definitions/need_value" }
+      }
+    },
+
+    "needs_meta_map": {
+      "type": "object",
+      "description": "(v0.1.5, Q-S30 + Q-S89) Optional per-Need metadata for genre-custom Needs. Keys are snake_case Need identifiers (matching needs_map keys); values are NeedMeta objects carrying tier (∈ [1, 5], A038) and reserved fields for v0.2/v0.3 extensions. Pre-Q-S89 the Q-S30 needs_meta feature was schema-blocked because kind/persona had additionalProperties:false and no needs_meta property declaration — LLMs writing perfectly spec-compliant needs_meta would be rejected by ajv before reaching the C# Validator.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": { "$ref": "#/definitions/need_meta" }
+      }
+    },
+
+    "need_meta": {
+      "type": "object",
+      "description": "(v0.1.5, Q-S30 + Q-S121) Per-Need metadata. Currently only tier (1-5 per Maslow, range enforced by C# Validator A038) — for genre-custom Needs that should participate in tier suppression (e.g. oxygen=tier1 in survival games). v0.2/v0.3 may add decay_multiplier, label, etc.",
+      "additionalProperties": false,
+      "required": ["tier"],
+      "properties": {
+        "tier": {
+          "type": "integer",
+          "description": "Maslow tier (1-5) for Need participation in §9.3.4 max_lower_tier_intensity. Validator A038 enforces the [1, 5] range with a human-readable Error (Q-S121)."
+        }
       }
     },
 
@@ -141,35 +138,30 @@
 
     "commitment": {
       "type": "object",
-      "description": "Action continuation bonus (v0.1.3+). The 'decay' field was removed in v0.1.3. The whole object may be omitted; default bonus is 0.0.",
+      "description": "(v0.1.5, Q-S121) Action continuation bonus (v0.1.3+). The 'decay' field was removed in v0.1.3. The whole object may be omitted; default bonus is 0.0. Bonus range [0, 50] (Q8) and Warning above 30 (A028) are enforced by the C# Validator, not by schema minimum/maximum (Q-S121 generalization of Q-S108).",
       "additionalProperties": false,
       "properties": {
         "bonus": {
           "type": "number",
-          "description": "Score bonus added to the currently chosen action every frame. Does not decay over time. Recommended 5–20. Above 30 raises a Warning (A028).",
-          "minimum": 0.0
+          "description": "Score bonus added to the currently chosen action every frame. Does not decay over time. Recommended 5-20. Range [0, 50] enforced by A028 (v0.1.5: Q8 + Q-S121); above 30 → Warning, negative → Error."
         }
       }
     },
 
     "threshold": {
       "type": "object",
-      "description": "Two-stage threshold trigger for Germio Bus publishing (v0.1.1). 'reset_threshold' is optional; default = trigger_threshold - 5.0. (A010, A015, A023.)",
+      "description": "Two-stage threshold trigger for Germio Bus publishing (v0.1.1). 'reset_threshold' is optional; default = trigger_threshold - 5.0. (A010, A015, A023.) (v0.1.5, Q-S121: schema range constraints removed — A010 / A015 / A023 / A034 enforce the spec-level numeric bounds with human-readable Errors.)",
       "additionalProperties": false,
       "required": ["need", "trigger_threshold", "trigger"],
       "properties": {
         "need":              { "$ref": "#/definitions/snake_case_id" },
         "trigger_threshold": {
           "type": "number",
-          "description": "Need value at or above which the trigger fires (A010). Range [0.0, 100.0].",
-          "minimum": 0.0,
-          "maximum": 100.0
+          "description": "(v0.1.5, Q-S121) Need value at or above which the trigger fires. Spec range (0.0, 100.0] (A010, tightened in Q-S15 to strictly positive) is enforced by the C# Validator, not by schema minimum/maximum. See `need_value` description for rationale."
         },
         "reset_threshold": {
           "type": "number",
-          "description": "Need value at or below which the trigger re-arms. Optional; default trigger_threshold - 5.0. Must be strictly less than trigger_threshold (A023).",
-          "minimum": 0.0,
-          "maximum": 100.0
+          "description": "(v0.1.5, Q-S108 + Q-S121) Need value at or below which the trigger re-arms. Optional; default trigger_threshold - 5.0 (Composer fills via Q-S11). Must be strictly less than trigger_threshold (A023). Range enforcement via A034 (explicit-negative Error) and A023 (post-fill trigger > reset). Q-S108 first removed schema minimum; Q-S121 generalizes the principle to all range constraints in this schema."
         },
         "trigger": {
           "type": "string",
@@ -186,13 +178,12 @@
       "properties": {
         "on_action_change": {
           "type": "string",
-          "description": "Bus event template fired on action change. Allowed placeholders: {agent_id}, {behavior} (A014). Default (when omitted): \"animo_{agent_id}_{behavior}\".",
+          "description": "Germio Bus event template fired when the chosen behavior changes. Allowed placeholders: {agent_id}, {behavior} (A015 + Q-S46).",
           "minLength": 1
         },
         "thresholds": {
           "type": "array",
-          "description": "Two-stage threshold triggers. If you do not need any threshold, omit the 'thresholds' key entirely instead of supplying an empty array.",
-          "minItems": 1,
+          "description": "Two-stage Bus triggers per Need (v0.1.1).",
           "items": { "$ref": "#/definitions/threshold" }
         }
       }
@@ -200,56 +191,38 @@
 
     "kind": {
       "type": "object",
-      "description": "Type definition. Cascades into a Persona via 'kind_ids'. Only 'kind_id' is required; every other field is optional.",
+      "description": "Kind = a reusable Persona slice. Kinds are referenced by Persona.kind_ids and merged via Composer (A011a, A019, A032).",
       "additionalProperties": false,
       "required": ["kind_id"],
       "properties": {
         "kind_id":     { "$ref": "#/definitions/snake_case_id" },
+        "needs":       { "$ref": "#/definitions/needs_map" },
         "rates":       { "$ref": "#/definitions/rates_map" },
         "suppression": { "$ref": "#/definitions/suppression" },
-        "influences": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/influence" }
-        },
-        "actions": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/action" }
-        },
-        "commitment": { "$ref": "#/definitions/commitment" },
-        "binding":    { "$ref": "#/definitions/binding" }
+        "influences":  { "type": "array", "items": { "$ref": "#/definitions/influence" } },
+        "actions":     { "type": "array", "items": { "$ref": "#/definitions/action" } },
+        "commitment":  { "$ref": "#/definitions/commitment" },
+        "binding":     { "$ref": "#/definitions/binding" },
+        "needs_meta":  { "$ref": "#/definitions/needs_meta_map" }
       }
     },
 
     "persona": {
       "type": "object",
-      "description": "Individual agent definition. Inherits from each kind in 'kind_ids' in order, then applies its own overrides. (See §8 cascading. A011a: if 'kind_ids' is empty or omitted, the Persona must define at least one Action.)",
+      "description": "Persona = the per-agent definition. May reference Kinds via kind_ids; merged values follow §17 cascade rules.",
       "additionalProperties": false,
       "required": ["agent_id"],
       "properties": {
-        "agent_id":     { "$ref": "#/definitions/snake_case_id" },
-        "persona_name": {
-          "type": "string",
-          "description": "Human-readable display name. Optional. No format restriction; UTF-8 free text.",
-          "minLength": 1
-        },
-        "kind_ids": {
-          "type": "array",
-          "description": "Ordered list of kind_ids to compose. Last-wins merge, followed by Persona's own overrides. Each id must exist in 'kinds' (A004; checked by runtime Validator).",
-          "items": { "$ref": "#/definitions/snake_case_id" }
-        },
+        "agent_id":    { "$ref": "#/definitions/snake_case_id" },
+        "kind_ids":    { "type": "array", "items": { "$ref": "#/definitions/snake_case_id" } },
         "needs":       { "$ref": "#/definitions/needs_map" },
         "rates":       { "$ref": "#/definitions/rates_map" },
         "suppression": { "$ref": "#/definitions/suppression" },
-        "influences": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/influence" }
-        },
-        "actions": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/action" }
-        },
-        "commitment": { "$ref": "#/definitions/commitment" },
-        "binding":    { "$ref": "#/definitions/binding" }
+        "influences":  { "type": "array", "items": { "$ref": "#/definitions/influence" } },
+        "actions":     { "type": "array", "items": { "$ref": "#/definitions/action" } },
+        "commitment":  { "$ref": "#/definitions/commitment" },
+        "binding":     { "$ref": "#/definitions/binding" },
+        "needs_meta":  { "$ref": "#/definitions/needs_meta_map" }
       }
     }
   }

@@ -17,7 +17,6 @@ namespace Animo.Tests.MiniUnity {
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public abstract class MockMonoBehaviour {
-#nullable enable
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Properties [noun]

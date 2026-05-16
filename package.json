@@ -1,0 +1,21 @@
+{
+  "name": "com.studiomeowtoon.animo",
+  "version": "0.1.5-design",
+  "displayName": "Animo",
+  "description": "Maslow-driven Utility AI engine for Unity (G+B+A stack: Germio + Briko + Animo).",
+  "unity": "2022.3",
+  "author": {
+    "name": "h.adachi (STUDIO MeowToon)",
+    "url": "https://github.com/hiroxpepe"
+  },
+  "dependencies": {
+    "com.studiomeowtoon.germio": "0.1.0"
+  },
+  "keywords": [
+    "ai",
+    "utility-ai",
+    "maslow",
+    "npc",
+    "behavior"
+  ]
+}

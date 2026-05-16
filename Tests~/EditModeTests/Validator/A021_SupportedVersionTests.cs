@@ -11,7 +11,7 @@ using Animo.Tests.EditMode.Helpers;
 using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ValidatorTests {
-    /// <summary>Decision-table tests for Validator rule A021: schema_version must be 1.3 or 1.4.</summary>
+    /// <summary>Decision-table tests for Validator rule A021: schema_version must be 1.3, 1.4, or 1.5 (v0.1.5).</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A021_SupportedVersionTests {
@@ -27,8 +27,12 @@ namespace Animo.Tests.EditMode.ValidatorTests {
             Root root = MinimalRoot(); root.schema_version = "1.4";
             ValidationResult r = Validator.Validate(root: root); AssertResult.IsClean(r);
         }
-        [Test] public void Case04_Version15Future_FailsA021() {
+        [Test] public void Case04_Version15_Passes() {
             Root root = MinimalRoot(); root.schema_version = "1.5";
+            ValidationResult r = Validator.Validate(root: root); AssertResult.IsClean(r);
+        }
+        [Test] public void Case05_Version16Future_FailsA021() {
+            Root root = MinimalRoot(); root.schema_version = "1.6";
             ValidationResult r = Validator.Validate(root: root); AssertResult.HasError(r, rule_id: "A021");
         }
     }

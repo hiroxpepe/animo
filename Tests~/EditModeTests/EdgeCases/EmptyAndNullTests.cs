@@ -23,7 +23,7 @@ namespace Animo.Tests.EditMode.EdgeCases {
         }
         [Test] public void Case02_EmptyActionsList_FailsA011() {
             Root root = MinimalRoot(); root.personas[0].actions = new List<Action>();
-            ValidationResult r = Validator.Validate(root: root); AssertResult.HasError(r, rule_id: "A011");
+            ValidationResult r = Validator.Validate(root: root); AssertResult.HasError(r, rule_id: "A011a");
         }
         [Test] public void Case03_EmptyKindIdsList_BehavesLikeMissing() {
             Root root = MinimalRoot(); root.personas[0].kind_ids = new List<string>();
