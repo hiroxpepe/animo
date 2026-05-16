@@ -11,16 +11,35 @@ using Animo.Tests.EditMode.Helpers;
 using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ValidatorTests {
-    /// <summary>Decision-table tests for Validator rule A011: If no kind_ids, the Persona must have at least one action (A011a).</summary>
+    /// <summary>
+    /// Decision-table tests for Validator rule A011a: If no kind_ids,
+    /// the Persona must have at least one action.
+    ///
+    /// (v0.1.5, Q-S100) Pre-Q-S100 the test asserted `rule_id: "A011"`
+    /// but spec §13.1 in v0.1.5 split the rule into A011a (Error: no
+    /// kind_ids → actions[] required) and A011b (allowance rule, no
+    /// emit). Asserting "A011" against a Validator that emits "A011a"
+    /// would fail with rule_id mismatch even when Phase 3 implements
+    /// the rule correctly. Q-S100 unifies on "A011a" across spec and
+    /// tests.
+    ///
+    /// (v0.1.5, Q-S129) Method name updated from
+    /// `Case01_NoKindIdsNoActions_FailsA011` to
+    /// `Case01_NoKindIdsNoActions_FailsA011a` so the method name
+    /// matches the assertion. Q-S100's sed targeted only the assertion
+    /// string (`"A011"` → `"A011a"`); the method name still carried
+    /// the pre-split rule identifier, creating a cosmetic mismatch
+    /// that misleads readers scanning for the rule under test.
+    /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A011_PersonaActionsRequiredTests {
-        [Test] public void Case01_NoKindIdsNoActions_FailsA011() {
+        [Test] public void Case01_NoKindIdsNoActions_FailsA011a() {
             Root root = new Root {
                 schema_version = "1.4",
                 personas = new List<Persona> { new Persona { agent_id = "a" } }
             };
-            ValidationResult r = Validator.Validate(root: root); AssertResult.HasError(r, rule_id: "A011");
+            ValidationResult r = Validator.Validate(root: root); AssertResult.HasError(r, rule_id: "A011a");
         }
         [Test] public void Case02_WithKindIdsNoOwnActions_Passes() {
             Root root = new Root {

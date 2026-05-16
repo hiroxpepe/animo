@@ -88,4 +88,46 @@ console.log('──────────────────────�
 console.log(` Result: ${pass} passed / ${fail} failed (of ${files.length} files)`);
 console.log('═══════════════════════════════════════════════════════════════');
 
-process.exit(fail === 0 ? 0 : 1);
+// ────────────────────────────────────────────────────────────────────────
+// v0.1.5 schema regression checks (Phase_2_4_1, Q8 + version bump)
+// ────────────────────────────────────────────────────────────────────────
+console.log('');
+console.log(' v0.1.5 schema regression checks');
+console.log('───────────────────────────────────────────────────────────────');
+
+const min_v15 = (extra) => ({
+  schema_version: '1.5',
+  personas: [{
+    agent_id: 'agent_a',
+    actions: [{ id: 'Idle', need: 'idle', tier: 5, exponent: 1.0 }],
+    ...extra
+  }]
+});
+
+const v15_cases = [
+  ['accepts schema_version "1.5"',                 true,  min_v15({})],
+  ['accepts commitment.bonus = 50 (ceiling)',      true,  min_v15({ commitment: { bonus: 50 } })],
+  ['rejects commitment.bonus = 51 (over ceiling)', false, min_v15({ commitment: { bonus: 51 } })],
+  ['rejects commitment.bonus = -1 (negative)',     false, min_v15({ commitment: { bonus: -1 } })],
+  ['accepts commitment.bonus = 0 (boundary)',      true,  min_v15({ commitment: { bonus: 0 } })],
+];
+
+let v15_pass = 0, v15_fail = 0;
+for (const [label, expected, data] of v15_cases) {
+  const got = validate(data);
+  if (got === expected) {
+    console.log(`  ✅ ${label}`);
+    v15_pass++;
+  } else {
+    console.log(`  ❌ ${label} — expected ${expected ? 'PASS' : 'REJECT'} but got ${got ? 'PASS' : 'REJECT'}`);
+    if (!got && validate.errors) {
+      for (const err of validate.errors) console.log(`     ↳ ${err.instancePath || '(root)'} ${err.message}`);
+    }
+    v15_fail++;
+  }
+}
+console.log('───────────────────────────────────────────────────────────────');
+console.log(` Regression: ${v15_pass} passed / ${v15_fail} failed (of ${v15_cases.length} cases)`);
+console.log('═══════════════════════════════════════════════════════════════');
+
+process.exit(fail === 0 && v15_fail === 0 ? 0 : 1);

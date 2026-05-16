@@ -24,6 +24,10 @@ namespace Animo.Model {
         public List<Action>? actions { get; set; }
         public Commitment? commitment { get; set; }
         public Binding? binding { get; set; }
+        // v0.1.5 (Q-S30): optional per-Need metadata. Currently the only
+        // populated field is `tier` for genre-custom Needs joining
+        // Maslow suppression. Keyed by Need name.
+        public Dictionary<string, NeedMeta>? needs_meta { get; set; }
     }
 
     /// <summary>Individual agent definition. Inherits via kind_ids.</summary>
@@ -38,17 +42,135 @@ namespace Animo.Model {
         public List<Action>? actions { get; set; }
         public Commitment? commitment { get; set; }
         public Binding? binding { get; set; }
+        // v0.1.5 (Q-S30): optional per-Need metadata. Same shape as
+        // Kind.needs_meta; merged via §8.3 Persona-first per key.
+        public Dictionary<string, NeedMeta>? needs_meta { get; set; }
+
+        /// <summary>
+        /// (v0.1.5, Q-S64) Deep-clone the composed Persona so each
+        /// `Animo.Agent` (MonoBehaviour) holds its own mutable copy.
+        /// Pre-Q-S64 the spec sample code `_composed_persona =
+        /// template.DeepCopy()` referenced an undeclared method —
+        /// confirmed compile error. The PersonaCache returns a shared
+        /// composed template (§11.6); without DeepCopy, two Agents
+        /// spawned from the same template id would share `Needs`,
+        /// `actions[]`, `binding.thresholds[].expanded_trigger`, etc.,
+        /// and one Agent's runtime mutation (e.g. Q-S28's agent_id
+        /// override) would corrupt every sibling. DeepCopy is the
+        /// per-Agent isolation barrier.
+        ///
+        /// Phase 3 implements deep copy of all reference-type fields:
+        /// Needs.values, Rates.values, Suppression (already value-typed
+        /// fields), each Influence in influences[], each Action in
+        /// actions[] (including action-internal collections), Commitment,
+        /// Binding (including binding.thresholds[] with their
+        /// expanded_trigger strings), needs_meta dictionary entries.
+        /// Stub returns NotImplementedException; Red baseline test
+        /// `PersonaDeepCopyIsolationTests` asserts isolation.
+        /// </summary>
+        public Persona DeepCopy() => throw new System.NotImplementedException();
+    }
+
+    /// <summary>
+    /// v0.1.5 (Q-S30): per-Need metadata. Currently carries only `tier`
+    /// for genre-custom Needs (oxygen, thirst, jealousy) that should
+    /// participate in Maslow tier suppression — without this metadata
+    /// non-standard Needs would be excluded from §9.3.4
+    /// `max_lower_tier_intensity` (Q-S16's safe default).
+    ///
+    /// `tier` ∈ [1, 5] — Validator A038 enforces the range.
+    /// </summary>
+    public class NeedMeta {
+        public int tier { get; set; }
+
+        /// <summary>
+        /// (v0.1.5, Q-S56) Per-Need default NeedMeta. Used by Engine ctor
+        /// PHASE C "Step 3" when iterating ALL composed Needs and the
+        /// author has not declared an explicit `needs_meta` entry for
+        /// this Need. v0.1.5 returns tier per §3.5 for standard Needs
+        /// or a sentinel `0` for non-standard Needs (which always have
+        /// an explicit needs_meta if they reach Engine ctor — A019 +
+        /// A038 enforce). v0.2 / v0.3 adds per-Need defaults for
+        /// future fields (decay_multiplier, etc.).
+        /// </summary>
+        public static NeedMeta DefaultFor(string need_name) {
+            // Standard Needs: tier per §3.5 (lookup via Const).
+            // Non-standard reaching here without explicit meta is
+            // a Validator-prevented contradiction; sentinel 0 is
+            // safe-by-construction.
+            int tier = 0;
+            if (Animo.Const.NEED_TIER_BY_NAME.TryGetValue(need_name, out var t)) {
+                tier = t;
+            }
+            return new NeedMeta { tier = tier };
+        }
+
+        /// <summary>
+        /// (v0.1.5, Q-S134) Shallow-safe copy of this NeedMeta.
+        /// v0.1.5 carries only `tier` (value type int), so a field-by-field
+        /// copy is identical to a deep copy. Declared here as an explicit
+        /// contract so that v0.2 / v0.3 NeedMeta field additions (e.g.
+        /// `decay_multiplier`, `label`) are automatically caught by the
+        /// compiler: the implementer must add the new field to this method
+        /// or the build fails. Pre-Q-S134 `Persona.DeepCopy()` would have
+        /// silently omitted future NeedMeta fields — a copy-leakage bug
+        /// guaranteed on first NeedMeta extension. Phase 3 implements
+        /// `Persona.DeepCopy()` by calling `meta.DeepCopy()` per entry.
+        /// </summary>
+        public NeedMeta DeepCopy() {
+            // v0.1.5: NeedMeta carries only `tier` (value type).
+            // Add every new field introduced in future versions here.
+            return new NeedMeta { tier = this.tier };
+        }
     }
 
     /// <summary>Need value set [0, 100]. Float dictionary backed.</summary>
+    ///
+    /// (v0.1.5, Q-S151) JSON deserialization contract for Phase 3:
+    /// The JSON shape for `needs` / `rates` is a FLAT object —
+    /// <c>{"hunger": 40, "fatigue": 20}</c> — not a wrapper object
+    /// <c>{"values": {"hunger": 40}}</c>. Newtonsoft.Json's default
+    /// <c>DeserializeObject&lt;Needs&gt;</c> looks for properties named
+    /// after each JSON key directly on the class, fails to find them,
+    /// and silently produces a Needs with <c>values.Count == 0</c> —
+    /// every Agent would spawn with no Needs at all. Empirically
+    /// verified: <c>JsonConvert.DeserializeObject&lt;Needs&gt;("{\"hunger\":40}").values.Count</c>
+    /// returns 0 with the bare Dictionary-backed shape.
+    ///
+    /// Phase 3 implementation pattern (one of):
+    ///   Option A (RECOMMENDED — minimal disruption, preserves `.values`
+    ///   convention used in Q-S65 §3.5.2 PHASE A and 8 existing tests):
+    ///     - Add private `Dictionary&lt;string, JToken&gt; _raw` annotated
+    ///       with <c>[JsonExtensionData]</c>; Newtonsoft routes all
+    ///       unmapped top-level properties into it.
+    ///     - `values` becomes a read-only projection: foreach kv in _raw,
+    ///       parse as float, populate Dictionary&lt;string, float&gt;.
+    ///     - Existing call sites (`_persona.needs?.values`) continue to work.
+    ///   Option B (deeper change — defer to v0.2 if Option A blocks):
+    ///     - Replace the `Needs` class with `Dictionary&lt;string, float&gt;?`
+    ///       directly on Persona/Kind. Requires updating Q-S65 spec
+    ///       pseudocode, §11.4.1 examples, and 8 test files.
+    ///
+    /// Q-S151 chooses Option A; the v0.1.5 stub keeps the simple
+    /// Dictionary-backed shape because Phase 3 wires up the converter.
+    /// The contract is documented here so Phase 3 cannot regress.
     public class Needs {
         public Dictionary<string, float> values { get; set; } = new();
         public float Get(string need) => throw new System.NotImplementedException();
         public float Normalized(string need) => throw new System.NotImplementedException();
-        public void Clamp() => throw new System.NotImplementedException();
+        // (v0.1.5, Q-S63) `Clamp()` removed. Hot path uses flat float[]
+        // and Mathf.Clamp directly per §16.2; the instance method was
+        // dead code that would only have surfaced as a confusing
+        // NotImplementedException for tool authors. Hot-path-zero-alloc
+        // (§16.1) leaves the Needs class as a JSON-bridge shape only.
     }
 
     /// <summary>Need change rate per second. Negative pulls toward 0; positive pushes toward 100.</summary>
+    ///
+    /// (v0.1.5, Q-S151) Same JSON-bridge contract as Needs above —
+    /// JSON shape is FLAT <c>{"hunger": -0.5, "fatigue": -0.3}</c>,
+    /// not a wrapper. Phase 3 implements the same [JsonExtensionData]
+    /// projection pattern.
     public class Rates {
         public Dictionary<string, float> values { get; set; } = new();
     }
@@ -66,6 +188,23 @@ namespace Animo.Model {
         public string source { get; set; } = "";
         public string target { get; set; } = "";
         public float coefficient { get; set; } = 0f;
+
+        /// <summary>
+        /// (v0.1.5, Q-S141) Q-S134 pattern extended to all reference-type model
+        /// classes that are deep-copied inside Persona.DeepCopy(). Influence
+        /// carries only value-type and immutable-string fields in v0.1.5, so
+        /// a field-by-field copy is currently equivalent to a deep copy.
+        /// Declared explicitly so future field additions (e.g. a weight List)
+        /// trigger a compiler error here if DeepCopy() is not extended.
+        /// Phase 3 implements Persona.DeepCopy() by calling DeepCopy() on each entry.
+        /// </summary>
+        public Influence DeepCopy() {
+            return new Influence {
+                source = this.source,
+                target = this.target,
+                coefficient = this.coefficient
+            };
+        }
     }
 
     /// <summary>Action definition. need is required since v0.1.1.</summary>
@@ -76,17 +215,54 @@ namespace Animo.Model {
         public float exponent { get; set; } = 1.0f;
         // need_index cache is internal in spec; tests use the public API only.
         internal int need_index;
+
+        /// <summary>
+        /// (v0.1.5, Q-S141) Q-S134 pattern: explicit DeepCopy() so future
+        /// fields trigger compiler error at this site. v0.1.5 Action fields
+        /// are value types + immutable strings. Commitment sub-object is
+        /// value-type only; Persona.DeepCopy() reconstructs it via
+        /// Commitment.DeepCopy(). Phase 3 responsibility: include need_index
+        /// and any future cached state.
+        /// </summary>
+        public Action DeepCopy() {
+            return new Action {
+                id = this.id,
+                need = this.need,
+                tier = this.tier,
+                exponent = this.exponent
+                // need_index: Phase 3 re-derives from Engine ctor — not copied.
+            };
+        }
     }
 
     /// <summary>Action continuation bonus. v0.1.3 dropped 'decay' field.</summary>
     public class Commitment {
         public float bonus { get; set; } = 0f;
+
+        /// <summary>(v0.1.5, Q-S141) See Action.DeepCopy() rationale.</summary>
+        public Commitment DeepCopy() {
+            return new Commitment { bonus = this.bonus };
+        }
     }
 
     /// <summary>Germio integration binding.</summary>
     public class Binding {
         public string? on_action_change { get; set; }
-        public List<Threshold>? thresholds { get; set; }
+        // v0.1.5 (Q-S12): non-nullable with empty-list default. Awake-time
+        // foreach over `thresholds` is branch-free; null cannot bypass
+        // Composer's default-fill (Q-S7) and crash Agent.Awake.
+        public List<Threshold> thresholds { get; set; } = new();
+
+        /// <summary>
+        /// (v0.1.5, Q-S141) Binding contains a List of Thresholds — explicit
+        /// DeepCopy() ensures each Threshold is deep-copied, not shared.
+        /// on_action_change is an immutable string (shallow copy is safe).
+        /// </summary>
+        public Binding DeepCopy() {
+            var copy = new Binding { on_action_change = this.on_action_change };
+            foreach (var t in thresholds) copy.thresholds.Add(item: t.DeepCopy());
+            return copy;
+        }
     }
 
     /// <summary>Two-stage hysteresis threshold trigger (v0.1.1).</summary>
@@ -96,5 +272,43 @@ namespace Animo.Model {
         public float? reset_threshold { get; set; }
         public string trigger { get; set; } = "";
         internal int need_index;
+        // v0.1.5 (Q-S14): per-Threshold pre-expanded trigger string.
+        // Replaces the old `_cached_threshold_triggers[t.need]` dictionary
+        // which collapsed multiple thresholds on the same Need (e.g.
+        // fear=50 → "alerted", fear=80 → "panic") into a single overwriting
+        // entry. With this field, each Threshold carries its own resolved
+        // string and Awake walks the list once without keying by Need.
+        internal string expanded_trigger = "";
+        // v0.1.5 (Q-S25): hysteresis state. The §12.3.2 state machine has
+        // two states (Below / Above) and is the very mechanism that makes
+        // `reset_threshold` meaningful — without state, `prev < trigger
+        // && curr >= trigger` cross-detection chatters around `trigger`
+        // even when `reset_threshold` is set, because the value would
+        // never need to drop below `reset_threshold` to re-arm. Engine
+        // ctor seeds this from the spawn-time `_effective_needs` (Q-S8
+        // + Q-S23 + Q-S25): Persona spawned with the Need already above
+        // `trigger_threshold` starts in `Above` and does NOT fire on
+        // first Live(dt). Step 3 fire branch transitions Below → Above;
+        // Step 3 reset branch transitions Above → Below.
+        internal bool is_above;
+
+        /// <summary>
+        /// (v0.1.5, Q-S141) Threshold carries internal state fields
+        /// (need_index, expanded_trigger, is_above) that must be re-derived
+        /// by Engine/Composer for each Agent instance — they are NOT copied
+        /// as they are instance-specific runtime cache. The public JSON-facing
+        /// fields (need, trigger_threshold, reset_threshold, trigger) are copied.
+        /// Phase 3 Persona.DeepCopy() must call this and then let the Engine
+        /// ctor re-populate the internal fields per-instance.
+        /// </summary>
+        public Threshold DeepCopy() {
+            return new Threshold {
+                need = this.need,
+                trigger_threshold = this.trigger_threshold,
+                reset_threshold = this.reset_threshold,
+                trigger = this.trigger
+                // need_index, expanded_trigger, is_above: re-derived by Engine ctor.
+            };
+        }
     }
 }

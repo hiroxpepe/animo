@@ -18,7 +18,6 @@ namespace Animo.Tests.MiniUnity {
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public class MockGameObject {
-#nullable enable
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Fields
