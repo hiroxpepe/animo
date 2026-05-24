@@ -5,9 +5,10 @@
 > Part of the **G+B+A stack** (Germio + Briko + Animo).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status: Design Complete](https://img.shields.io/badge/Status-Design%20Complete-green.svg)](docs/animo_spec_v0.1.4_EN.md)
-[![Spec: v0.1.4](https://img.shields.io/badge/Spec-v0.1.4-blue.svg)](docs/animo_spec_v0.1.4_EN.md)
-[![Phase 1: Done](https://img.shields.io/badge/Phase%201-Done-brightgreen.svg)](docs/animo_roadmap_to_v1.0.0.md)
+[![Status: Phase 3 Complete](https://img.shields.io/badge/Status-Phase%203%20Complete-brightgreen.svg)](docs/state_of_animo_v0.3.0-alpha.md)
+[![Spec: v0.1.5](https://img.shields.io/badge/Spec-v0.1.5-blue.svg)](docs/animo_spec_v0.1.5_EN.md)
+[![Build: v0.3.0-alpha](https://img.shields.io/badge/Build-v0.3.0--alpha-brightgreen.svg)](CHANGELOG.md)
+[![Tests: 452 Green](https://img.shields.io/badge/Tests-452%20Green-brightgreen.svg)](docs/state_of_animo_v0.3.0-alpha.md)
 
 ---
 
@@ -35,7 +36,7 @@ flowchart LR
   end
   G["<b>Germio</b><br/>v0.5.19-alpha"]
   B["<b>Briko</b><br/>v0.1.0-alpha"]
-  A["<b>Animo</b><br/>v0.1.4-design"]
+  A["<b>Animo</b><br/>v0.3.0-alpha"]
   QW --> G
   QH --> B
   QY --> A
@@ -51,30 +52,38 @@ Most game AI mixes *what* the agent does with *why* it does it. Animo separates 
 
 ## Status
 
-🟢 **Phase 1 — Design Complete**
-🔥 **Phase 2 — Schema and Test Foundation (in progress)**
+🟢 **Phase 1 — Design Complete (v0.1.4 → v0.1.5)**
+🟢 **Phase 2 — Schema + Red Baseline Complete (v0.2.0-alpha)**
+🟢 **Phase 3 — Core Engine + ScenarioRunner Complete (v0.3.0-alpha)**
+⬜ **Phase 4 — Unity Integration + CLI (next)**
 
 ```mermaid
 flowchart LR
   P0["<b>Phase 0</b><br/>Concept<br/>v0.1.0"]
-  P1["<b>Phase 1</b><br/>Design<br/>v0.1.4"]
-  P2["<b>Phase 2</b><br/>Schema + Red tests<br/>v0.2.0-test"]
-  P3["<b>Phase 3</b><br/>Implementation<br/>v0.3.0-impl"]
-  P4["<b>Phase 4</b><br/>Unity integration<br/>v0.4.0-unity"]
+  P1["<b>Phase 1</b><br/>Design<br/>v0.1.5"]
+  P2["<b>Phase 2</b><br/>Schema + Red tests<br/>v0.2.0-alpha"]
+  P3["<b>Phase 3</b><br/>Core Engine<br/>v0.3.0-alpha"]
+  P4["<b>Phase 4</b><br/>Unity integration<br/>v0.4.0-alpha"]
   P5["<b>Phase 5</b><br/>Stabilize<br/>v1.0.0"]
   P0 --> P1 --> P2 --> P3 --> P4 --> P5
   style P0 fill:#d1fae5,stroke:#059669
   style P1 fill:#d1fae5,stroke:#059669
-  style P2 fill:#fef3c7,stroke:#ca8a04,stroke-width:3px
-  style P3 fill:#f1f5f9,stroke:#64748b
-  style P4 fill:#f1f5f9,stroke:#64748b
-  style P5 fill:#fce7f3,stroke:#be185d
+  style P2 fill:#d1fae5,stroke:#059669
+  style P3 fill:#d1fae5,stroke:#059669,stroke-width:3px
+  style P4 fill:#fef3c7,stroke:#ca8a04
+  style P5 fill:#f1f5f9,stroke:#64748b
 ```
 
-The architecture is locked. Eight commits of iterative spec design (v0.1.0 → v0.1.4) put us at a point where **every formula, every validator rule, every namespace boundary is decided**. Implementation can now start without redesigning anything mid-flight.
+**At v0.3.0-alpha** the core engine is functionally complete, mathematically
+proven (452 tests Green, zero-GC verified), and Unity-independent (`Animo.Core` /
+`Animo.Model` / `Animo.Tools` have zero `UnityEngine` references). Phase 4 wraps
+the proven core in Unity components and ships a CLI runner.
 
-- 📄 [English specification (reference)](docs/animo_spec_v0.1.4_EN.md) — implementation truth
-- 📄 [Japanese specification](docs/animo_spec_v0.1.4_JP.md) — original design discussion
+- 📄 [English specification (current)](docs/animo_spec_v0.1.5_EN.md) — implementation truth
+- 📄 [Japanese specification](docs/animo_spec_v0.1.5_JP.md) — original design discussion
+- 📊 [State of Animo v0.3.0-alpha](docs/state_of_animo_v0.3.0-alpha.md) — Phase 3 retrospective + Phase 4 gap analysis
+- ⚡ [Benchmarks v0.3.0](docs/benchmarks_v0.3.0.md) — zero-GC measurement methodology
+- 📝 [CHANGELOG](CHANGELOG.md) — release notes
 - 🗺️ [Roadmap to v1.0.0](docs/animo_roadmap_to_v1.0.0.md)
 
 ---
@@ -639,7 +648,7 @@ Examples:
 - **A028** — `commitment.bonus` ≥ 30 raises a warning (chattering risk)
 - **A031** — `lock.duration` over 5s raises a warning (frozen agent)
 
-The full list is in [§13 of the spec](docs/animo_spec_v0.1.4_EN.md).
+The full list is in [§13 of the spec](docs/animo_spec_v0.1.5_EN.md).
 
 ---
 
@@ -662,11 +671,11 @@ The full list is in [§13 of the spec](docs/animo_spec_v0.1.4_EN.md).
 | Phase | Goal | Status |
 |---|---|---|
 | Phase 0 | Concept (v0.1.0) | ✅ Done |
-| **Phase 1** | **Design (v0.1.4)** | ✅ **Done** |
-| Phase 2 | Schema + Red tests (v0.2.0-test) | 🔥 In progress |
-| Phase 3 | Implementation (v0.3.0-impl) | ⬜ |
-| Phase 4 | Unity integration (v0.4.0-unity) | ⬜ |
-| Phase 5 | Stabilize (v1.0.0) | ⬜ |
+| Phase 1 | Design (v0.1.5) | ✅ Done |
+| Phase 2 | Schema + Red tests (v0.2.0-alpha) | ✅ Done |
+| **Phase 3** | **Core Engine + ScenarioRunner (v0.3.0-alpha)** | ✅ **Done** |
+| Phase 4 | Unity integration + CLI (v0.4.0-alpha) | 🔥 Next |
+| Phase 5 | Stabilize and Asset Store (v1.0.0) | ⬜ |
 
 See [animo_roadmap_to_v1.0.0.md](docs/animo_roadmap_to_v1.0.0.md) for the full task graph.
 
