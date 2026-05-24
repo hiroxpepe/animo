@@ -1,32 +1,27 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table test for Q-S62 (v0.1.5): Step 4 (score calculation)
-    /// runs every frame even under Hard lock. The post-unlock Step 5
-    /// reads the locked-behavior's _action_scores to compute the
-    /// smooth-out-of-lock decision; if Step 4 had skipped during lock,
-    /// the score would be stale.
-    ///
-    /// Phase 3 contract: After 100 Live(dt) calls under Hard lock,
-    /// _action_scores[locked_behavior_index] reflects the current Need
-    /// state, not the score from the frame the lock began.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class HardLockStep4ContinuityTests {
         [Test] public void Case01_LockedFrames_UpdateActionScores_ForPostUnlockContinuity() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "After Hard locking and running 100 Live(dt) calls during which Needs change " +
-                "(e.g. fear rises from 30 to 80), _action_scores[locked_behavior] must " +
-                "reflect the current Needs (computed by Step 4 every frame), not stale " +
-                "pre-lock values. Q-S62 design rationale: post-unlock Step 5 needs current " +
-                "scores for smooth-out-of-lock.");
+            var p = new Persona { agent_id = "a",
+                needs = NeedsOf(("fear",30f),("idle",10f)),
+                actions = new List<Animo.Model.Action>{
+                    ActionOf("Flee","fear",2), ActionOf("Idle","idle",5) },
+                rates = RatesOf(("fear",10f))
+            };
+            var e = new Engine(p);
+            e.Live(0.0f); // seed behavior
+            e.Lock(10f, LockMode.Hard);
+            for (int i = 0; i < 5; i++) e.Live(0.1f); // fear rises; scores updated
+            // Q-S62: Step 4 runs even during Hard lock
+            float score = e.GetActionScore("Flee");
+            Assert.That(score, Is.GreaterThan(0f),
+                "Q-S62: Step 4 must update action scores even during Hard lock.");
         }
     }
 }

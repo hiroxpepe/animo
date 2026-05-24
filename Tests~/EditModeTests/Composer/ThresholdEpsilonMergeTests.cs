@@ -3,30 +3,32 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ComposerTests {
-    /// <summary>
-    /// Decision-table test for Q-S43 (v0.1.5): the (need, trigger_threshold)
-    /// compound key compares trigger_threshold with EPSILON tolerance,
-    /// not raw float ==. A Persona overriding `trigger_threshold: 80.0`
-    /// with `80.0001` must produce ONE merged Threshold (Persona wins),
-    /// not two near-duplicates.
-    ///
-    /// Phase 3 contract: Composer.MergeThresholds uses
-    /// Math.Abs(a.trigger_threshold - b.trigger_threshold) < 0.5f
-    /// (THRESHOLD_KEY_EPSILON), wider than IEEE-754 round-trip drift,
-    /// narrower than authored milestone spacing (>= 5 by A035 / Q-S15).
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class ThresholdEpsilonMergeTests {
         [Test] public void Case01_PersonaOverrideWithDriftedFloat_CollapsesToOne() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Composer.MergeThresholds(kind_thresholds with trigger_threshold=80.0, " +
-                "persona_thresholds with trigger_threshold=80.0001) must produce ONE merged " +
-                "threshold (Persona's value wins). Pre-Q-S43 raw == created two duplicates " +
-                "that both fired.");
+            var root = new Root {
+                schema_version = "1.5",
+                kinds = new List<Kind> { new Kind { kind_id = "k",
+                    actions = new List<Animo.Model.Action> { ActionOf("X","fear",2) },
+                    binding = new Binding { thresholds = new List<Threshold> {
+                        ThresholdOf("fear", 80.0f, "alert") }}}},
+                personas = new List<Persona> { new Persona { agent_id = "a",
+                    kind_ids = new List<string> { "k" },
+                    binding = new Binding { thresholds = new List<Threshold> {
+                        ThresholdOf("fear", 80.0001f, "alert_override") }}}}
+            };
+            var composed = Composer.Compose(root.personas[0], root);
+            Assert.That(composed.binding!.thresholds.Count, Is.EqualTo(1),
+                "Q-S43: drift 80.0 vs 80.0001 must collapse to one threshold (Persona wins).");
+            Assert.That(composed.binding.thresholds[0].trigger, Is.EqualTo("alert_override"),
+                "Persona value must win.");
         }
     }
 }

@@ -20,17 +20,16 @@ namespace Animo.Tests.EditMode.ValidatorTests {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A040ActionIdUniquenessTests {
+        static string RepoRoot() {
+            string? d = System.IO.Directory.GetCurrentDirectory();
+            while (d != null && !System.IO.File.Exists(System.IO.Path.Combine(d, "Scripts", "Const.cs")))
+                d = System.IO.Directory.GetParent(d)?.FullName;
+            return d ?? System.IO.Directory.GetCurrentDirectory();
+        }
+
         [Test] public void Case01_SpecEN_A040RuleIsDefined() {
-            var roots = new[] {
-                "/home/claude/animo_full/animo",
-                System.Environment.CurrentDirectory,
-                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
-            };
             string? path = null;
-            foreach (var r in roots) {
-                var p = Path.Combine(r, "docs", "animo_spec_v0.1.5_EN.md");
-                if (File.Exists(p)) { path = p; break; }
-            }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S113: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("**A040**"),
@@ -40,16 +39,8 @@ namespace Animo.Tests.EditMode.ValidatorTests {
         }
 
         [Test] public void Case02_LayoutAnnotation_UpdatedToA000_A040() {
-            var roots = new[] {
-                "/home/claude/animo_full/animo",
-                System.Environment.CurrentDirectory,
-                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
-            };
             string? path = null;
-            foreach (var r in roots) {
-                var p = Path.Combine(r, "docs", "animo_spec_v0.1.5_EN.md");
-                if (File.Exists(p)) { path = p; break; }
-            }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S113: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("A000-A040"),

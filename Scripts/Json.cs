@@ -3,49 +3,82 @@
 
 #nullable enable
 
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Animo.Model;
 
 namespace Animo {
     /// <summary>
-    /// (v0.1.5, Q-S76) JSON parsing facade for `animo.json` files.
-    /// Wraps the underlying serializer (Newtonsoft.Json in Phase 3 default
-    /// build, or System.Text.Json in lean builds) and returns a fully-
-    /// populated `Animo.Model.Root`.
-    ///
-    /// Pre-Q-S76 the §11.6.5 AnimoBootstrapper sample called
-    /// `Animo.Json.Parse(...)` but neither the class nor any Parse method
-    /// declaration existed anywhere in `Scripts/` — confirmed missing-
-    /// type compile error. Q-S76 adds this stub so Bootstrapper compiles.
-    ///
-    /// Hosts that prefer a different JSON library can substitute by
-    /// calling their library's deserializer directly in the bootstrapper
-    /// — the wrapper exists for ergonomic parity with the rest of Animo's
-    /// API surface.
+    /// (v0.1.5, Q-S76 + Q-S151) JSON parsing facade for animo.json files.
+    /// Uses Newtonsoft.Json with custom converters for Needs/Rates flat-object
+    /// shape. JSON: {"hunger": 40, "fatigue": 20} → Needs.values["hunger"]=40.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class Json {
+        static readonly JsonSerializerSettings _settings = new JsonSerializerSettings {
+            Converters = { new NeedsConverter(), new RatesConverter() },
+            MissingMemberHandling = MissingMemberHandling.Ignore
+        };
+
         /// <summary>
-        /// Parse an `animo.json` text payload into a `Root` aggregate.
-        /// Phase 3 implementation calls `JsonConvert.DeserializeObject&lt;Root&gt;`
-        /// (or equivalent) and validates basic shape. v0.1.5 stub
-        /// throws NotImplementedException; Phase 3 implements.
-        ///
-        /// (v0.1.5, Q-S151) Phase 3 implementation MUST handle the
-        /// `Needs` / `Rates` flat-JSON contract — see <c>Animo.Model.Needs</c>
-        /// docstring. The JSON shape is <c>{"hunger": 40, "fatigue": 20}</c>;
-        /// the C# class is <c>Needs { Dictionary&lt;string, float&gt; values }</c>;
-        /// Newtonsoft's default deserializer DOES NOT bridge the two
-        /// automatically (empirically: produces <c>values.Count == 0</c>).
-        /// Phase 3 must either:
-        ///   - register a custom <c>JsonConverter&lt;Needs&gt;</c> with the
-        ///     <c>JsonSerializerSettings</c> used here, OR
-        ///   - add <c>[JsonExtensionData]</c> attribute on a private
-        ///     backing field inside <c>Needs</c> / <c>Rates</c> and project
-        ///     to <c>values</c>.
-        /// Without this, every Agent spawns with no Needs at all.
+        /// Parse an animo.json text payload into a Root aggregate.
+        /// (Q-S151) Needs/Rates flat-JSON is handled by NeedsConverter/RatesConverter.
         /// </summary>
         public static Root Parse(string text) {
-            throw new System.NotImplementedException();
+            if (string.IsNullOrEmpty(text))
+                throw new ArgumentException("JSON text cannot be null or empty.", nameof(text));
+            var root = JsonConvert.DeserializeObject<Root>(text, _settings);
+            if (root == null)
+                throw new InvalidOperationException("Json.Parse: deserialization returned null.");
+            return root;
+        }
+
+        // ── Custom converters ──────────────────────────────────────────────
+
+        /// <summary>
+        /// (Q-S151) Converts flat JSON object {"hunger": 40, "fatigue": 20}
+        /// into Needs.values Dictionary. Without this, Newtonsoft maps
+        /// properties to Needs class members (finds none), leaving values empty.
+        /// </summary>
+        sealed class NeedsConverter : JsonConverter<Needs> {
+            public override Needs? ReadJson(JsonReader reader, Type t, Needs? existing,
+                                            bool hasExisting, JsonSerializer s) {
+                if (reader.TokenType == JsonToken.Null) return null;
+                var obj = JObject.Load(reader);
+                var needs = new Needs();
+                foreach (var prop in obj.Properties())
+                    needs.values[prop.Name] = prop.Value.Value<float>();
+                return needs;
+            }
+            public override void WriteJson(JsonWriter w, Needs? v, JsonSerializer s) {
+                w.WriteStartObject();
+                if (v != null) foreach (var kv in v.values) {
+                    w.WritePropertyName(kv.Key); w.WriteValue(kv.Value);
+                }
+                w.WriteEndObject();
+            }
+        }
+
+        /// <summary>(Q-S151) Same flat-object converter for Rates.</summary>
+        sealed class RatesConverter : JsonConverter<Rates> {
+            public override Rates? ReadJson(JsonReader reader, Type t, Rates? existing,
+                                            bool hasExisting, JsonSerializer s) {
+                if (reader.TokenType == JsonToken.Null) return null;
+                var obj = JObject.Load(reader);
+                var rates = new Rates();
+                foreach (var prop in obj.Properties())
+                    rates.values[prop.Name] = prop.Value.Value<float>();
+                return rates;
+            }
+            public override void WriteJson(JsonWriter w, Rates? v, JsonSerializer s) {
+                w.WriteStartObject();
+                if (v != null) foreach (var kv in v.values) {
+                    w.WritePropertyName(kv.Key); w.WriteValue(kv.Value);
+                }
+                w.WriteEndObject();
+            }
         }
     }
 }

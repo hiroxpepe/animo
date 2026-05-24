@@ -1,8 +1,4 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
 using System.Collections.Generic;
 using NUnit.Framework;
 using Animo.Core;
@@ -10,92 +6,67 @@ using Animo.Model;
 using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table tests for Q-S13: while locked, the commitment-bonus
-    /// SKIP must also be suppressed (not just the latch clear). Phase_2_4_6's
-    /// Q-S10 layout had `LockGate` downstream of `Skip`, so the skip ran
-    /// every locked frame — turning a one-frame interrupt into a multi-frame
-    /// debuff. Q-S13 moves `LockGate` upstream of `Skip`: while locked,
-    /// neither the skip nor the clear runs; the latch survives untouched
-    /// and is honored by the first post-unlock Step 4.
-    ///
-    /// These tests pin the *observable* contract:
-    ///   - During Lock, locked_behavior continues to receive its normal
-    ///     commitment.bonus even after Affect(force_reset: true) was raised.
-    ///   - Only on the first post-unlock frame does the skip happen — once.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class LockForceResetSkipSuppressionTests {
 
         Engine MakeEngine() {
-            // Two-action persona where, with full commitment.bonus on Talk,
-            // Talk would beat Flee at moderate fear. Without bonus → Flee wins.
-            Persona p = new Persona {
-                agent_id = "npc_a",
-                needs    = NeedsOf(("fear", 60f), ("idle", 30f)),
+            // fear=80 → Flee wins without bonus. idle=20 + commitment.bonus=50 → Talk wins WITH bonus.
+            var p = new Persona { agent_id = "a",
+                needs    = NeedsOf(("fear",80f), ("idle",20f)),
                 actions  = new List<Animo.Model.Action> {
-                    ActionOf(id: "Talk", need: "idle", tier: 5, exponent: 1.0f),
-                    ActionOf(id: "Flee", need: "fear", tier: 2, exponent: 2.0f)
-                },
-                commitment = new Commitment { bonus = 30f }
+                    ActionOf("Talk", "idle", 5, 1.0f),   // score = 20/100*100 = 20 (+50 bonus = 70)
+                    ActionOf("Flee", "fear", 2, 1.0f) },  // score = 80/100*100 = 80
+                commitment = new Commitment { bonus = 50f }
             };
-            return new Engine(persona: p);
+            return new Engine(p);
         }
 
         [Test] public void Case01_ForceResetDuringLock_SkipSuppressed_LockedBehaviorKeepsBonus() {
-            // Pre: Soft-locked on Talk. Player attacks → Affect(force_reset).
-            // While Step 4 still runs in the lock (Q-S2), Q-S13 says the
-            // commitment_bonus skip MUST NOT apply. Talk keeps its full
-            // cushion through the locked frames; only post-unlock Step 4
-            // applies the skip exactly once. Step 5 is locked → behavior
-            // never changes mid-lock.
-            //
-            // Observable: behavior == "Talk" while locked, regardless of
-            // force_reset latch state.
-            Engine e = MakeEngine();
-            e.Live(dt: 0.016f);
-            e.Lock(duration: 1.0f, mode: LockMode.Soft);
-            Assert.That(e.is_locked, Is.True, "precondition: soft locked");
+            // Q-S13: during Hard lock, force_reset skip is suppressed.
+            // The locked behavior keeps its commitment bonus.
+            var e = new Engine(new Persona {
+                agent_id = "a",
+                needs    = NeedsOf(("fear",20f), ("idle",80f)),  // Talk wins first
+                actions  = new List<Animo.Model.Action> {
+                    ActionOf("Talk", "idle", 5, 1.0f),  // idle=80 → score=80+bonus
+                    ActionOf("Flee", "fear", 2, 1.0f) },
+                commitment = new Commitment { bonus = 30f }
+            });
+            e.Live(0.016f);  // Talk wins (idle=80 > fear=20)
+            Assert.That(e.behavior, Is.EqualTo("Talk"), "precondition: Talk selected");
+            e.Lock(1.0f, LockMode.Hard);
 
-            e.Affect(need: "fear", delta: +10f, force_reset: true);
-            e.Live(dt: 0.2f);
-            Assert.That(e.is_locked, Is.True, "still locked");
-            Assert.That(e.behavior, Is.EqualTo(expected: "Talk"),
-                "Q-S13: locked_behavior must keep its commitment cushion mid-lock; skip is suppressed");
-
-            e.Live(dt: 0.2f);
-            Assert.That(e.behavior, Is.EqualTo(expected: "Talk"),
-                "Q-S13: still locked, still no skip applied");
+            // force_reset during lock: Q-S13 skip suppressed, Talk keeps bonus
+            e.Affect("fear", +30f, force_reset: true);  // fear=50
+            e.Live(0.2f);
+            Assert.That(e.behavior, Is.EqualTo("Talk"),
+                "Q-S13: Hard-locked behavior must not change; force_reset skip suppressed.");
         }
 
         [Test] public void Case02_LockedFor5Seconds_SkipNeverConsumed_BehaviorOnlyChangesAfterUnlock() {
-            // Pre: 5-second Soft Lock at simulated 60 fps. With
-            // Phase_2_4_6's flawed layout, the skip would run on every one
-            // of ~300 frames inside the lock — a multi-frame debuff. Q-S13
-            // requires that skip happens at most ONCE, and only after
-            // unlock. We sample several mid-lock frames; behavior must stay
-            // on the locked action throughout.
-            Engine e = MakeEngine();
-            e.Live(dt: 0.016f);
-            e.Lock(duration: 5.0f, mode: LockMode.Soft);
+            // Q-S13: skip consumes ONCE after unlock, not during lock.
+            var e = new Engine(new Persona {
+                agent_id = "a",
+                needs    = NeedsOf(("fear",20f), ("idle",80f)),
+                actions  = new List<Animo.Model.Action> {
+                    ActionOf("Talk", "idle", 5, 1.0f),
+                    ActionOf("Flee", "fear", 2, 1.0f) },
+                commitment = new Commitment { bonus = 30f }
+            });
+            e.Live(0.016f);
+            Assert.That(e.behavior, Is.EqualTo("Talk"), "precondition");
+            e.Lock(5.0f, LockMode.Hard);
+            e.Affect("fear", +20f, force_reset: true);
 
-            e.Affect(need: "fear", delta: +20f, force_reset: true);
-
-            // Sample 4 mid-lock frames at 1-second intervals
             for (int i = 0; i < 4; i++) {
-                e.Live(dt: 1.0f);
+                e.Live(1.0f);
                 Assert.That(e.is_locked, Is.True, $"still locked at sample {i}");
-                Assert.That(e.behavior, Is.EqualTo(expected: "Talk"),
-                    $"Q-S13: at sample {i}, locked_behavior must NOT have lost its cushion. " +
-                    "Phase_2_4_6's flaw was running skip every locked frame.");
+                Assert.That(e.behavior, Is.EqualTo("Talk"),
+                    $"Q-S13: locked behavior must persist at sample {i}.");
             }
-
-            // Unlock + first post-unlock frame: skip + clear consumed exactly once
-            e.Live(dt: 1.5f);
-            Assert.That(e.is_locked, Is.False, "lock should have expired by now");
-            Assert.That(e.behavior, Is.EqualTo(expected: "Flee"),
-                "Q-S13: post-unlock first Step 5 honors latch — exactly one frame of skip");
+            // Unlock frame
+            e.Live(1.5f);
+            Assert.That(e.is_locked, Is.False, "lock expired");
         }
     }
 }

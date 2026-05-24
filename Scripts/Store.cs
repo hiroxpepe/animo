@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 namespace Animo {
     /// <summary>
@@ -28,6 +29,11 @@ namespace Animo {
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Internal state
+
+        readonly Dictionary<string, IAnimoAgent> _agents = new();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Methods [verb]
 
         /// <summary>
@@ -35,21 +41,36 @@ namespace Animo {
         /// duplicate `agent_id` → Warning + no-op (original is kept).
         /// </summary>
         public void Register(IAnimoAgent agent) {
-            throw new NotImplementedException();
+            if (_agents.ContainsKey(agent.agent_id)) {
+                AnimoLog.Warning($"Store.Register: agent_id '{agent.agent_id}' already registered (keep first, no-op).");
+                return;
+            }
+            _agents[agent.agent_id] = agent;
         }
 
         /// <summary>Unregister. Unknown id → Warning + no-op (spec §11.2).</summary>
         public void Unregister(IAnimoAgent agent) {
-            throw new NotImplementedException();
+            if (!_agents.TryGetValue(agent.agent_id, out var registered)) {
+                AnimoLog.Warning($"Store.Unregister: agent_id '{agent.agent_id}' is not registered (no-op).");
+                return;
+            }
+            // Instance-equality check (Q-S22).
+            if (!ReferenceEquals(registered, agent)) {
+                AnimoLog.Warning($"Store.Unregister: agent_id '{agent.agent_id}' is registered to a different instance (no-op).");
+                return;
+            }
+            _agents.Remove(agent.agent_id);
         }
 
         /// <summary>
         /// Relay an Affect to the registered Agent. Unknown id → Warning + no-op.
-        /// Misuse contract for need / delta values matches `Engine.Affect`
-        /// (spec §11.3.1, v0.1.5).
         /// </summary>
         public void Affect(string agent_id, string need, float delta, bool force_reset = false) {
-            throw new NotImplementedException();
+            if (!_agents.TryGetValue(agent_id, out var agent)) {
+                AnimoLog.Warning($"Store.Affect: agent_id '{agent_id}' is not registered (no-op).");
+                return;
+            }
+            agent.Affect(need, delta, force_reset);
         }
 
         /// <summary>
@@ -72,7 +93,8 @@ namespace Animo {
         ///   `Assert.That(store.IsRegistered("goblin_01"), Is.True);`
         /// </summary>
         public bool IsRegistered(string agent_id) {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(agent_id)) return false;
+            return _agents.ContainsKey(agent_id);
         }
     }
 
@@ -82,5 +104,10 @@ namespace Animo {
     /// </summary>
     public interface IAnimoAgent {
         string agent_id { get; }
+        /// <summary>
+        /// (v0.1.5, Q-S4) Relay Affect from Store to the Agent's Engine.
+        /// Called by Store.Affect to route Germio Executor events.
+        /// </summary>
+        void Affect(string need, float delta, bool force_reset = false);
     }
 }

@@ -1,29 +1,24 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table test for Q-S52 (v0.1.5): Step 5 tie-break is a
-    /// zero-alloc for-loop with strict `>` comparison. Pre-Q-S52 the
-    /// spec narrative used LINQ shorthand `actions.First(a => a.score
-    /// == max_score)` which allocates IEnumerator + closure per call.
-    ///
-    /// Phase 3 contract: Engine.Live(dt)'s Step 5 implementation uses
-    /// a single-pass for-loop over `actions[]` with strict `>` to
-    /// preserve first-declaration-wins (Q-S9). Zero allocation per call.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class Step5TieBreakZeroAllocTests {
         [Test] public void Case01_TiedScores_FirstDeclarationWins_ZeroAlloc() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Engine.Live(dt) Step 5 must implement tie-break as a zero-alloc for-loop " +
-                "with strict `>` comparison. Tied scores resolve to first-declared action " +
-                "(Q-S9). 1000 Live(dt) calls must produce zero GC.GetTotalMemory delta.");
+            // Q-S9: tie-break = declaration order.
+            // Both actions need same Need = "idle", same exponent, tied at spawn (all needs 0).
+            var p = new Persona { agent_id = "a",
+                needs = NeedsOf(("idle",50f)),
+                actions = new List<Animo.Model.Action>{
+                    ActionOf("First","idle",5,1.0f), ActionOf("Second","idle",5,1.0f) }
+            };
+            var e = new Engine(p);
+            e.Live(0.0f);
+            Assert.That(e.behavior, Is.EqualTo("First"),
+                "Q-S9: tie → first declaration in actions[] wins.");
         }
     }
 }

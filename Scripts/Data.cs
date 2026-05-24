@@ -42,9 +42,16 @@ namespace Animo.Model {
         public List<Action>? actions { get; set; }
         public Commitment? commitment { get; set; }
         public Binding? binding { get; set; }
-        // v0.1.5 (Q-S30): optional per-Need metadata. Same shape as
-        // Kind.needs_meta; merged via §8.3 Persona-first per key.
         public Dictionary<string, NeedMeta>? needs_meta { get; set; }
+
+        /// <summary>
+        /// (§16.3.4 Pre-cache Principle) Topo-sorted edge order produced by
+        /// Composer.TopoSortInfluences (cold path, once per composed Persona).
+        /// Engine Step 2 iterates this int[] with zero allocation per frame.
+        /// null = not yet composed (direct construction); Engine falls back to
+        /// declaration order (safe, possibly non-topo for cyclic graphs).
+        /// </summary>
+        public int[]? _sorted_influence_order { get; set; }
 
         /// <summary>
         /// (v0.1.5, Q-S64) Deep-clone the composed Persona so each
@@ -68,7 +75,70 @@ namespace Animo.Model {
         /// Stub returns NotImplementedException; Red baseline test
         /// `PersonaDeepCopyIsolationTests` asserts isolation.
         /// </summary>
-        public Persona DeepCopy() => throw new System.NotImplementedException();
+        public Persona DeepCopy() {
+            // (v0.1.5, Q-S64 + Q-S141) Deep copy all reference-type fields.
+            // PersonaCache returns a shared composed template; each Agent.Awake
+            // must work on its own isolated copy so one Agent's runtime
+            // mutations (e.g. Q-S28 agent_id override) cannot corrupt siblings.
+            var copy = new Persona {
+                agent_id     = this.agent_id,
+                persona_name = this.persona_name,
+                kind_ids     = this.kind_ids != null ? new List<string>(this.kind_ids) : null,
+            };
+
+            // Needs: copy the values dictionary
+            if (this.needs != null) {
+                copy.needs = new Needs();
+                foreach (var kv in this.needs.values) copy.needs.values[kv.Key] = kv.Value;
+            }
+
+            // Rates: copy the values dictionary
+            if (this.rates != null) {
+                copy.rates = new Rates();
+                foreach (var kv in this.rates.values) copy.rates.values[kv.Key] = kv.Value;
+            }
+
+            // Suppression: struct-like, just field-copy
+            if (this.suppression != null) {
+                copy.suppression = new Suppression {
+                    tier2 = this.suppression.tier2,
+                    tier3 = this.suppression.tier3,
+                    tier4 = this.suppression.tier4,
+                    tier5 = this.suppression.tier5
+                };
+            }
+
+            // Influences: deep copy each element (Q-S141)
+            if (this.influences != null) {
+                copy.influences = new List<Influence>(capacity: this.influences.Count);
+                foreach (var inf in this.influences) copy.influences.Add(inf.DeepCopy());
+            }
+
+            // Actions: deep copy each element (Q-S141)
+            if (this.actions != null) {
+                copy.actions = new List<Action>(capacity: this.actions.Count);
+                foreach (var act in this.actions) copy.actions.Add(act.DeepCopy());
+            }
+
+            // Commitment: deep copy (Q-S141)
+            if (this.commitment != null) copy.commitment = this.commitment.DeepCopy();
+
+            // Binding: copy on_action_change + deep copy each Threshold (Q-S141)
+            if (this.binding != null) {
+                copy.binding = new Binding { on_action_change = this.binding.on_action_change };
+                foreach (var t in this.binding.thresholds) copy.binding.thresholds.Add(t.DeepCopy());
+            }
+
+            // needs_meta: deep copy each NeedMeta entry (Q-S134 + Q-S141)
+            if (this.needs_meta != null) {
+                copy.needs_meta = new Dictionary<string, NeedMeta>(capacity: this.needs_meta.Count);
+                foreach (var kv in this.needs_meta) copy.needs_meta[kv.Key] = kv.Value.DeepCopy();
+            }
+            // (§16.3.4) Copy pre-sorted order array (int[] is immutable after Compose; safe to share).
+            copy._sorted_influence_order = this._sorted_influence_order;
+
+            return copy;
+        }
     }
 
     /// <summary>
@@ -81,7 +151,17 @@ namespace Animo.Model {
     /// `tier` ∈ [1, 5] — Validator A038 enforces the range.
     /// </summary>
     public class NeedMeta {
-        public int tier { get; set; }
+        public int   tier            { get; set; }
+        /// <summary>
+        /// (v0.1.5, Q-S48) Per-Need decay rate multiplier applied in Engine
+        /// PHASE C via ApplyNonTierMetadata. 1.0 = no change (default).
+        /// Values &lt; 1.0 slow decay; values &gt; 1.0 accelerate decay.
+        /// Used to give different Needs different "drain speeds" without
+        /// requiring explicit rates[] overrides in every Persona.
+        /// Phase 3 Engine.ApplyNonTierMetadata multiplies the base rates[]
+        /// value by this factor before storing it in a per-Need rate cache.
+        /// </summary>
+        public float decay_multiplier { get; set; } = 1.0f;
 
         /// <summary>
         /// (v0.1.5, Q-S56) Per-Need default NeedMeta. Used by Engine ctor
@@ -120,7 +200,7 @@ namespace Animo.Model {
         public NeedMeta DeepCopy() {
             // v0.1.5: NeedMeta carries only `tier` (value type).
             // Add every new field introduced in future versions here.
-            return new NeedMeta { tier = this.tier };
+            return new NeedMeta { tier = this.tier, decay_multiplier = this.decay_multiplier };
         }
     }
 
@@ -156,8 +236,10 @@ namespace Animo.Model {
     /// The contract is documented here so Phase 3 cannot regress.
     public class Needs {
         public Dictionary<string, float> values { get; set; } = new();
-        public float Get(string need) => throw new System.NotImplementedException();
-        public float Normalized(string need) => throw new System.NotImplementedException();
+        public float Get(string need) =>
+            values.TryGetValue(need, out var v) ? v : 0f;
+        public float Normalized(string need) =>
+            values.TryGetValue(need, out var v) ? v / 100f : 0f;
         // (v0.1.5, Q-S63) `Clamp()` removed. Hot path uses flat float[]
         // and Mathf.Clamp directly per §16.2; the instance method was
         // dead code that would only have surfaced as a confusing
@@ -190,6 +272,14 @@ namespace Animo.Model {
         public float coefficient { get; set; } = 0f;
 
         /// <summary>
+        /// (v0.1.5, §16.3.4 Pre-cache Principle) Baked by Engine ctor PHASE B
+        /// from _need_index. Hot-path Step 2 uses these int indices directly
+        /// instead of string lookups. -1 = not yet baked.
+        /// </summary>
+        public int source_index { get; set; } = -1;
+        public int target_index { get; set; } = -1;
+
+        /// <summary>
         /// (v0.1.5, Q-S141) Q-S134 pattern extended to all reference-type model
         /// classes that are deep-copied inside Persona.DeepCopy(). Influence
         /// carries only value-type and immutable-string fields in v0.1.5, so
@@ -200,9 +290,11 @@ namespace Animo.Model {
         /// </summary>
         public Influence DeepCopy() {
             return new Influence {
-                source = this.source,
-                target = this.target,
-                coefficient = this.coefficient
+                source       = this.source,
+                target       = this.target,
+                coefficient  = this.coefficient,
+                source_index = this.source_index,
+                target_index = this.target_index
             };
         }
     }

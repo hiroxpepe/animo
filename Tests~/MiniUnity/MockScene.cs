@@ -23,7 +23,7 @@ namespace Animo.Tests.MiniUnity {
         readonly List<MockGameObject> _objects = new();
 
         // (v0.1.5, Q-S87) Reusable scratch buffers for the per-Tick
-        // snapshot. Pre-Q-S87 Tick allocated `_objects.ToArray()` plus
+        // snapshot. Pre-Q-S87 Tick allocated `_objects.ToArray` plus
         // a fresh `new MockMonoBehaviour[comps.Count]` every frame —
         // a 1-hour Soak Test (216,000 frames) burnt ~432,000 array
         // allocations in the test infrastructure alone, defeating the

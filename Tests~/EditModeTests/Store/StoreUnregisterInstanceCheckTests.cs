@@ -31,6 +31,7 @@ namespace Animo.Tests.EditMode.StoreTests {
         sealed class FakeAgent : IAnimoAgent {
             public string agent_id { get; }
             public FakeAgent(string id) { agent_id = id; }
+            public void Affect(string need, float delta, bool force_reset = false) {}
         }
 
         [Test] public void Case01_DuplicateRejectedThenItsDestroyDoesNotEvictOriginal() {

@@ -1,36 +1,35 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ValidatorTests {
-    /// <summary>
-    /// Decision-table tests for Q-S30 / Validator rule A038 (v0.1.5):
-    /// `needs_meta[need].tier` must be in [1, 5]; out-of-range ⇒ Error.
-    /// Reference to a Need not declared in `needs` ⇒ Warning.
-    ///
-    /// Phase 3 contract: Persona gains `needs_meta: Dictionary<string, NeedMeta>`
-    /// and a new NeedMeta type with `int tier`. Validator A038 fires per the
-    /// rules above. Test bodies are Phase 3 work; this fixture pins the spec
-    /// expectation in test form (Red baseline).
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A038_NeedsMetaTierTests {
-
         [Test] public void Case01_TierOutOfRange_Errors() {
-            // Phase 3: needs_meta { oxygen: { tier: 99 } } → A038 Error.
-            // Pinned in spec §3.5.2 + §13.1 (A038 row).
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Persona.needs_meta + NeedMeta type + Validator A038 rule. " +
-                "See §3.5.2 (Q-S30) and §13.1 A038 row for the contract.");
+            var root = new Animo.Model.Root { schema_version = "1.5",
+                personas = new List<Persona> {
+                    new Persona { agent_id = "a",
+                        actions = new List<Animo.Model.Action>{ ActionOf("X","fear",2) },
+                        needs_meta = new Dictionary<string, NeedMeta>{
+                            ["oxygen"] = new NeedMeta { tier = 99 } }}}};
+            var r = Validator.Validate(root);
+            Assert.That(r.HasRuleWithSeverity("A038", Severity.Error), Is.True,
+                "A038 Stage 1: tier=99 out of [1,5] must emit Error.");
         }
-
         [Test] public void Case02_ValidTier_NoA038() {
-            // Phase 3: needs_meta { oxygen: { tier: 1 } } → no A038.
-            Assert.Fail(message: "Phase 3 implementation pending — see §3.5.2 (Q-S30).");
+            var root = new Animo.Model.Root { schema_version = "1.5",
+                personas = new List<Persona> {
+                    new Persona { agent_id = "a",
+                        needs = NeedsOf(("oxygen",40f)),
+                        actions = new List<Animo.Model.Action>{ ActionOf("X","oxygen",1) },
+                        needs_meta = new Dictionary<string, NeedMeta>{
+                            ["oxygen"] = new NeedMeta { tier = 1 } }}}};
+            var r = Validator.Validate(root);
+            Assert.That(r.HasRuleWithSeverity("A038", Severity.Error), Is.False,
+                "A038: valid tier 1 must not emit Error.");
         }
     }
 }

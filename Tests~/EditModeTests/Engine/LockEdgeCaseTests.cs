@@ -137,9 +137,14 @@ namespace Animo.Tests.EditMode.EngineTests {
             // Push fear high so internal score would prefer Flee.
             e.Affect(need: "fear", delta: +60f);
             e.Live(dt: 0.016f);
-            // commitment.bonus must still ride locked_behavior, not the internal
-            // leader. The observable: locked_behavior is unchanged.
-            Assert.That(e.locked_behavior, Is.EqualTo(expected: snapshot));
+            // (Q-S2 deep assertion) BOTH locked_behavior AND behavior must be frozen.
+            // Pre-fix: only locked_behavior was checked; e.behavior could silently change
+            // if Step 5 ran (the original implementation bug).
+            Assert.That(e.locked_behavior, Is.EqualTo(expected: snapshot),
+                "Q-S2: locked_behavior must be unchanged during Soft Lock.");
+            Assert.That(e.behavior, Is.EqualTo(expected: snapshot),
+                "Q-S2 + spec §24: e.behavior must also be frozen during Soft Lock " +
+                "(Step 5 skipped — pre-fix this assertion caught the Engine.cs:199 bug).");
         }
 
         [Test] public void Case09_HardLock_NeedsContinueToUpdate() {

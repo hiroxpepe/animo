@@ -60,7 +60,8 @@ namespace Animo.Tests.EditMode.Helpers {
             return new Threshold {
                 need = need,
                 trigger_threshold = trigger,
-                reset_threshold = reset,
+                // Q-S11/Q-S86: fill reset_threshold if not specified (mirrors Composer.FillResetThresholds)
+                reset_threshold = reset ?? (float)System.Math.Max(0.0, trigger - 5.0),
                 trigger = trigger_event
             };
         }

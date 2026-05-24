@@ -49,7 +49,7 @@ namespace Animo.Tests.EditMode.ComposerTests {
                 personas       = new List<Persona> { p }
             };
             Persona composed = Composer.Compose(persona: p, root: r);
-            string[] sources = composed.influences.Select(i => i.source).ToArray();
+            string[] sources = composed.influences!.Select(i => i.source).ToArray();
             Assert.That(sources, Is.EqualTo(expected: new[] { "hunger", "fatigue" }),
                 "Q-S20: composed influences[] must preserve Persona's authored order " +
                 "(hunger→fear first because Persona declared it); Kind's fatigue→fear " +

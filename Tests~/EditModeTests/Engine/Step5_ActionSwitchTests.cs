@@ -37,7 +37,19 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 5f, mode: LockMode.Hard); Assert.That(e.is_locked, Is.True);
         }
         [Test] public void Case04_WhenLockedSoft_StepsRunButBehaviorFrozen() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 5f, mode: LockMode.Soft); Assert.That(e.is_locked, Is.True);
+            // (Q-S2, spec §24 line 5525, DECISION LOG Q-S2)
+            // Soft Lock: Steps 1-4 run, Step 5 SKIPPED → behavior must NOT change.
+            Engine e = MakeEngine();
+            e.Live(dt: 0.016f);
+            string before = e.behavior;
+            e.Lock(duration: 5f, mode: LockMode.Soft);
+            Assert.That(e.is_locked, Is.True);
+            // Drive fear high so Flee would win if Step 5 ran.
+            e.Affect(need: "fear", delta: +99f);
+            e.Live(dt: 0.016f);
+            Assert.That(e.behavior, Is.EqualTo(expected: before),
+                "Q-S2 + spec §24: Soft Lock must freeze behavior (Step 5 skipped). " +
+                "behavior must not change even when Flee score dominates.");
         }
 
         // ─────────────────────────────────────────────────────────────────

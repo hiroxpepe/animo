@@ -47,7 +47,9 @@ namespace Animo {
         /// subsequent Initialize calls overwrite Root and clear cache.
         /// </summary>
         public static void Initialize(Root root) {
-            throw new NotImplementedException();
+            _root       = root;
+            _validation = Validator.Validate(root);
+            _cache.Clear();
         }
 
         /// <summary>
@@ -64,9 +66,36 @@ namespace Animo {
         /// (Q-S103) or stage-2 validation failure (Q-S38 fail-loud).
         /// `Agent.Awake` distinguishes the two so logs can name the
         /// real cause instead of disguising one as the other.
+        /// (Q-S144) PersonaCache throws only — logging is Agent.Awake's job.
         /// </summary>
         public static Persona GetComposed(string template_id) {
-            throw new NotImplementedException();
+            if (_root == null)
+                throw new PersonaCacheNotInitializedException(
+                    "PersonaCache.GetComposed: Initialize(root) has not been called. " +
+                    "Ensure AnimoBootstrapper runs before any Agent.Awake.");
+
+            if (_cache.TryGetValue(template_id, out var cached)) return cached;
+
+            Persona? raw = null;
+            foreach (var p in _root.personas)
+                if (p.agent_id == template_id) { raw = p; break; }
+            if (raw == null)
+                throw new PersonaTemplateRejectedException(
+                    $"PersonaCache.GetComposed: template_id '{template_id}' not found in Root.");
+
+            var composed = Composer.Compose(persona: raw, root: _root);
+            var stage2   = Validator.ValidateStage2(composed);
+
+            if (stage2.has_errors) {
+                var msgs = string.Join("; ",
+                    System.Linq.Enumerable.Select(stage2.errors, e => $"{e.rule_id}: {e.message}"));
+                throw new PersonaTemplateRejectedException(
+                    $"PersonaCache.GetComposed: template_id '{template_id}' failed stage-2: {msgs}");
+            }
+
+            if (_validation != null) _validation.Merge(stage2);
+            _cache[template_id] = composed;
+            return composed;
         }
 
         /// <summary>

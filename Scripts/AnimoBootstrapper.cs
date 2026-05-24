@@ -47,26 +47,20 @@ namespace Animo {
         [SerializeField] TextAsset? _animo_json = null;
 
         void Awake() {
-            // Phase 3 implementation per §11.6.5 spec narrative:
-            //   (Q-S133) JSON parse failure contract — fail-loud:
-            //   The parse can throw (malformed JSON, corrupted TextAsset).
-            //   Do NOT silently swallow the exception. Let it propagate so
-            //   the Unity console shows a fatal error with full stack trace,
-            //   identifying the file and line in the JSON that caused the
-            //   failure. Rationale: if Initialize is never called, every
-            //   Agent.Awake immediately throws PersonaCacheNotInitializedException
-            //   (Q-S111) with a cryptic message. The root cause (malformed JSON)
-            //   is buried. Fail-loud at the parse site is always preferable.
-            //   Phase 3 implementation pattern:
-            //     Root root;
-            //     try {
-            //         root = Animo.Json.Parse(_animo_json!.text);
-            //     } catch (System.Exception ex) {
-            //         AnimoLog.Error($"AnimoBootstrapper: failed to parse animo.json: {ex.Message}");
-            //         throw;  // re-throw: keep Unity's exception dialog and full stack trace
-            //     }
-            //     Animo.PersonaCache.Initialize(root: root);
-            throw new System.NotImplementedException();
+            // (Q-S133) JSON parse failure contract — fail-loud per §11.6.5:
+            // malformed JSON must propagate to Unity console, never be swallowed.
+            if (_animo_json == null) {
+                AnimoLog.Error("AnimoBootstrapper: _animo_json TextAsset is not assigned.");
+                return;
+            }
+            Animo.Model.Root root;
+            try {
+                root = Animo.Json.Parse(_animo_json.text);
+            } catch (System.Exception ex) {
+                AnimoLog.Error($"AnimoBootstrapper: failed to parse animo.json: {ex.Message}");
+                throw;  // re-throw: keep Unity's exception dialog + full stack trace
+            }
+            Animo.PersonaCache.Initialize(root: root);
         }
 
         void OnDestroy() {

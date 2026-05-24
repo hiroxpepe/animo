@@ -1,31 +1,27 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ValidatorTests {
-    /// <summary>
-    /// Decision-table test for Q-S57 (v0.1.5): A038 orphan check
-    /// includes rates as the 5th "in use" site. A pure-rate Need
-    /// (e.g. poison decaying via rates only, read by UI without any
-    /// Action/Influence/Threshold) does NOT trigger A038.
-    ///
-    /// Phase 3 contract: Validator.ValidateStage2 considers the union
-    /// `needs[] ∪ actions[].need ∪ influences[].source/target ∪
-    /// binding.thresholds[].need ∪ rates.keys()` when deciding whether
-    /// needs_meta entry is "in use".
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A038_RatesOnlyNeedTests {
         [Test] public void Case01_NeedReferencedOnlyInRates_DoesNotTriggerA038Orphan() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Persona with `needs: [\"poison\"]`, `needs_meta: { poison: { tier: 1 } }`, " +
-                "`rates: { poison: -0.5 }` and no actions/influences/thresholds referencing " +
-                "poison must NOT emit A038 orphan Warning. Q-S57 fix: rates.keys() is the " +
-                "5th 'in use' site.");
+            // Q-S57: rates.keys() is 5th "in use" site for A038 orphan check.
+            var root = new Animo.Model.Root { schema_version = "1.5",
+                personas = new List<Persona> {
+                    new Persona { agent_id = "a",
+                        needs = NeedsOf(("poison",50f),("idle",30f)),
+                        actions = new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) },
+                        rates = RatesOf(("poison",-0.5f)),
+                        needs_meta = new Dictionary<string, NeedMeta>{
+                            ["poison"] = new NeedMeta { tier = 1 } }}}};
+            var composed = Composer.Compose(root.personas[0], root);
+            var r = Validator.ValidateStage2(composed);
+            Assert.That(r.issues.Exists(i => i.rule_id == "A038" && i.severity == Severity.Warning), Is.False,
+                "Q-S57: Need referenced in rates must NOT emit A038 orphan Warning.");
         }
     }
 }
