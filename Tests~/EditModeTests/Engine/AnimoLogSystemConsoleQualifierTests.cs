@@ -17,17 +17,16 @@ namespace Animo.Tests.EditMode.EngineTests {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class AnimoLogSystemConsoleQualifierTests {
+        static string RepoRoot() {
+            string? d = System.IO.Directory.GetCurrentDirectory();
+            while (d != null && !System.IO.File.Exists(System.IO.Path.Combine(d, "Scripts", "Const.cs")))
+                d = System.IO.Directory.GetParent(d)?.FullName;
+            return d ?? System.IO.Directory.GetCurrentDirectory();
+        }
+
         [Test] public void Case01_PhysicalAnimoLog_UsesSystemConsoleQualifier() {
-            var roots = new[] {
-                "/home/claude/animo_full/animo",
-                System.Environment.CurrentDirectory,
-                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
-            };
             string? path = null;
-            foreach (var r in roots) {
-                var p = Path.Combine(r, "Scripts", "AnimoLog.cs");
-                if (File.Exists(p)) { path = p; break; }
-            }
+            { var p = Path.Combine(RepoRoot(), "Scripts", "AnimoLog.cs"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S127: AnimoLog.cs must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("System.Console.Error.WriteLine"),

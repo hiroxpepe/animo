@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using NUnit.Framework;
+using Animo;
 using Animo.Core;
 using Animo.Model;
 using static Animo.Tests.EditMode.Helpers.Fixture;
@@ -44,7 +45,22 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 10f); e.Unlock(); Assert.That(e.is_locked, Is.False);
         }
         [Test] public void Case06_LockDurationOver30s_TriggersA031Warning() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); Assert.DoesNotThrow(code: () => e.Lock(duration: 60f));
+            // (A031, roadmap §5.5.1) Engine.Lock with duration > LOCK_DURATION_WARN_THRESHOLD
+            // must emit AnimoLog.Warning containing "[A031]". The lock must still succeed.
+            string? captured = null;
+            AnimoLog.OnLog = (level, msg) => { if (level == "Warning") captured = msg; };
+            try {
+                Engine e = MakeEngine();
+                e.Live(dt: 0.016f);
+                Assert.DoesNotThrow(code: () => e.Lock(duration: 60f),
+                    "A031: Lock(60f) must not throw — it warns only.");
+                Assert.That(captured, Is.Not.Null,
+                    "A031: Lock(duration > 30s) must emit AnimoLog.Warning.");
+                Assert.That(captured, Does.Contain("[A031]"),
+                    "A031: Warning message must contain rule ID \"[A031]\".");
+            } finally {
+                AnimoLog.OnLog = null;
+            }
         }
         [Test] public void Case07_HardLockMode_PreventsBehaviorChange() {
             Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f, mode: LockMode.Hard);

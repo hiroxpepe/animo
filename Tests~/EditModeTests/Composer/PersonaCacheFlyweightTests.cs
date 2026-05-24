@@ -3,35 +3,37 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ComposerTests {
-    /// <summary>
-    /// Decision-table tests for Q-S29 (v0.1.5): Animo.PersonaCache must
-    /// validate the Root once at Initialize and compose each template
-    /// at most once per session.
-    ///
-    /// Phase 3 contract: `Animo.PersonaCache` static class with
-    /// Initialize(Root), GetComposed(string), ClearForTesting(). See
-    /// spec §11.6 for the full surface and §11.6.5 for the bootstrapper
-    /// pattern. Test bodies are Phase 3 work; this fixture pins the
-    /// spec expectation in test form (Red baseline).
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class PersonaCacheFlyweightTests {
+        [TearDown] public void TearDown() => PersonaCache.ClearForTesting();
 
         [Test] public void Case01_GetComposedBeforeInitialize_ThrowsInvalidOperation() {
-            // Phase 3: PersonaCache.GetComposed without prior Initialize → throws.
-            // Master's policy: fail-loud, not lazy-init.
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Animo.PersonaCache static class with Initialize+GetComposed+ClearForTesting. " +
-                "See §11.6 (Q-S29) for full contract.");
+            PersonaCache.ClearForTesting();
+            Assert.Throws<PersonaCacheNotInitializedException>(
+                () => PersonaCache.GetComposed("any"),
+                "Q-S111: GetComposed before Initialize must throw PersonaCacheNotInitializedException.");
         }
 
         [Test] public void Case02_RepeatedGetComposed_ReturnsSameInstance() {
-            // Phase 3: repeated GetComposed for same template_id → SameAs.
-            Assert.Fail(message: "Phase 3 implementation pending — see §11.6 (Q-S29).");
+            var root = new Root {
+                schema_version = "1.5",
+                personas = new List<Persona> {
+                    new Persona { agent_id = "agent_a",
+                        actions = new List<Animo.Model.Action> { ActionOf("Idle","idle",5) }}
+                }
+            };
+            PersonaCache.Initialize(root);
+            var p1 = PersonaCache.GetComposed("agent_a");
+            var p2 = PersonaCache.GetComposed("agent_a");
+            Assert.That(p2, Is.SameAs(p1),
+                "Q-S29: repeated GetComposed for same template_id must return the cached instance.");
         }
     }
 }

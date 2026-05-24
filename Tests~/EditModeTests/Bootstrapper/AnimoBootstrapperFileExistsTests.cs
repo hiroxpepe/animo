@@ -15,17 +15,16 @@ namespace Animo.Tests.EditMode.BootstrapperTests {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class AnimoBootstrapperFileExistsTests {
+        static string RepoRoot() {
+            string? d = System.IO.Directory.GetCurrentDirectory();
+            while (d != null && !System.IO.File.Exists(System.IO.Path.Combine(d, "Scripts", "Const.cs")))
+                d = System.IO.Directory.GetParent(d)?.FullName;
+            return d ?? System.IO.Directory.GetCurrentDirectory();
+        }
+
         [Test] public void Case01_AnimoBootstrapperCs_ExistsInScriptsDir() {
-            var roots = new[] {
-                "/home/claude/animo_full/animo",
-                System.Environment.CurrentDirectory,
-                Path.Combine(System.Environment.CurrentDirectory, "..", ".."),
-            };
             string? found = null;
-            foreach (var r in roots) {
-                var p = Path.Combine(r, "Scripts", "AnimoBootstrapper.cs");
-                if (File.Exists(p)) { found = p; break; }
-            }
+            { var p = Path.Combine(RepoRoot(), "Scripts", "AnimoBootstrapper.cs"); if (File.Exists(p)) found = p; }
             Assert.That(found, Is.Not.Null,
                 "Q-S97: Scripts/AnimoBootstrapper.cs must exist.");
             var text = File.ReadAllText(found!);

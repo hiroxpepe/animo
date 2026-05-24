@@ -67,11 +67,79 @@ namespace Animo {
         // ran before _composed_persona was assigned in Awake step (3).
         public string agent_id => _composed_persona?.agent_id ?? "<uninitialized>";
 
+        // (Q-S115) Optional time provider injected by test harness.
+        // null → falls back to Unity Time.deltaTime in Update.
+        ITimeProvider? _time_provider = null;
+        /// <summary>(Q-S115) Inject custom time provider for deterministic tests.</summary>
+        public void SetTimeProvider(ITimeProvider provider) => _time_provider = provider;
+
         void Awake() {
-            // Phase 3 implementation per §11.4.1 spec narrative
-            // (Q-S28 + Q-S34 + Q-S38 + Q-S64 + Q-S68 + Q-S75).
-            throw new System.NotImplementedException();
+            // (Q-S112) Warn once if Bus is null — authoring aid, not fatal.
+            if (_bus == null)
+                AnimoLog.Warning($"Agent '{name}': no Bus assigned. OnSignal events will not route.");
+
+            try {
+                // Step 1 (Q-S34): Get composed Persona from cache.
+                // Throws PersonaCacheNotInitializedException if Bootstrapper missed.
+                // Throws PersonaTemplateRejectedException if stage-2 validation failed.
+                var template = PersonaCache.GetComposed(_persona_template_id);
+
+                // Step 2 (Q-S64): Deep copy so runtime mutations stay isolated.
+                _composed_persona = template.DeepCopy();
+
+                // Step 3 (Q-S28): Override agent_id with runtime-unique value.
+                _composed_persona.agent_id = $"{_persona_template_id}_{GetInstanceID()}";
+
+                // Step 4 (Q-S34): Construct Engine with composed Persona.
+                _engine = new Engine(_composed_persona);
+
+                // Step 5 (Q-S22): Register in Store.
+                Animo.Store.Instance.Register(agent: this);
+
+                // Step 6 (Q-S102): Wire OnSignal to Bus and Animator.
+                _engine.OnSignal += OnSignalHandler;
+
+                // Step 7 (Q-S80): Seed first behavior (silent per Q-S31).
+                _engine.Live(dt: 0.0f);
+
+                // Step 8 (Q-S75): Sync Animator to initial behavior.
+                _animator?.Play(stateName: _engine.behavior);
+                _last_played_behavior = _engine.behavior;
+            }
+            catch (PersonaCacheNotInitializedException) {
+                // (Q-S111) Bootstrapper architectural error — PROPAGATE, do not catch.
+                // This represents a scene-level startup bug (wrong execution order, missing
+                // Bootstrapper). Propagating causes Unity's hard error dialog, making the
+                // root cause immediately visible. Swallowing it with AnimoLog.Error + enabled=false
+                // hides a fatal architecture error as a silent per-Agent disable.
+                throw;
+            }
+            catch (PersonaTemplateRejectedException ex) {
+                // (Q-S38 + Q-S144) Per-Agent authoring error. Keep scene alive.
+                AnimoLog.Error($"Agent '{name}' template '{_persona_template_id}' rejected: {ex.Message}");
+                enabled = false;
+            }
         }
+
+        string _last_played_behavior = "";
+
+        void OnSignalHandler(string signal_id) {
+            // (Q-S102) Publish to Bus on every signal (Step 3 threshold + Step 5 behavior).
+            _bus?.Publish(signal_id);
+            // (#1) Only call Animator.Play when behavior actually changes.
+            // Engine.OnSignal fires for BOTH Step 3 threshold events AND Step 5 behavior
+            // switches; calling Play on every signal would restart the current animation
+            // from frame 0 each time a threshold crosses, causing visible stutter.
+            string current = _engine.behavior;
+            if (current != _last_played_behavior) {
+                _animator?.Play(stateName: current);
+                _last_played_behavior = current;
+            }
+        }
+
+        /// <summary>(Q-S4) Relay external Affect from Store to this Agent's Engine.</summary>
+        public void Affect(string need, float delta, bool force_reset = false) =>
+            _engine?.Affect(need, delta, force_reset);
 
         void Update() {
             // (Q-S80) Per-frame engine tick.
@@ -91,17 +159,19 @@ namespace Animo {
             //
             // (v0.1.5, Q-S147) Guard against _engine being null when
             // Update is called before Awake completes or after Awake's
-            // Q-S38 fail-loud catch disables this Agent. Unity suppresses
-            // Update on disabled MonoBehaviours automatically, but
-            // test harnesses (MockScene.Tick) dispatch Update based only
-            // on MockGameObject.is_active — MockMonoBehaviour has no
-            // `enabled` property, so a failed Agent whose MockGameObject
-            // remains active would receive Update calls with _engine ==
-            // null and crash with NullReferenceException. The guard
-            // keeps MockScene parity with Unity's disabled-component
-            // contract. Phase 3 replaces the body; keep the guard.
+            // Q-S38 fail-loud catch disables this Agent.
+            //
+            // (#5) MockScene/MockMonoBehaviour parity was the original justification
+            // but it does not apply: MockGameObject.AddComponent<T> has the constraint
+            // `where T : MockMonoBehaviour`, and Agent extends Unity's MonoBehaviour,
+            // so MockScene cannot host an Agent — the C# type system forbids it.
+            // The guard is kept for the Unity-only race condition: between Awake
+            // throwing/disabling and the engine's next frame, Update may still fire
+            // once on a frame where `_engine` was never assigned.
             if (_engine == null) return;
-            _engine.Live(dt: Time.deltaTime);
+            // (Q-S115) Use injected ITimeProvider if available, else Unity Time.deltaTime.
+            float dt = _time_provider != null ? _time_provider.deltaTime : Time.deltaTime;
+            _engine.Live(dt: dt);
         }
 
         void OnDestroy() {

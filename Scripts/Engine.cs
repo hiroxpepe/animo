@@ -8,243 +8,471 @@ using System.Collections.Generic;
 using Animo.Model;
 
 namespace Animo.Core {
-    /// <summary>Lock mode for behavior locking (v0.1.4). See spec §24.2.1.</summary>
-    public enum LockMode {
-        Hard,
-        Soft
+    /// <summary>
+    /// (v0.1.5, Q-S115) Time abstraction for Engine.Live dt injection.
+    /// Phase 3: Agent.Update calls _engine.Live(dt: _time_provider.deltaTime).
+    /// MockTime implements this for deterministic headless tests.
+    /// </summary>
+    public interface ITimeProvider {
+        float deltaTime { get; }
     }
 
-    /// <summary>
-    /// Animo AI calculation engine. Runs the 5-step Live(dt) per frame:
-    /// natural decay → effective needs → threshold check → score → switch.
-    /// See spec §9.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
-    public class Engine {
+    public enum LockMode { Hard, Soft }
 
+    public class Engine {
         readonly Persona _persona;
 
-        // (v0.1.5, Q-S70) Lock countdown timer (§24). Decremented by
-        // `dt` at the start of every Live(dt) — the T0 timer phase
-        // per §9.2. Reaching ≤0 triggers Unlock. Pre-Q-S70 the spec
-        // referenced this field in §9.2 mermaid pseudocode and §24.3
-        // narrative but never declared it in §16.6 or in this file.
-        // Phase 3 implementation reads/writes during Live(dt) T0 and
-        // public Lock/Unlock methods. CS0414 suppressed because the
-        // field is intentionally unused in v0.1.5 stub (T0 phase
-        // implemented in Phase 3).
-        #pragma warning disable CS0414
-        float _lock_remaining = 0.0f;
-        #pragma warning restore CS0414
+        ///////////////////////////////////////////////////////////////////////
+        // Pre-allocated hot-path arrays (§16.4)
 
-        // (v0.1.5, Q-S142) Cached index of the locked action in the
-        // _action_scores float[] array. Pre-Q-S142 spec §24 and §3.4
-        // referenced `_action_scores[locked_behavior_index]` (e.g. spec
-        // line 237, 5421) but the field was never declared in §16.6 or
-        // in this file — Phase 3 implementer writing Step 4 / Step 5
-        // under Lock would hit a compile error.
-        //
-        // Cache rationale (Pre-cache Principle §16.1): Lock(duration)
-        // is called on the cold path; `_engine.behavior` at lock time is
-        // already resolved to an array index via `_need_index`. Storing the
-        // integer index avoids a Dictionary<string, int> lookup on every
-        // Hot Path Step 4 / Step 5 frame while locked. The field is -1
-        // (sentinel "not locked") when no Lock is active; Lock() sets it
-        // to the index of `behavior` at lock time; Unlock() resets to -1.
-        // CS0414 suppressed for v0.1.5 stub.
-        #pragma warning disable CS0414
-        int _locked_behavior_index = -1;
-        #pragma warning restore CS0414
+        float[] _needs;
+        float[] _effective_needs;
+        // (#4) _previous_effective_needs removed: was a Q-S23 patch residue. After Q-S25
+        //      introduced Threshold.is_above state machine, no logic reads the previous
+        //      effective snapshot — only writes remained (alloc + seed + per-frame copy).
+        float[] _action_scores;
 
-        // (v0.1.5, Q-S110) Previous-frame behavior tracker for the
-        // Q-S31 silent-first-transition contract (§16.6). Pre-Q-S110
-        // the §16.6 fields table listed `_previous_behavior` but the
-        // physical Engine.cs file declared only `_persona` and
-        // `_lock_remaining` — the Q-S70 fix for `_lock_remaining`
-        // closed the analogous gap, but the same fix was not applied
-        // to `_previous_behavior`. Phase 3 implementer writing Step 5
-        // (`if (_previous_behavior != new_behavior) RaiseSignal(...);
-        //  _previous_behavior = new_behavior;`) would hit "the name
-        // `_previous_behavior` does not exist" compile error.
-        //
-        // Initial value `""` (empty string) is the Q-S31 sentinel:
-        // the only frame where `_previous_behavior == ""` is the very
-        // first Step 5 of the Engine's life, which is exactly when
-        // the silent-first-transition contract should suppress
-        // OnSignal. After Step 5 writes a real behavior id once,
-        // the sentinel can never reappear (snake_case action ids
-        // are non-empty by A009). CS0414 suppressed for v0.1.5 stub.
-        #pragma warning disable CS0414
-        string _previous_behavior = "";
-        #pragma warning restore CS0414
+        ///////////////////////////////////////////////////////////////////////
+        // Index maps (built once in ctor; cold path only)
+
+        readonly Dictionary<string, int> _need_index;
+        readonly Dictionary<string, int> _action_id_to_index;
+        readonly Dictionary<int, int[]>  _need_tier_indices;  // per-Persona (Q-S30 + Q-S69)
+
+        ///////////////////////////////////////////////////////////////////////
+        // String cache (§16.5)
+
+        readonly Dictionary<string, string> _cached_action_triggers;
+
+        ///////////////////////////////////////////////////////////////////////
+        // State fields
+
+        float  _lock_remaining       = 0.0f;       // Q-S70
+        // (Q-S48) Per-Need decay multiplier cache. Built in PHASE C via
+        // ApplyNonTierMetadata. Applied in Step 1 to rates[] values.
+        // Index parallel to _needs[]. Default 1.0f (no change).
+        float[] _decay_rates = Array.Empty<float>();
+        // (§16.3.4 Pre-cache Principle) Flat parallel array for Step 1 (natural decay).
+        // Index = _need_index slot. Built once in PHASE B.
+        // Eliminates foreach-over-Dictionary + string TryGetValue in hot-path Step 1.
+        float[] _rates_flat  = Array.Empty<float>();
+        int    _locked_behavior_index = -1;         // Q-S142
+        string _previous_behavior    = "";          // Q-S110 / Q-S31 sentinel
+        string _current_behavior     = "";
+        bool   _force_reset_pending  = false;       // Q-S5
+
+        LockMode _lock_mode          = LockMode.Hard;
+
+        ///////////////////////////////////////////////////////////////////////
+        // Public event
+
+        public event Action<string>? OnSignal;      // Q-S26
+
+        ///////////////////////////////////////////////////////////////////////
+        // Constructor
 
         public Engine(Persona persona) {
             _persona = persona;
+
+            // ── PHASE A (Q-S27): build _need_index ────────────────────────
+            _need_index = new Dictionary<string, int>();
+            for (int i = 0; i < Const.STANDARD_NEEDS.Count; i++)
+                _need_index[Const.STANDARD_NEEDS[i]] = i;
+            int next_idx = Const.STANDARD_NEEDS.Count;
+            // (Q-S65) iterate _persona.needs?.values
+            foreach (var kv in _persona.needs?.values ?? new Dictionary<string, float>())
+                if (!_need_index.ContainsKey(kv.Key))
+                    _need_index[kv.Key] = next_idx++;
+
+            // PHASE A.2: needs_meta-only slots
+            if (_persona.needs_meta != null)
+                foreach (var m in _persona.needs_meta)
+                    if (!_need_index.ContainsKey(m.Key))
+                        _need_index[m.Key] = next_idx++;
+
+            int n = next_idx;
+            _needs                    = new float[n];
+            _effective_needs          = new float[n];
+            _decay_rates              = new float[n];
+            for (int i = 0; i < n; i++) _decay_rates[i] = 1.0f;  // default: no multiplier
+
+            // Seed _needs from spawn values (Q-S65)
+            foreach (var kv in _persona.needs?.values ?? new Dictionary<string, float>())
+                _needs[_need_index[kv.Key]] = kv.Value;
+
+            // ── PHASE B (Q-S37): bake need_index into Action/Threshold ────
+            foreach (var act in _persona.actions ?? new List<Animo.Model.Action>())
+                act.need_index = _need_index[act.need];
+            // (#2 Zero-GC) Cache thresholds List directly; avoid per-frame cast in hot path.
+            _thresholds = _persona.binding?.thresholds ?? new List<Threshold>();
+            foreach (var t in _thresholds)
+                t.need_index = _need_index[t.need];
+
+            // (§16.3.4) Bake source_index / target_index into each Influence.
+            foreach (var inf in _persona.influences ?? new List<Influence>()) {
+                inf.source_index = _need_index.TryGetValue(inf.source, out var si) ? si : -1;
+                inf.target_index = _need_index.TryGetValue(inf.target, out var ti) ? ti : -1;
+            }
+
+            // (§16.3.4) Build _rates_flat: parallel to _needs[]. Step 1 uses this
+            // flat float[] instead of foreach-over-Dictionary.
+            _rates_flat = new float[n];
+            if (_persona.rates != null)
+                foreach (var kv in _persona.rates.values)
+                    if (_need_index.TryGetValue(kv.Key, out var ri))
+                        _rates_flat[ri] = kv.Value;
+
+            // ── PHASE C (Q-S30 + Q-S69): build _need_tier_indices ─────────
+            var scratch = new Dictionary<int, List<int>>();
+            foreach (var kv in Const.NEED_INDICES_BY_TIER)
+                scratch[kv.Key] = new List<int>(kv.Value);
+            if (_persona.needs_meta != null)
+                foreach (var m in _persona.needs_meta) {
+                    bool is_std = false;
+                    foreach (var sn in Const.STANDARD_NEEDS) if (sn == m.Key) { is_std = true; break; }
+                    if (is_std) continue;
+                    int tier = m.Value.tier;
+                    if (!scratch.ContainsKey(tier)) scratch[tier] = new List<int>();
+                    scratch[tier].Add(_need_index[m.Key]);
+                }
+            _need_tier_indices = new Dictionary<int, int[]>();
+            foreach (var kv in scratch) _need_tier_indices[kv.Key] = kv.Value.ToArray();
+
+            // PHASE C Step 3: ApplyNonTierMetadata for all needs
+            foreach (var entry in _need_index) {
+                NeedMeta meta = (_persona.needs_meta != null &&
+                                 _persona.needs_meta.TryGetValue(entry.Key, out var em))
+                                ? em : NeedMeta.DefaultFor(entry.Key);
+                ApplyNonTierMetadata(entry.Value, meta);
+            }
+
+            // ── Action score array ─────────────────────────────────────────
+            _action_scores     = new float[(_persona.actions?.Count) ?? 0];
+            _action_id_to_index = new Dictionary<string, int>();
+            for (int i = 0; i < (_persona.actions?.Count ?? 0); i++)
+                _action_id_to_index[_persona.actions![i].id] = i;
+
+            // ── String cache (§16.5, Q-S46 + Q-S53) ──────────────────────
+            _cached_action_triggers = new Dictionary<string, string>();
+            string tmpl = _persona.binding?.on_action_change ?? Const.DEFAULT_ON_ACTION_CHANGE;
+            foreach (var act in _persona.actions ?? new List<Animo.Model.Action>())
+                _cached_action_triggers[act.id] = tmpl
+                    .Replace("{agent_id}", _persona.agent_id)
+                    .Replace("{behavior}",  act.id);
+            foreach (var t in _thresholds)
+                t.expanded_trigger = t.trigger.Replace("{agent_id}", _persona.agent_id);
+
+            // ── PHASE D (Q-S8 + Q-S23 + Q-S25): seed previous_eff + is_above
+            Step2_EffectiveNeeds();
+            foreach (var t in _thresholds)
+                t.is_above = _effective_needs[t.need_index] >= t.trigger_threshold;
         }
 
-        // v0.1.5 (Q-S26): output channel for fire / behavior-change
-        // signals. Engine is a pure C# library (§12.1) and does NOT
-        // hold a reference to Germio.Bus — that reference belongs to
-        // Animo.Agent (the MonoBehaviour). Engine raises this event
-        // when a Threshold fires (Step 3) or when `behavior` actually
-        // changes (Step 4 / Step 5); Agent subscribes once in Awake
-        // and forwards the payload to `Bus.Publish(signal_id)`.
-        // Pre-Q-S26 the only path described in §16.5 was a fictional
-        // `_bus.Publish(...)` call inside Engine — architecturally
-        // impossible because Engine has no Bus reference. OnSignal
-        // is the missing wire.
-        public event Action<string>? OnSignal;
+        ///////////////////////////////////////////////////////////////////////
+        // Public properties
 
-        /// <summary>Current chosen action id. Empty before the first Live().</summary>
-        /// <remarks>
-        /// (v0.1.5, Q-S34) After Agent.Awake calls Live(dt: 0.0f) once
-        /// to seed the initial behavior decision, this property carries
-        /// the spawn-time chosen Action (typically actions[0] via Q-S9
-        /// tie-break on equal scores). Hosts read this property to set
-        /// their Animator/View state directly — Q-S31's silent-first-
-        /// transition contract means OnSignal is NOT raised for the
-        /// "" → actions[0] transition, so reading this property is
-        /// the only way to know what to play. After spawn the property
-        /// stays in sync with the most recent Step 5 decision and
-        /// hosts that subscribe to OnSignal need not re-read it.
-        /// </remarks>
-        public string behavior => throw new NotImplementedException();
+        public string behavior   => _current_behavior;
+        public bool   is_locked  => _lock_remaining > 0f;  // Q-S126: computed property
+        public string locked_behavior =>
+            (_locked_behavior_index >= 0 && _persona.actions != null &&
+             _locked_behavior_index < _persona.actions.Count)
+            ? _persona.actions[_locked_behavior_index].id : "";
 
-        /// <summary>Whether the engine is in Lock state.</summary>
-        public bool is_locked => throw new NotImplementedException();
+        ///////////////////////////////////////////////////////////////////////
+        // Live(dt) — 5 steps + T0
 
-        /// <summary>The action id locked when Lock() was called. Empty if not locked.</summary>
-        public string locked_behavior => throw new NotImplementedException();
-
-        /// <summary>Advance the engine by dt seconds (5-step process).</summary>
         public void Live(float dt) {
-            throw new NotImplementedException();
+            // (Q-S117) Validate dt before any time-based math.
+            if (float.IsNaN(dt))
+                throw new ArgumentException("dt is NaN — would corrupt all Needs via decay.", nameof(dt));
+            if (dt < 0f)
+                throw new ArgumentException($"dt must be >= 0. Got {dt}.", nameof(dt));
+            // T0: Lock timer (Q-S3)
+            if (is_locked) {
+                _lock_remaining -= dt;
+                if (_lock_remaining <= 0f) {
+                    _lock_remaining = 0f;
+                    _locked_behavior_index = -1;
+                    // Unlock raises OnSignal for behavior change in Step 5 below
+                }
+            }
+
+            // Step 1: natural decay (rates)
+            // (§16.3.4 Pre-cache Principle) Use _rates_flat float[] — zero string lookup,
+            // zero Dictionary boxing. Skip slots where rate == 0 (default: no decay).
+            for (int i = 0; i < _rates_flat.Length; i++) {
+                if (_rates_flat[i] == 0f) continue;
+                // (Q-S48) Apply per-Need decay_multiplier from NeedMeta.
+                float effective_rate = _rates_flat[i] * _decay_rates[i];
+                _needs[i] = (float)System.Math.Clamp(_needs[i] + effective_rate * dt, 0f, 100f);
+            }
+
+            // Step 2: EffectiveNeeds cascade
+            Step2_EffectiveNeeds();
+
+            // Step 3: Threshold check
+            Step3_Thresholds();
+
+            // Step 4: Action score calc
+            Step4_ScoreActions();
+
+            // Step 5: switch decision.
+            // (Q-S2, spec §24 line 5525, DECISION LOG Q-S2 line 334)
+            // BOTH Hard and Soft lock skip Step 5 — behavior is frozen in both modes.
+            // Soft Lock's "inner state keeps moving" refers to Steps 1-4 (decay, cascade,
+            // threshold, score), NOT to Step 5 (switch). ROADMAP §5.6.1 3-3-k
+            // "Step 5 runs but output is frozen" was an outdated description superseded
+            // by the Q-S2 decision and spec §24 table.
+            if (!is_locked)
+                Step5_Switch();
         }
 
-        /// <summary>External stimulus. Add delta to the named Need; clamp to [0,100].</summary>
+        ///////////////////////////////////////////////////////////////////////
+        // Step 2: EffectiveNeeds
+
+        void Step2_EffectiveNeeds() {
+            // Start from base needs
+            Array.Copy(_needs, _effective_needs, _needs.Length);
+
+            if (_persona.influences == null || _persona.influences.Count == 0) return;
+
+            // (§16.3.4 Pre-cache Principle) Use pre-sorted order from Composer.
+            // Zero allocation: iterate int[] built once at compose time.
+            // If _sorted_influence_order is null (directly-constructed Persona),
+            // fall back to declaration order (safe; A025 catches cycles at validate time).
+            var edges = _persona.influences;
+            var order = _persona._sorted_influence_order;
+
+            if (order != null) {
+                for (int oi = 0; oi < order.Length; oi++) {
+                    var inf = edges[order[oi]];
+                    int si  = inf.source_index;
+                    int ti  = inf.target_index;
+                    if (si < 0 || ti < 0) continue;
+                    float intensity = _effective_needs[si] / 100f;
+                    float delta     = inf.coefficient * intensity * _effective_needs[si];
+                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
+                }
+            } else {
+                // Cold fallback: declaration order (direct Persona construction without Composer)
+                for (int i = 0; i < edges.Count; i++) {
+                    var inf = edges[i];
+                    if (!_need_index.TryGetValue(inf.source, out var si)) continue;
+                    if (!_need_index.TryGetValue(inf.target, out var ti)) continue;
+                    float intensity = _effective_needs[si] / 100f;
+                    float delta     = inf.coefficient * intensity * _effective_needs[si];
+                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 3: Thresholds
+
+        // (#2 Zero-GC) Pre-cached non-null List<Threshold> reference avoids per-frame
+        // IReadOnlyList cast boxing in Step 3 hot path. Set in ctor.
+        List<Threshold> _thresholds = null!;
+
+        void Step3_Thresholds() {
+            // foreach over concrete List<T> uses struct-enumerator (no alloc).
+            foreach (var t in _thresholds) {
+                float curr  = _effective_needs[t.need_index];
+                // (Q-S86) Composer always fills reset_threshold (Q-S11 contract).
+                // Use !.Value — NRE on first frame is the correct fail-loud signal
+                // if contract is violated (preferable to silent wrong-value fallback).
+                float reset = t.reset_threshold!.Value;
+                if (!t.is_above) {
+                    if (curr >= t.trigger_threshold) {
+                        t.is_above = true;
+                        RaiseSignal(t.expanded_trigger);
+                    }
+                } else {
+                    if (curr <= reset) t.is_above = false;
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 4: Score
+
+        void Step4_ScoreActions() {
+            if (_persona.actions == null) return;
+            for (int i = 0; i < _persona.actions.Count; i++) {
+                var act     = _persona.actions[i];
+                float eff   = _effective_needs[act.need_index];
+                float inten = eff / 100f;
+                float score = (float)System.Math.Pow(inten, act.exponent) * 100f;
+
+                // (Q-S13) While locked, the bonus-skip is suppressed.
+                // The latch (_force_reset_pending) survives the lock but does NOT
+                // skip the bonus mid-lock — it is consumed on the first post-unlock Step 4.
+                bool is_current = (act.id == _current_behavior);
+                bool locked_act = (_locked_behavior_index >= 0 && _locked_behavior_index == i);
+                bool skip_bonus = _force_reset_pending && !is_locked;
+                if ((is_current || locked_act) && !skip_bonus) {
+                    float bonus = _persona.commitment?.bonus ?? 0f;
+                    score += bonus;
+                }
+
+                // Apply Maslow dynamic suppression (§9.3.4)
+                // score × (1 - suppression_factor[act.tier] × max_lower_tier_intensity)
+                // suppression_factor is keyed on ACT.TIER (one value), not on t2 (loop var).
+                float supp_factor = 0f;
+                if (_persona.suppression != null && act.tier > 1) {
+                    // Determine the suppression coefficient for THIS action's tier.
+                    float sf = act.tier == 2 ? _persona.suppression.tier2 :
+                               act.tier == 3 ? _persona.suppression.tier3 :
+                               act.tier == 4 ? _persona.suppression.tier4 :
+                                               _persona.suppression.tier5;
+                    if (sf > 0f) {
+                        // Accumulate max need intensity from ALL lower tiers.
+                        float max_lower = 0f;
+                        for (int t2 = 1; t2 < act.tier; t2++) {
+                            if (!_need_tier_indices.TryGetValue(t2, out var idxs)) continue;
+                            foreach (var ni in idxs) {
+                                float v = _effective_needs[ni] / 100f;
+                                if (v > max_lower) max_lower = v;
+                            }
+                        }
+                        supp_factor = sf * max_lower;
+                    }
+                }
+                score *= (1f - supp_factor);
+
+                _action_scores[i] = score;
+            }
+
+            // Clear force_reset if not locked (Q-S13)
+            if (!is_locked) _force_reset_pending = false;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 5: Switch
+
+        void Step5_Switch() {
+            if (_persona.actions == null || _persona.actions.Count == 0) return;
+
+            // Pick best score (tie-break: declaration order / lowest index, Q-S9)
+            int   best_idx   = 0;
+            float best_score = _action_scores[0];
+            for (int i = 1; i < _action_scores.Length; i++)
+                if (_action_scores[i] > best_score) { best_score = _action_scores[i]; best_idx = i; }
+
+            string new_behavior = _persona.actions[best_idx].id;
+            if (new_behavior != _current_behavior) {
+                string prev = _current_behavior;
+                _current_behavior = new_behavior;
+                OnBehaviorChanged(prev, new_behavior);
+            }
+            _previous_behavior = _current_behavior;
+        }
+
+        void OnBehaviorChanged(string previous, string next_b) {
+            if (previous == "") return;  // Q-S31: silent first transition
+            if (_cached_action_triggers.TryGetValue(next_b, out var sig))
+                RaiseSignal(sig);
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Public API
+
         public void Affect(string need, float delta, bool force_reset = false) {
-            throw new NotImplementedException();
+            if (need == null) throw new ArgumentNullException(nameof(need));
+            if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
+            if (float.IsNaN(delta)) throw new ArgumentException("delta is NaN.", nameof(delta));
+            if (!_need_index.TryGetValue(need, out var idx)) {
+                AnimoLog.Warning($"Engine.Affect: need '{need}' is unknown (no-op).");
+                return;
+            }
+            float new_val;
+            if (float.IsInfinity(delta)) {
+                new_val = delta > 0 ? 100f : 0f;
+            } else {
+                new_val = (float)System.Math.Clamp(_needs[idx] + delta, 0f, 100f);
+            }
+            _needs[idx] = new_val;
+            // Also update effective_needs immediately so GetNeed() reflects the change
+            // before the next Live(dt) runs Step2 (Q-S54 semantics: GetNeed reads effective).
+            _effective_needs[idx] = new_val;
+            _force_reset_pending |= force_reset;  // Q-S5: OR-latch
         }
 
-        // (v0.1.5, Q-S86) Phase 3 implementation contract: Step3_Thresholds
-        // hot path reads `t.reset_threshold!.Value` directly, NOT
-        // `t.reset_threshold ?? Math.Max(...)`. The non-null guarantee
-        // comes from Composer.Compose (Q-S11 contract): every Threshold
-        // has its `reset_threshold` filled with `Math.Max(0f,
-        // trigger_threshold - 5f)` if the author omitted it, BEFORE
-        // returning the composed Persona. Engine.ctor receives only
-        // composed Personas (via PersonaCache.GetComposed). The
-        // null-forgiving operator (`!`) is therefore safe; a contract
-        // violation would surface as NullReferenceException on the
-        // FIRST frame's Step3, not silently as the wrong reset value.
-        // This eliminates dead code in the §16.1 zero-overhead Hot Path.
-
-        /// <summary>Lock the current behavior for duration seconds.</summary>
         public void Lock(float duration, LockMode mode = LockMode.Hard) {
-            throw new NotImplementedException();
+            // (#4) NaN guard: float.NaN > MAX → false, < 0 → false, would slip past
+            // all comparisons and write _lock_remaining = NaN, then NaN <= 0 → false
+            // every frame → permanent freeze. Fail-loud is the correct response.
+            if (float.IsNaN(duration))
+                throw new ArgumentException("Lock duration must not be NaN.", nameof(duration));
+            if (duration < 0f)
+                throw new ArgumentException($"Lock duration must be >= 0. Got {duration}.", nameof(duration));
+            // (§24.6.1) Hard cap at LOCK_DURATION_MAX before any other check.
+            if (duration > Const.LOCK_DURATION_MAX)
+                duration = Const.LOCK_DURATION_MAX;
+            // (A031) Runtime warning when duration exceeds LOCK_DURATION_WARN_THRESHOLD (30s).
+            if (duration > Const.LOCK_DURATION_WARN_THRESHOLD)
+                AnimoLog.Warning(
+                    $"[A031] Engine.Lock: duration {duration}s exceeds " +
+                    $"LOCK_DURATION_WARN_THRESHOLD ({Const.LOCK_DURATION_WARN_THRESHOLD}s). " +
+                    "Runaway Lock state risk.");
+            _lock_remaining        = duration;
+            _lock_mode             = mode;
+            if (is_locked && !string.IsNullOrEmpty(_current_behavior) &&
+                _action_id_to_index.TryGetValue(_current_behavior, out var idx))
+                _locked_behavior_index = idx;
+            else if (!is_locked)
+                _locked_behavior_index = -1;
         }
 
-        /// <summary>Manually release the lock (emergency only; auto-release is preferred).</summary>
         public void Unlock() {
-            throw new NotImplementedException();
+            _lock_remaining        = 0f;
+            _locked_behavior_index = -1;
         }
 
-        /// <summary>
-        /// Read the **effective** (post-Influence-cascade per Q-S23)
-        /// value of the named Need. Returns 0.0 for unknown needs after
-        /// a Warning. Read-only debug API (v0.1.5; semantics pinned to
-        /// effective by Q-S54); not for the hot path. Hot-path code
-        /// should use the cached EffectiveNeeds buffer (spec §16.4).
-        /// </summary>
         public float GetNeed(string need) {
-            throw new NotImplementedException();
+            if (need == null) throw new ArgumentNullException(nameof(need));
+            if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
+            if (!_need_index.TryGetValue(need, out var idx)) {
+                AnimoLog.Warning($"Engine.GetNeed: '{need}' unknown."); return 0f;
+            }
+            return _effective_needs[idx];
         }
 
-        /// <summary>
-        /// (v0.1.5, Q-S54) Read the **base** (pre-cascade) value of the
-        /// named Need. Companion to GetNeed for inspector tools that
-        /// display both layers. Returns 0.0 for unknown needs after a
-        /// Warning. Read-only debug API; not for the hot path.
-        /// </summary>
         public float GetBaseNeed(string need) {
-            throw new NotImplementedException();
+            if (need == null) throw new ArgumentNullException(nameof(need));
+            if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
+            if (!_need_index.TryGetValue(need, out var idx)) {
+                AnimoLog.Warning($"Engine.GetBaseNeed: '{need}' unknown."); return 0f;
+            }
+            return _needs[idx];
         }
 
-        // v0.1.5 (Q-S32): internal debug accessors for Animo.Tools
-        // (ScenarioRunner). Pre-Q-S32 §26.3 declared `TraceFrame` with
-        // `effective_needs`, `action_scores` Dictionaries, but Engine's
-        // public API only exposed `GetNeed(string)` — there was no way
-        // for ScenarioRunner to populate the trace. These accessors are
-        // `internal` (visible to Animo.Tools via InternalsVisibleTo)
-        // and explicitly NOT for the hot path; they allocate or copy.
-        // The hot path inside Engine uses direct float[] index access.
+        internal float GetEffectiveNeed(string need) =>
+            _need_index.TryGetValue(need, out var i) ? _effective_needs[i] : 0f;
 
-        /// <summary>(Q-S32) Read Effective Need value — for ScenarioRunner / debug.</summary>
-        internal float GetEffectiveNeed(string need) {
-            throw new NotImplementedException();
-        }
+        internal float GetActionScore(string action_id) =>
+            _action_id_to_index.TryGetValue(action_id, out var i) ? _action_scores[i] : 0f;
 
-        /// <summary>(Q-S32) Read computed Action score — for ScenarioRunner / debug.</summary>
-        internal float GetActionScore(string action_id) {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>(Q-S32) Snapshot all Need names (incl. non-standard) — for ScenarioRunner.</summary>
         internal IReadOnlyList<string> GetAllNeedNames() {
-            throw new NotImplementedException();
+            var names = new string[_need_index.Count];
+            foreach (var kv in _need_index) names[kv.Value] = kv.Key;
+            return names;
         }
 
-        /// <summary>(Q-S32) Snapshot all Action ids — for ScenarioRunner.</summary>
-        internal IReadOnlyList<string> GetAllActionIds() {
-            throw new NotImplementedException();
-        }
+        internal IReadOnlyList<string> GetAllActionIds() =>
+            _persona.actions?.ConvertAll(a => a.id) ?? new List<string>();
 
-        /// <summary>
-        /// (Q-S44) Cold-path accessor: returns the `expanded_action_change`
-        /// string for the given Action id (i.e. `binding.on_action_change`
-        /// template expanded with this Engine's runtime-unique agent_id).
-        /// Used by `Agent.Awake` step (6) to push the initial behavior to
-        /// the host's Animator through the SAME template format the Bus
-        /// path uses — keeps the host's state-name namespace consistent
-        /// between frame 1 (silent first transition, Q-S31) and all later
-        /// frames (Bus-routed via Q-S26).
-        /// Falls back to `behavior` (raw id) if the template was not
-        /// configured in `binding.on_action_change`.
-        /// Internal access — visible to Animo.Tools and Animo.Agent
-        /// callers via InternalsVisibleTo (Q-S32 + Q-S44).
-        /// </summary>
-        internal string GetExpandedActionTrigger(string behavior) {
-            throw new NotImplementedException();
-        }
+        internal string GetExpandedActionTrigger(string beh) =>
+            _cached_action_triggers.TryGetValue(beh, out var t) ? t : beh;
 
-        /// <summary>
-        /// (Q-S45 + Q-S48) Hook for non-tier `NeedMeta` fields applied
-        /// during Engine ctor PHASE C (§3.5.2). Called for both standard
-        /// and non-standard Needs — only the tier-assignment side of
-        /// PHASE C skips standard Needs. v0.1.5 has no non-tier NeedMeta
-        /// fields, so this method is a no-op (Phase 3 implements as an
-        /// empty body); v0.2 / v0.3 may add fields like
-        /// `decay_multiplier` or `label` and implement them here.
-        ///
-        /// Q-S48 fix: pre-Q-S48 the Q-S45 narrow-skip code in §3.5.2
-        /// PHASE C called this method but no declaration existed in
-        /// Engine.cs — confirmed compile error. This declaration closes
-        /// the spec-vs-code gap so the Q-S45 path is buildable.
-        /// </summary>
-        /// <param name="need_index">Resolved index (per Q-S37 PHASE B)</param>
-        /// <param name="meta">The NeedMeta entry (tier-only in v0.1.5)</param>
         private void ApplyNonTierMetadata(int need_index, NeedMeta meta) {
-            // v0.1.5: no-op. NeedMeta currently carries only `tier`,
-            // which PHASE C handles directly. Future fields apply here.
+            // (Q-S45 + Q-S48) Apply non-tier NeedMeta fields.
+            // decay_multiplier: scales the rates[] value for this Need.
+            // 1.0 = no change (default). Applied to _decay_rates[] cache;
+            // Step 1 multiplies by this factor when updating _needs[].
+            if (need_index >= 0 && need_index < _decay_rates.Length)
+                _decay_rates[need_index] = meta.decay_multiplier;
         }
 
-        // v0.1.5 (Q-S26): protected raise helper for subclass test
-        // harnesses; Engine implementation in Phase 3 invokes this from
-        // Step 3 (Threshold fire) and Step 4 / Step 5 (behavior change).
-        // Helper exists so tests with derived stubs can simulate fires
-        // without re-implementing the whole 5-step loop.
-        protected void RaiseSignal(string signal_id) {
-            OnSignal?.Invoke(obj: signal_id);
-        }
+        protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
     }
 }

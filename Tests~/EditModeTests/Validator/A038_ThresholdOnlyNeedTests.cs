@@ -1,30 +1,28 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ValidatorTests {
-    /// <summary>
-    /// Decision-table test for Q-S49 (v0.1.5): A038 orphan check broadens
-    /// to 4 sites — needs[], actions[].need, influences[].source/target,
-    /// AND binding.thresholds[].need. A Need used signal-only via Threshold
-    /// (e.g. oxygen → UI alert with no scoring action) must NOT trigger
-    /// A038 orphan Warning. Pre-Q-S49 thresholds were missing from the
-    /// "in use" list.
-    ///
-    /// Phase 3 contract: Validator.ValidateStage2 considers Threshold need
-    /// references when deciding whether needs_meta entry is "in use".
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class A038_ThresholdOnlyNeedTests {
         [Test] public void Case01_NeedUsedOnlyInThreshold_DoesNotTriggerA038Orphan() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Persona with needs_meta { oxygen: tier:1 } and binding.thresholds[].need = oxygen " +
-                "(but no actions/influences referencing oxygen) must NOT emit A038 orphan Warning. " +
-                "Q-S49 fix: thresholds[].need is the 4th 'in use' site.");
+            // Q-S49: binding.thresholds[].need is 4th "in use" site.
+            var root = new Animo.Model.Root { schema_version = "1.5",
+                personas = new List<Persona>{ new Persona { agent_id = "a",
+                    needs = NeedsOf(("fear",30f),("idle",50f)),
+                    actions = new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) },
+                    binding = new Binding { thresholds = new List<Threshold>{
+                        ThresholdOf("fear",80f,"alert") }},
+                    needs_meta = new Dictionary<string, NeedMeta>{
+                        ["fear"] = new NeedMeta { tier = 2 } }}}};
+            var composed = Composer.Compose(root.personas[0], root);
+            var r = Validator.ValidateStage2(composed);
+            bool fear_orphan = r.issues.Exists(i => i.rule_id=="A038" && i.message.Contains("fear") && i.severity==Severity.Warning);
+            Assert.That(fear_orphan, Is.False,
+                "Q-S49: Need referenced only in thresholds must NOT be A038 orphan.");
         }
     }
 }

@@ -4,104 +4,114 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace Animo.Tools {
     /// <summary>
-    /// (v0.1.5, Q-S82) Snapshot of a single simulated frame produced by
-    /// `ScenarioRunner.Run`. The runner records one TraceFrame at the
-    /// spawn boundary (t=0 after Q-S55 sweeps any t=0 events) plus one
-    /// after every `Live(dt)` tick, plus optionally one final frame at
-    /// `time == duration` for boundary events (Q-S40).
-    ///
-    /// Pre-Q-S82 §26.3 declared this type but no `Scripts/Tools/
-    /// TraceResult.cs` file existed in the repository — the
-    /// `Animo.Tools` namespace had no source to compile.
-    /// Q-S82 ships the file with field declarations matching §26.3.
-    /// Phase 3 wires up the actual recording.
-    ///
-    /// (v0.1.5, Q-S132) Phase 3 OOM risk and mitigation contract:
-    /// The current field declarations allocate three Dictionary and one List
-    /// per TraceFrame. A 1-hour Soak Test at 60 fps = 216,000 frames
-    /// × 4 heap objects = ~864,000 allocations in the test harness alone.
-    /// Phase 3 implementation MUST use a lightweight alternative:
-    ///   Option A (recommended): replace Dictionary fields with parallel
-    ///     float[] arrays and a shared string[] key array stored once in
-    ///     TraceResult (the key order is fixed per Run). Each TraceFrame
-    ///     then holds only float[] need_values, float[] effective_values,
-    ///     float[] score_values — no per-frame Dictionary allocation.
-    ///   Option B: object pool of TraceFrame instances cleared and reused
-    ///     between runs (requires clearing Dictionaries, not replacing).
-    /// Note: ScenarioRunner is NOT the Zero-GC hot path (Engine.Live is),
-    /// but soak tests (Phase 5) run the runner for 3600 seconds at 60fps;
-    /// unchecked allocation here will OOM the test runner before Phase 5
-    /// even starts. Resolve in Phase 3 before Phase 5 soak is attempted.
+    /// Single simulation frame. Recorded once per Live(dt) call.
+    /// (Q-S132) Phase 3 lightweight snapshot: stores float[] values as
+    /// Dictionary for API clarity; Phase 4 optimization may switch to
+    /// shared key arrays + parallel float[] per Q-S132 contract.
     /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     public sealed class TraceFrame {
         public float time;
         public string behavior = "";
-        public Dictionary<string, float> needs = new();
+        public Dictionary<string, float> needs          = new();
         public Dictionary<string, float> effective_needs = new();
-        public Dictionary<string, float> action_scores = new();
-        public bool is_locked;
+        public Dictionary<string, float> action_scores  = new();
+        public bool   is_locked;
         public string locked_behavior = "";
         public List<string> signals_fired = new();
     }
 
     /// <summary>
-    /// Aggregate result of a `ScenarioRunner.Run` invocation. Holds
-    /// the chronological list of `TraceFrame`s plus run-level
-    /// metadata and analysis APIs.
-    ///
-    /// (v0.1.5, Q-S93) Pre-Q-S93 this class declared only `agent_id`,
-    /// `duration`, `dt`, `frames` — but spec §26.3 promised
-    /// `behavior_count`, `behavior_total_time`, `ToCsv()`, `ToJson()`
-    /// as the analysis surface for ScenarioRunner consumers. Without
-    /// these, sim results could not be exported to CSV / JSON for
-    /// regression baselines, and behavior occupancy queries (e.g.
-    /// "did NPC spend at least 5 seconds fleeing?") had no API.
-    /// Q-S93 ships the spec-promised members as Phase 3 stubs.
+    /// (v0.1.5, Q-S93) Aggregate result of ScenarioRunner.Run.
     /// </summary>
+    /// <author>h.adachi (STUDIO MeowToon)</author>
     public sealed class TraceResult {
         public string agent_id = "";
-        public float duration;
-        public float dt;
+        public float  duration;
+        public float  dt;
         public List<TraceFrame> frames = new();
 
-        /// <summary>
-        /// (v0.1.5, Q-S93) Per-behavior occurrence count over the
-        /// recorded frames. Key = action_id (e.g. "Flee"), value =
-        /// number of frames where TraceFrame.behavior matched that id.
-        /// Phase 3 populates by iterating `frames` once at the end of
-        /// `ScenarioRunner.Run` (single pass; no re-computation per
-        /// query). v0.1.5 stub: empty Dictionary; Phase 3 implements.
-        /// </summary>
-        public Dictionary<string, int> behavior_count { get; } = new();
-
-        /// <summary>
-        /// (v0.1.5, Q-S93) Per-behavior cumulative occupancy time over
-        /// the recorded frames. Key = action_id, value = sum of `dt`
-        /// for frames where the behavior was active. Phase 3 populates
-        /// alongside `behavior_count` in the same single pass.
-        /// </summary>
+        // (Q-S93) Populated by ScenarioRunner.Run in a single post-run pass.
+        public Dictionary<string, int>   behavior_count      { get; } = new();
         public Dictionary<string, float> behavior_total_time { get; } = new();
 
         /// <summary>
-        /// (v0.1.5, Q-S93) Serialize the trace to CSV for spreadsheet
-        /// analysis. Columns: time, behavior, is_locked, locked_behavior,
-        /// {needs}, {effective_needs}, {action_scores}, signals_fired.
-        /// Phase 3 implementation handles header generation from the
-        /// first non-empty TraceFrame's keys (ensuring stable column
-        /// order across rows).
+        /// Populate behavior_count and behavior_total_time from frames[].
+        /// Called once by ScenarioRunner.Run after all frames are recorded.
         /// </summary>
-        public string ToCsv() => throw new System.NotImplementedException();
+        internal void BuildAnalysis() {
+            behavior_count.Clear();
+            behavior_total_time.Clear();
+            // (#6/#7/#9) Use frame time deltas; skip zero-time frames (spawn t=0 and
+            // boundary Live(0.0f) frames) for both count and total_time so analysis
+            // reflects real simulated time, not number of recorded snapshots.
+            for (int i = 0; i < frames.Count; i++) {
+                if (string.IsNullOrEmpty(frames[i].behavior)) continue;
+                float prev  = i > 0 ? frames[i - 1].time : 0f;
+                float delta = System.Math.Max(0f, frames[i].time - prev);
+                if (delta <= 0f) continue;  // skip zero-time frames (no real time advanced)
+                behavior_count.TryGetValue(frames[i].behavior, out var c);
+                behavior_count[frames[i].behavior] = c + 1;
+                behavior_total_time.TryGetValue(frames[i].behavior, out var t);
+                behavior_total_time[frames[i].behavior] = t + delta;
+            }
+        }
 
         /// <summary>
-        /// (v0.1.5, Q-S93) Serialize the trace to JSON for downstream
-        /// tools (regression diff, plotting). Wraps frames + metadata
-        /// + behavior_count + behavior_total_time in a root object
-        /// matching schemas/trace.schema.json (Phase 3 to define).
+        /// (Q-S93) Serialize to CSV. Columns: time, behavior, is_locked,
+        /// locked_behavior, needs.*, effective_needs.*, action_scores.*, signals_fired.
+        /// Column order is stable (sorted keys) for regression diffing.
         /// </summary>
-        public string ToJson() => throw new System.NotImplementedException();
+        public string ToCsv() {
+            if (frames.Count == 0) return "";
+            var need_keys   = SortedKeys(frames[0].needs);
+            var eff_keys    = SortedKeys(frames[0].effective_needs);
+            var score_keys  = SortedKeys(frames[0].action_scores);
+
+            var ic = CultureInfo.InvariantCulture;
+            var sb = new StringBuilder();
+            // Header
+            sb.Append("time,behavior,is_locked,locked_behavior");
+            foreach (var k in need_keys)  sb.Append($",needs.{k}");
+            foreach (var k in eff_keys)   sb.Append($",eff.{k}");
+            foreach (var k in score_keys) sb.Append($",score.{k}");
+            sb.AppendLine(",signals_fired");
+
+            // Rows
+            foreach (var f in frames) {
+                sb.Append($"{f.time.ToString("F4", ic)},{Csv(f.behavior)},{f.is_locked},{Csv(f.locked_behavior)}");
+                foreach (var k in need_keys)  sb.Append($",{f.needs.GetValueOrDefault(k).ToString("F4", ic)}");
+                foreach (var k in eff_keys)   sb.Append($",{f.effective_needs.GetValueOrDefault(k).ToString("F4", ic)}");
+                foreach (var k in score_keys) sb.Append($",{f.action_scores.GetValueOrDefault(k).ToString("F4", ic)}");
+                sb.AppendLine($",\"{string.Join(";", f.signals_fired)}\"");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>(Q-S93) Serialize to JSON.</summary>
+        public string ToJson() {
+            var obj = new {
+                agent_id,
+                duration,
+                dt,
+                behavior_count,
+                behavior_total_time,
+                frames
+            };
+            return JsonConvert.SerializeObject(obj, Formatting.Indented);
+        }
+
+        static List<string> SortedKeys(Dictionary<string, float> d) {
+            var keys = new List<string>(d.Keys);
+            keys.Sort(System.StringComparer.Ordinal);
+            return keys;
+        }
+        static string Csv(string s) =>
+            s.Contains(',') || s.Contains('"') ? $"\"{s.Replace("\"", "\"\"")}\"" : s;
     }
 }

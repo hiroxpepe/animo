@@ -54,7 +54,7 @@ namespace Animo.Tests.EditMode.ComposerTests {
                 personas       = new List<Persona> { p }
             };
             Persona composed = Composer.Compose(persona: p, root: r);
-            string[] ids = composed.actions.Select(a => a.id).ToArray();
+            string[] ids = composed.actions!.Select(a => a.id).ToArray();
             Assert.That(ids, Is.EqualTo(expected: new[] { "Idle", "Flee", "Eat" }),
                 "Q-S19: composed actions[] must preserve Persona's declared order; " +
                 "unmatched Kind ids append at the tail");
@@ -84,7 +84,7 @@ namespace Animo.Tests.EditMode.ComposerTests {
             };
             Root r = new Root { schema_version = "1.5", kinds = new List<Kind> { k }, personas = new List<Persona> { p } };
             Persona composed = Composer.Compose(persona: p, root: r);
-            string[] ids = composed.actions.Select(a => a.id).ToArray();
+            string[] ids = composed.actions!.Select(a => a.id).ToArray();
             Assert.That(ids, Is.EqualTo(expected: new[] { "Idle", "Flee", "Eat" }),
                 "Q-S19: Persona [Idle] alone produces [Idle] first, Kind [Flee, Eat] appended");
         }

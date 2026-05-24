@@ -1,32 +1,36 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table test for Q-S65 (v0.1.5): Engine ctor PHASE A
-    /// loops correctly unwrap `_persona.needs?.values` (Dictionary)
-    /// rather than the `Needs` wrapper class itself. Pre-Q-S65 the
-    /// code wrote `_persona.needs ?? new Dictionary<string, float>()`
-    /// — confirmed type-mismatch compile error.
-    ///
-    /// Phase 3 contract: Engine ctor accepts a Persona with `needs`
-    /// = null, with `needs.values` = empty, and with `needs.values`
-    /// populated. All three produce a valid Engine without
-    /// NullReferenceException.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class PhaseANeedsUnwrapTests {
         [Test] public void Case01_PersonaWithNullNeeds_DoesNotThrow() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "new Engine(persona) where persona.needs == null must NOT throw " +
-                "NullReferenceException. Q-S65 fix: foreach (var kv in " +
-                "_persona.needs?.values ?? new Dictionary<string, float>()) — null-safe " +
-                "via ?.values + ?? fallback.");
+            var p = new Persona { agent_id = "a",
+                needs = null,
+                actions = new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) }
+            };
+            Assert.DoesNotThrow(() => new Engine(p),
+                "Q-S65: null needs must not throw NRE in PHASE A.");
+        }
+        [Test] public void Case02_PersonaWithNeedsValues_CorrectlySeeded() {
+            var p = new Persona { agent_id = "a",
+                needs = NeedsOf(("fear",40f)),
+                actions = new List<Animo.Model.Action>{ ActionOf("Flee","fear",2) }
+            };
+            var e = new Engine(p);
+            Assert.That(e.GetBaseNeed("fear"), Is.EqualTo(40f),
+                "Q-S65: needs.values must be correctly seeded in _needs array.");
+        }
+        [Test] public void Case03_NeedsValuesDictionaryDirectReference_DoesNotThrow() {
+            var p = new Persona { agent_id = "a",
+                needs = NeedsOf(("idle",30f), ("fear",50f)),
+                actions = new List<Animo.Model.Action>{ ActionOf("X","idle",5) }
+            };
+            Assert.DoesNotThrow(() => new Engine(p),
+                "Q-S65: _persona.needs?.values unwrap must not throw.");
         }
     }
 }

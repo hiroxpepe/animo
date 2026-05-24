@@ -1,27 +1,26 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Tools;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.ToolsTests {
-    /// <summary>
-    /// Decision-table test for Q-S35 (v0.1.5): ScenarioRunner.Run with
-    /// duration=10.0f, dt=0.1f must call Engine.Live exactly 100 times,
-    /// not 101. Q-S33's `<= duration + EPSILON` ran one extra Live;
-    /// Q-S35 final form (strict `<` outer + post-loop sweep) is exact.
-    ///
-    /// Phase 3 contract: total Live calls = floor(duration / dt).
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class ScenarioRunnerOverShootTests {
+        Root MakeRoot() => new Root { schema_version="1.5",
+            personas = new List<Persona>{ new Persona { agent_id="a",
+                needs=NeedsOf(("idle",30f)),
+                actions=new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) }}}};
+
         [Test] public void Case01_DurationExactMultipleOfDt_DoesNotOverShoot() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Animo.Tools.ScenarioRunner.Run(duration: 10.0f, dt: 0.1f) must call " +
-                "Engine.Live exactly 100 times. Pre-Q-S35 the EPSILON form ran 101 times. " +
-                "See §26.3.1 + §26.3.1a (Q-S35 final form) for the iteration trace.");
+            var runner = new ScenarioRunner(MakeRoot());
+            var result = runner.Run("a", duration: 10.0f, dt: 0.1f);
+            // Exactly 100 Live(dt) calls, no overshoot
+            Assert.That(result.frames.Count, Is.EqualTo(101),
+                "Q-S35: exactly 100 Live(dt) calls, no extra frame.");
+            float last_time = result.frames[result.frames.Count - 1].time;
+            Assert.That(last_time, Is.EqualTo(10.0f).Within(0.001f),
+                "last frame time must be duration (10.0f).");
         }
     }
 }

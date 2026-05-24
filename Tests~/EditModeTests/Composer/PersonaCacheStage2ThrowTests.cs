@@ -3,29 +3,33 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.ComposerTests {
     /// <summary>
-    /// Decision-table test for Q-S38 (v0.1.5): PersonaCache.GetComposed
-    /// MUST throw InvalidOperationException when stage-2 validation
-    /// reports errors (e.g. composed actions[] empty per A036).
-    /// Pre-Q-S38 it logged and returned the broken Persona, letting
-    /// Engine build and crash on first Live(dt) inside Update().
-    ///
-    /// Phase 3 contract: GetComposed throws; Agent.Awake catches
-    /// and disables itself; the rest of the scene continues.
+    /// Q-S38: PersonaCache.GetComposed throws when stage-2 validation has errors.
     /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class PersonaCacheStage2ThrowTests {
+        [TearDown] public void TearDown() => PersonaCache.ClearForTesting();
+
         [Test] public void Case01_Stage2HasErrors_GetComposedThrowsInvalidOperationException() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "PersonaCache.GetComposed must throw InvalidOperationException when " +
-                "Validator.ValidateStage2(composed) returns HasErrors==true (e.g. A036). " +
-                "Pre-Q-S38 the broken Persona was returned and Engine crashed on first " +
-                "Live via Q-S9 actions.First() on empty list. See §11.6 GetComposed " +
-                "code (Q-S38) for the throw + §11.4.1 Awake code for the catch.");
+            // A Persona with no actions (A036 Error: composed actions[] empty).
+            var root = new Root {
+                schema_version = "1.5",
+                personas = new List<Persona> {
+                    new Persona { agent_id = "broken", kind_ids = new List<string>() }
+                }
+            };
+            PersonaCache.Initialize(root);
+            Assert.Throws<PersonaTemplateRejectedException>(
+                () => PersonaCache.GetComposed("broken"),
+                "Q-S38: PersonaCache.GetComposed must throw PersonaTemplateRejectedException " +
+                "when stage-2 has errors (A036: composed actions[] empty).");
         }
     }
 }

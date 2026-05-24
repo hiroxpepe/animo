@@ -1,31 +1,30 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table test for Q-S44 (v0.1.5): Engine.GetExpandedActionTrigger
-    /// returns the same template-expanded string OnBehaviorChanged would
-    /// publish to Bus, for the named behavior. Used by Agent.Awake step
-    /// (6) to keep frame-1 Animator state-name format consistent with
-    /// frame-2+ Bus payloads.
-    ///
-    /// Phase 3 contract: GetExpandedActionTrigger("flee") returns
-    /// e.g. "animo_goblin_47291_flee" (template-expanded with the
-    /// runtime-unique agent_id from Q-S28 override). Falls back to
-    /// the raw behavior id if binding.on_action_change is unset.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class GetExpandedActionTriggerTests {
         [Test] public void Case01_KnownBehavior_ReturnsTemplateExpandedTrigger() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "Engine.GetExpandedActionTrigger(behavior) must read _cached_action_triggers " +
-                "and return the template-expanded form (same as OnBehaviorChanged would publish). " +
-                "Q-S44 fix for Q-S34's frame-1-vs-frame-2 Animator state-name asymmetry.");
+            var p = new Persona { agent_id = "goblin_01",
+                needs = NeedsOf(("idle",50f)),
+                actions = new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) },
+                binding = new Binding { on_action_change = "animo_{agent_id}_{behavior}" }
+            };
+            var e = new Engine(p);
+            Assert.That(e.GetExpandedActionTrigger("Idle"), Is.EqualTo("animo_goblin_01_Idle"),
+                "Q-S44: GetExpandedActionTrigger must return template-expanded string.");
+        }
+        [Test] public void Case02_IsInvokableOnConstructedEngine() {
+            var p = new Persona { agent_id = "a",
+                needs = NeedsOf(("idle",30f)),
+                actions = new List<Animo.Model.Action>{ ActionOf("Idle","idle",5) }
+            };
+            var e = new Engine(p);
+            Assert.DoesNotThrow(() => e.GetExpandedActionTrigger("Idle"),
+                "Q-S46: GetExpandedActionTrigger must be callable on a constructed Engine.");
         }
     }
 }

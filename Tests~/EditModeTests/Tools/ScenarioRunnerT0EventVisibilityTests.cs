@@ -1,30 +1,26 @@
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 #nullable enable
-
+using System.Collections.Generic;
 using NUnit.Framework;
-
+using Animo.Tools;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.ToolsTests {
-    /// <summary>
-    /// Decision-table test for Q-S55 (v0.1.5): ScenarioRunner sweeps
-    /// `events[next].time <= 0.0f` BEFORE the spawn Live(0.0f) +
-    /// RecordTraceFrame(0.0f). A t=0 event modifies Need values
-    /// observably in the trace's first frame.
-    ///
-    /// Phase 3 contract: events = [{ time: 0.0, ev: Affect("fear", +50) }]
-    /// produces TraceResult.frames[0].time == 0.0 with fear == 50
-    /// (or whatever spawn-+-50 evaluates to).
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class ScenarioRunnerT0EventVisibilityTests {
+        Root MakeRoot() => new Root { schema_version="1.5",
+            personas = new List<Persona>{ new Persona { agent_id="a",
+                needs=NeedsOf(("fear",10f),("idle",30f)),
+                actions=new List<Animo.Model.Action>{ ActionOf("Idle","idle",5), ActionOf("Flee","fear",2) }}}};
+
         [Test] public void Case01_T0Event_VisibleInFrameAtTimeZero() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "ScenarioRunner.Run(events: [{ time: 0.0, ev: Affect(\"fear\", +50) }], ...) " +
-                "must produce a TraceResult whose frames[0].time == 0.0 and shows fear with " +
-                "the +50 already applied. Pre-Q-S55 the t=0 event was deferred to first " +
-                "loop iteration, leaving frames[0] showing pre-Affect spawn state.");
+            var events = new List<TimedAffectEvent>{
+                new TimedAffectEvent(0f, new AffectEvent("fear", +50f)) };
+            var runner = new ScenarioRunner(MakeRoot());
+            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            // frames[0] is after t=0 Affect → fear should be 60
+            float fear_at_spawn = result.frames[0].effective_needs.GetValueOrDefault("fear", 0f);
+            Assert.That(fear_at_spawn, Is.EqualTo(60f).Within(0.1f),
+                "Q-S55: t=0 event must be visible in spawn frame (frames[0]).");
         }
     }
 }

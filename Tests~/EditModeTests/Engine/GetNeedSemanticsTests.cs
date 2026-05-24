@@ -3,30 +3,48 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using NUnit.Framework;
+using Animo.Core;
+using Animo.Model;
+using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>
-    /// Decision-table tests for Q-S54 (v0.1.5): GetNeed returns
-    /// effective_needs (post-Influence-cascade per Q-S23); GetBaseNeed
-    /// returns base _needs (pre-cascade). Pre-Q-S54 the spec said
-    /// "current value" without disambiguation, leaving inspector tools
-    /// unable to reason about cascade-driven behavior.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class GetNeedSemanticsTests {
-        [Test] public void Case01_GetNeed_ReturnsEffective_AfterInfluenceCascade() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "With Influence amplifying fear from base 30 to effective 80, " +
-                "Engine.GetNeed(\"fear\") must return 80 (the value Step 4 actually consumes), " +
-                "not 30. Q-S54 fix: GetNeed reads _effective_needs.");
+        [Test] public void Case01_GetNeedReturnsEffective_AfterInfluenceCascade() {
+            // Q-S54: GetNeed = effective (post-cascade).
+            var p = new Persona {
+                agent_id = "a",
+                needs = NeedsOf(("fear",30f),("confidence",50f)),
+                actions = new List<Animo.Model.Action> { ActionOf("X","fear",2) },
+                influences = new List<Influence> {
+                    new Influence { source="fear", target="confidence", coefficient=1.0f }
+                }
+            };
+            var e = new Engine(p);
+            e.Live(0.1f);
+            // After cascade, confidence should be elevated
+            float eff_confidence = e.GetNeed("confidence");
+            Assert.That(eff_confidence, Is.GreaterThan(50f),
+                "Q-S54: GetNeed('confidence') must return effective (post-cascade) value.");
         }
 
-        [Test] public void Case02_GetBaseNeed_ReturnsBase_BypassingCascade() {
-            Assert.Fail(message: "Phase 3 implementation pending: " +
-                "GetBaseNeed(\"fear\") must return the base (pre-cascade) value (e.g. 30 in " +
-                "the Case01 setup), giving inspector tools a way to read both layers.");
+        [Test] public void Case02_GetBaseNeedReturnsBase_BeforeCascade() {
+            // Q-S54: GetBaseNeed = base (pre-cascade).
+            var p = new Persona {
+                agent_id = "a",
+                needs = NeedsOf(("fear",30f),("confidence",50f)),
+                actions = new List<Animo.Model.Action> { ActionOf("X","fear",2) },
+                influences = new List<Influence> {
+                    new Influence { source="fear", target="confidence", coefficient=1.0f }
+                }
+            };
+            var e = new Engine(p);
+            e.Live(0.1f);
+            float base_confidence = e.GetBaseNeed("confidence");
+            Assert.That(base_confidence, Is.EqualTo(50f).Within(0.01f),
+                "Q-S54: GetBaseNeed must return base (pre-cascade) value.");
         }
     }
 }

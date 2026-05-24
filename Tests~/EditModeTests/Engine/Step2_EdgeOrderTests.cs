@@ -81,9 +81,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             // re-ordered influences[] internally (e.g. by source for
             // hot-path packing), Q-S24's determinism contract would
             // break before Step 2 even ran.
-            string[] targets = new string[composed.influences.Count];
-            for (int i = 0; i < composed.influences.Count; i++) {
-                targets[i] = composed.influences[i].target;
+            string[] targets = new string[composed.influences!.Count];
+            for (int i = 0; i < composed.influences!.Count; i++) {
+                targets[i] = composed.influences![i].target;
             }
             Assert.That(targets, Is.EqualTo(expected: new[] { "A", "B", "C" }),
                 "Q-S24: composed influences[] must preserve the LLM's authored order " +

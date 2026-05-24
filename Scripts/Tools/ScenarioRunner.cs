@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
 using Animo.Core;
 using Animo.Model;
 
@@ -142,7 +143,122 @@ namespace Animo.Tools {
             IReadOnlyList<TimedAffectEvent>?  events = null,
             string?                           agent_id_override = null
         ) {
-            throw new System.NotImplementedException();
+            // (Q-S117) dt <= 0 fail-loud
+            if (dt <= 0f)
+                throw new System.ArgumentException(
+                    $"dt must be > 0. Got {dt}.", nameof(dt));
+
+            // (Q-S145) empty agent_id_override is fail-loud
+            if (agent_id_override is string ov && ov.Length == 0)
+                throw new System.ArgumentException(
+                    "agent_id_override must be null or non-empty string.", nameof(agent_id_override));
+
+            // Build composed Persona (deep copy for isolation)
+            Persona? raw = null;
+            foreach (var p in _root.personas)
+                if (p.agent_id == agent_id) { raw = p; break; }
+            if (raw == null)
+                throw new System.ArgumentException(
+                    $"agent_id '{agent_id}' not found in Root.", nameof(agent_id));
+
+            // (#2) Route through PersonaCache.GetComposed so the same Stage 2 validation
+            // gate that protects Unity Agents (PersonaTemplateRejectedException on A036
+            // composed-actions-empty, etc.) also protects ScenarioRunner. Prior direct
+            // Composer.Compose call let invalid templates crash at Live() inside Step 5.
+            // GetComposed returns a shared composed template; DeepCopy so per-run mutation
+            // (agent_id override) doesn't corrupt the cache for concurrent runs.
+            var composed = Animo.PersonaCache.GetComposed(agent_id).DeepCopy();
+            string effective_id = agent_id_override ?? $"{agent_id}_run_{_seq++}";
+            composed.agent_id   = effective_id;
+
+            _engine = new Engine(composed);
+
+            // (#2 Q-S26) Subscribe to Engine.OnSignal so signals_fired is populated per frame.
+            var _pending_signals = new System.Collections.Generic.List<string>();
+            _engine.OnSignal += s => _pending_signals.Add(s);
+            var result = new TraceResult();
+
+            // (#5 + Q-S35) Normalize and sort events by time. spec §26.3.1 requires
+            // events to be time-ordered; the next-pointer loop below would silently
+            // skip out-of-order events. Internal stable sort ensures correctness even
+            // when callers pass an unsorted list. Sort is O(N log N) once at run start.
+            // (#3) Use stable OrderBy (LINQ) to preserve original insertion order for
+            // same-time events — Array.Sort is unstable per .NET spec and would break
+            // the Q-S35 "forward-pointer preserves authored order" contract.
+            TimedAffectEvent[] ev_list;
+            if (events == null) {
+                ev_list = System.Array.Empty<TimedAffectEvent>();
+            } else {
+                ev_list = events.OrderBy(e => e.time).ToArray();
+            }
+            int next = 0;
+
+            // (Q-S55) Sweep events[next].time <= 0.0f BEFORE spawn Live(0.0f).
+            // Includes negative-time events (hand-built tests, pre-t0 priming).
+            while (next < ev_list.Length && ev_list[next].time <= 0.0f) {
+                _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+                next++;
+            }
+
+            // Spawn frame (Q-S34)
+            _engine.Live(0.0f);
+            RecordFrame(result, 0f, _engine, _pending_signals);
+
+            // (Q-S84 + Q-S98) Integer step counter with double-precision Math.Round.
+            int   total_steps = (int)System.Math.Round((double)duration / (double)dt);
+            bool  boundary_consumed = false;
+
+            for (int step = 0; step < total_steps; step++) {
+                float frame_end = (step + 1) * dt;
+
+                // (Q-S35) Consume events within the upcoming frame window (next pointer, O(1) per frame).
+                while (next < ev_list.Length && ev_list[next].time < frame_end) {
+                    _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+                    next++;
+                }
+
+                _engine.Live(dt);
+                RecordFrame(result, frame_end, _engine, _pending_signals);
+            }
+
+            // (Q-S40) Post-loop sweep: events at time == duration (or missed by loop).
+            bool sweep_any = false;
+            while (next < ev_list.Length && ev_list[next].time <= duration) {
+                _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+                next++;
+                sweep_any = true;
+            }
+            if (sweep_any) {
+                _engine.Live(0.0f);
+                RecordFrame(result, duration, _engine, _pending_signals);
+            }
+
+            // (Q-S93) Populate analysis counters in a single post-run pass.
+            result.agent_id  = effective_id;
+            result.duration  = duration;
+            result.dt        = dt;
+            result.BuildAnalysis();
+            return result;
+        }
+
+        static void RecordFrame(TraceResult result, float time, Engine engine,
+                                   System.Collections.Generic.List<string> pending_signals) {
+            var frame = new TraceFrame();
+            frame.time            = time;
+            frame.behavior        = engine.behavior;
+            frame.is_locked       = engine.is_locked;
+            frame.locked_behavior = engine.locked_behavior;
+            // (#1 Q-S62) Collect signals fired since last frame and clear the buffer.
+            frame.signals_fired.AddRange(pending_signals);
+            pending_signals.Clear();
+            var names = engine.GetAllNeedNames();
+            foreach (var n in names) {
+                frame.needs[n]           = engine.GetBaseNeed(n);
+                frame.effective_needs[n] = engine.GetNeed(n);
+            }
+            foreach (var aid in engine.GetAllActionIds())
+                frame.action_scores[aid] = engine.GetActionScore(aid);
+            result.frames.Add(frame);
         }
     }
 }
