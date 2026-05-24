@@ -188,10 +188,16 @@ namespace Animo {
             // "Agent.OnDestroy must call Engine.Unlock() to prevent
             // leftover lock state when scenes change." Unlock is
             // idempotent (no-op if not locked), so calling it here is
-            // always safe. Phase 3 must keep this call BEFORE the
-            // Store.Unregister below — Unlock may publish an OnSignal
-            // event (behavior-change upon release), and the Agent must
-            // still be registered at that point for Bus routing to work.
+            // always safe. Defensive cleanup: clears _lock_remaining and
+            // _locked_behavior_index so the Engine leaves a consistent state.
+            //
+            // (#3 Phase_3_5_2) NOTE: An earlier comment claimed "Unlock may publish
+            // an OnSignal event (behavior-change upon release), so Store.Unregister
+            // must come after." That was a fact error — Engine.Unlock() only resets
+            // two fields; OnSignal is raised by Step 5 inside Live(dt), not by Unlock
+            // itself. Since OnDestroy is the agent's last frame, no Live(dt) will run
+            // again. The Unlock/Unregister order is therefore semantically free; we
+            // keep Unlock first as defensive ordering for future code changes.
             _engine?.Unlock();
             // (Q-S22) Instance-equality-checked unregister.
             Animo.Store.Instance.Unregister(agent: this);

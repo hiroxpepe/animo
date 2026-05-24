@@ -2,10 +2,10 @@
 
 > **The Master Plan: from spec FIX to commercial-grade release**
 > **Document version**: 1.0
-> **Status**: Active (Phase 1 complete, Phase 2 next)
-> **Last updated**: 2026-05-08
+> **Status**: Active — Phase 1/2/3 complete (v0.3.0-alpha), Phase 4 next
+> **Last updated**: end of Phase 3 (Task 3-6 Exit Gate)
 > **Author**: STUDIO MeowToon — h.adachi
-> **Companion spec**: [`animo_spec_v0.1.4_EN.md`](animo_spec_v0.1.4_EN.md)
+> **Companion spec**: [`animo_spec_v0.1.5_EN.md`](animo_spec_v0.1.5_EN.md)
 
 ---
 
@@ -119,10 +119,15 @@ Phase 2 and 3 take half of the total. This is on purpose. The proof has to hold 
 
 ### 3.2 Deliverables (already done)
 
+> **Note**: The spec files listed below were the Phase 1 output. Phase 2-4
+> superseded them with `animo_spec_v0.1.5_EN.md` / `animo_spec_v0.1.5_JP.md`
+> after Gemini adversarial review (Q-S1..Q-S151). The v0.1.4 files no longer
+> exist in the repo; use the v0.1.5 successors for any current reference.
+
 | Artifact | Location |
 |---|---|
-| English specification (reference) | `docs/animo_spec_v0.1.4_EN.md` |
-| Japanese specification | `docs/animo_spec_v0.1.4_JP.md` |
+| English specification (reference, superseded) | `docs/animo_spec_v0.1.5_EN.md` |
+| Japanese specification (superseded) | `docs/animo_spec_v0.1.5_JP.md` |
 | README | `README.md` |
 | LICENSE (MIT) | `LICENSE` |
 | Git history | 7 commits, `3b8f3b4` to `1e7c082` |

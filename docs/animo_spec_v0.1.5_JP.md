@@ -1,7 +1,7 @@
 # Animo 仕様書
 
 > **Maslow-driven Utility AI for Game Agents**
-> **v0.1.5-design** / 2026-05-09
+> **v0.1.5** (Phase 3 implementation complete, v0.3.0-alpha) / originally 2026-05-09
 > STUDIO MeowToon — h.adachi
 > github.com/hiroxpepe/animo
 
