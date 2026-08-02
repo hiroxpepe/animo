@@ -4,11 +4,10 @@
 >
 > Part of the **G+B+A stack** (Germio + Briko + Animo).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status: Phase 3 Complete](https://img.shields.io/badge/Status-Phase%203%20Complete-brightgreen.svg)](docs/state_of_animo_v0.3.0-alpha.md)
-[![Spec: v0.1.5](https://img.shields.io/badge/Spec-v0.1.5-blue.svg)](docs/animo_spec_v0.1.5_EN.md)
-[![Build: v0.3.0-alpha](https://img.shields.io/badge/Build-v0.3.0--alpha-brightgreen.svg)](CHANGELOG.md)
-[![Tests: 452 Green](https://img.shields.io/badge/Tests-452%20Green-brightgreen.svg)](docs/state_of_animo_v0.3.0-alpha.md)
+[![.NET](https://img.shields.io/badge/.NET-8-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Phase](https://img.shields.io/badge/phase-3-blue)]()
+[![Version](https://img.shields.io/badge/version-v0.3.9-orange)]()
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
 
