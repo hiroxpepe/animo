@@ -17,7 +17,7 @@ Animo is a **Utility AI engine** for game agents — enemies, NPCs, anything tha
 
 It models inner motivation using **Maslow's hierarchy of needs**.
 You write a JSON file describing what an agent *cares about*.
-The engine reads it, simulates internal needs over time, and decides what the agent does next — with no behavior tree, no state machine, and no string lookups in the hot path.
+The engine reads it, works out inner needs over time, and decides what the agent does next — with no behavior tree, no state machine, and no string lookups in the hot path.
 
 > **Germio asks "what". Briko asks "where". Animo asks "why".**
 
@@ -29,13 +29,13 @@ The engine reads it, simulates internal needs over time, and decides what the ag
 flowchart LR
   subgraph Q["The Three Questions of Game AI"]
     direction LR
-    QW["<b>WHAT</b><br/>What happens<br/>game logic"]
-    QH["<b>WHERE</b><br/>Where it happens<br/>level layout"]
-    QY["<b>WHY</b><br/>Why it acts<br/>agent inner state"]
+    QW["WHAT<br/>What happens<br/>game logic"]
+    QH["WHERE<br/>Where it happens<br/>level layout"]
+    QY["WHY<br/>Why it acts<br/>agent inner state"]
   end
-  G["<b>Germio</b><br/>v0.5.19"]
-  B["<b>Briko</b><br/>v0.1.0"]
-  A["<b>Animo</b><br/>v0.3.0"]
+  G["Germio<br/>v0.5.19"]
+  B["Briko<br/>v0.1.0"]
+  A["Animo<br/>v0.3.0"]
   QW --> G
   QH --> B
   QY --> A
@@ -45,7 +45,7 @@ flowchart LR
 ```
 
 Animo is the **WHY** layer.
-Most game AI mixes *what* the agent does with *why* it does it. Animo separates them — and that separation is the whole point.
+Most game AI mixes *what* the agent does with *why* it does it. Animo keeps them apart — and that is the whole point.
 
 ---
 
@@ -58,12 +58,12 @@ Most game AI mixes *what* the agent does with *why* it does it. Animo separates 
 
 ```mermaid
 flowchart LR
-  P0["<b>Phase 0</b><br/>Concept<br/>v0.1.0"]
-  P1["<b>Phase 1</b><br/>Design<br/>v0.1.5"]
-  P2["<b>Phase 2</b><br/>Schema + Red tests<br/>v0.2.0"]
-  P3["<b>Phase 3</b><br/>Core Engine<br/>v0.3.0"]
-  P4["<b>Phase 4</b><br/>Unity integration<br/>v0.4.0"]
-  P5["<b>Phase 5</b><br/>Stabilize<br/>v1.0.0"]
+  P0["Phase 0<br/>Concept<br/>v0.1.0"]
+  P1["Phase 1<br/>Design<br/>v0.1.5"]
+  P2["Phase 2<br/>Schema + Red tests<br/>v0.2.0"]
+  P3["Phase 3<br/>Core Engine<br/>v0.3.0"]
+  P4["Phase 4<br/>Unity integration<br/>v0.4.0"]
+  P5["Phase 5<br/>Stabilize<br/>v1.0.0"]
   P0 --> P1 --> P2 --> P3 --> P4 --> P5
   style P0 fill:#d1fae5,stroke:#059669
   style P1 fill:#d1fae5,stroke:#059669
@@ -186,9 +186,9 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  Animo["<b>Animo</b><br/>Agent / Store / Const<br/><i>Unity layer</i>"]
-  Core["<b>Animo.Core</b><br/>Engine / Composer / Validator<br/><i>logic layer</i>"]
-  Model["<b>Animo.Model</b><br/>Root / Kind / Persona / Needs<br/><i>pure data layer</i>"]
+  Animo["Animo<br/>Agent / Store / Const<br/><i>Unity layer</i>"]
+  Core["Animo.Core<br/>Engine / Composer / Validator<br/><i>logic layer</i>"]
+  Model["Animo.Model<br/>Root / Kind / Persona / Needs<br/><i>pure data layer</i>"]
   Animo -->|"uses"| Core
   Animo -->|"uses"| Model
   Core -->|"uses"| Model
@@ -211,12 +211,12 @@ Every Animo agent runs the same 5 steps each frame. The Lock mechanism (v0.1.4) 
 ```mermaid
 flowchart TB
   Start(["Live(dt) called"])
-  S1["<b>Step 1: natural decay</b><br/>update each Need with Rates<br/><i>Clamp [0, 100]</i>"]
-  S2["<b>Step 2: EffectiveNeeds</b><br/>apply influences in topo-sorted order<br/><i>Clamp after each edge</i>"]
-  S3["<b>Step 3: Threshold check</b><br/>compare with previous frame<br/><i>Bus.Publish (cached strings)</i>"]
-  S4["<b>Step 4: Action score calc</b><br/>dynamic Maslow suppression<br/><i>add commitment.bonus to current</i>"]
+  S1["Step 1: natural decay<br/>update each Need with Rates<br/><i>Clamp [0, 100]</i>"]
+  S2["Step 2: EffectiveNeeds<br/>apply influences in topo-sorted order<br/><i>Clamp after each edge</i>"]
+  S3["Step 3: Threshold check<br/>compare with previous frame<br/><i>Bus.Publish (cached strings)</i>"]
+  S4["Step 4: Action score calc<br/>dynamic Maslow suppression<br/><i>add commitment.bonus to current</i>"]
   Lock{"is_locked?<br/>(v0.1.4)"}
-  S5["<b>Step 5: switch decision</b><br/>pick best score"]
+  S5["Step 5: switch decision<br/>pick best score"]
   Skip["Skip Step 5<br/>keep locked behavior"]
   End(["update behavior"])
   Start --> S1 --> S2 --> S3 --> S4 --> Lock
@@ -237,11 +237,11 @@ The piece that makes Animo *Maslow*. Low-tier needs (survival) suppress high-tie
 
 ```mermaid
 flowchart TB
-  T1["<b>Tier 1: Physiological</b><br/>hunger, thirst, sleep"]
-  T2["<b>Tier 2: Safety</b><br/>fear, shelter"]
-  T3["<b>Tier 3: Social</b><br/>belonging, affection"]
-  T4["<b>Tier 4: Esteem</b><br/>status, recognition"]
-  T5["<b>Tier 5: Self-actualization</b><br/>curiosity, creativity"]
+  T1["Tier 1: Physiological<br/>hunger, thirst, sleep"]
+  T2["Tier 2: Safety<br/>fear, shelter"]
+  T3["Tier 3: Social<br/>belonging, affection"]
+  T4["Tier 4: Esteem<br/>status, recognition"]
+  T5["Tier 5: Self-actualization<br/>curiosity, creativity"]
   T1 -.->|"suppresses if<br/>Tier 1 high"| T2
   T2 -.->|"suppresses if<br/>Tier 2 high"| T3
   T3 -.->|"suppresses if<br/>Tier 3 high"| T4
@@ -284,8 +284,8 @@ Every `animo.json` is checked against `Schemas/animo.schema.json` (JSON Schema *
 ```mermaid
 flowchart LR
   JSON["animo.json"]
-  Schema["Schemas/animo.schema.json<br/><b>Draft-07</b><br/>type / structure / range / pattern"]
-  Validator["Animo.Core.Validator<br/><b>semantics</b><br/>cross-field / cycles / templates"]
+  Schema["Schemas/animo.schema.json<br/>Draft-07<br/>type / structure / range / pattern"]
+  Validator["Animo.Core.Validator<br/>semantics<br/>cross-field / cycles / templates"]
   Engine["Engine accepts"]
   JSON --> Schema --> Validator --> Engine
   style Schema fill:#e8f4f8,stroke:#0369a1

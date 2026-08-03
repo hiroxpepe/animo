@@ -1,14 +1,14 @@
 # Animo Test Plan — Phase 2 Red Baseline (v0.1.5)
 
 > **Status**: This is the **Phase 2 design document**. The Red baseline has
-> since transitioned to **Phase 3 Green**: 447 EditMode tests + 5 MiniUnity
+> since moved to **Phase 3 Green**: 447 EditMode tests + 5 MiniUnity
 > self-tests = 452 Green, 0 Red, 0 Skipped (Debug + Release) as of
 > v0.3.0. The numerical totals below describe the original Phase 2
 > Red baseline at planning time, not the current state. See
 > [`state_of_animo_v0.3.0.md`](state_of_animo_v0.3.0.md) and
 > [`benchmarks_v0.3.0.md`](benchmarks_v0.3.0.md) for the current state.
 
-This document is the decision table specification for Phase 2 Tasks 2-3
+This document is the decision-table plan for Phase 2 Tasks 2-3
 and 2-4. Every row of every table maps to one `[Test]` method in
 `Tests~/EditModeTests/`.
 
@@ -21,14 +21,14 @@ and 2-4. Every row of every table maps to one `[Test]` method in
 + 4 EdgeCases test files
 + **~205 test methods** (v0.1.4 baseline 183 + v0.1.5 deltas)
 
-All tests are Red until Phase 3 implements the production classes. The 4
+All tests are Red until Phase 3 builds the real classes. The 4
 MiniUnity self-tests are the only Green tests in this phase.
 
 ---
 
 ## Validator Decision Tables (A000–A032)
 
-### A000 — schema_version exists and is not empty
+### A000 — schema_version is there and not empty
 
 | #   | Input                        | Expected   |
 | --- | ---------------------------- | ---------- |
@@ -36,7 +36,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | empty string schema_version  | Error A000 |
 | 03  | valid schema_version `"1.4"` | Pass       |
 
-### A001 — personas exists and is not empty
+### A001 — personas is there and not empty
 
 | #   | Input                | Expected   |
 | --- | -------------------- | ---------- |
@@ -66,7 +66,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 03  | duplicate kind_id | Error A003 |
 | 04  | valid kind_id     | Pass       |
 
-### A004 — persona.kind_ids reference exists in kinds
+### A004 — persona.kind_ids points to a kind that is there
 
 | #   | Input                                    | Expected   |
 | --- | ---------------------------------------- | ---------- |
@@ -74,7 +74,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | defined kind_id                          | Pass       |
 | 03  | partially undefined `["goblin","ghost"]` | Error A004 |
 
-### A005 — needs values in [0, 100]
+### A005 — needs values are in [0, 100]
 
 | #   | Input                 | Expected   |
 | --- | --------------------- | ---------- |
@@ -108,7 +108,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | exponent 5.1  | Error A008 |
 | 03  | exponent 5.0  | Pass       |
 
-### A009 — actions[].id not empty
+### A009 — actions[].id is not empty
 
 | #   | Input       | Expected   |
 | --- | ----------- | ---------- |
@@ -123,7 +123,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | trigger -10           | Error A010 |
 | 03  | trigger 100, reset 90 | Pass       |
 
-### A011 — persona without kind_ids must have actions
+### A011 — a persona with no kind_ids must have actions
 
 | #   | Input                         | Expected   |
 | --- | ----------------------------- | ---------- |
@@ -161,7 +161,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 01  | `x_{behavior}_y` | Error A015 |
 | 02  | `x_{agent_id}_y` | Pass       |
 
-### A016 — binding missing (Warning)
+### A016 — binding is missing (Warning)
 
 | #   | Input           | Expected     |
 | --- | --------------- | ------------ |
@@ -180,7 +180,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | --- | ----------------- | ------------------ |
 | 01  | kind_id 129 chars | Error A018 OR A003 |
 
-### A019 — unknown needs key looks like typo (Warning)
+### A019 — an unknown needs key looks like a typo (Warning)
 
 | #   | Input                      | Expected       |
 | --- | -------------------------- | -------------- |
@@ -230,14 +230,14 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | trigger 60, reset 70 | Error A023 |
 | 03  | trigger 80, reset 70 | Pass       |
 
-### A024 — idle action should be tier 5 (Warning)
+### A024 — the idle action should be tier 5 (Warning)
 
 | #   | Input          | Expected     |
 | --- | -------------- | ------------ |
 | 01  | idle at tier 1 | Warning A024 |
 | 02  | idle at tier 5 | Pass         |
 
-### A025 — cycle in influences (Error since v0.1.2)
+### A025 — a cycle in influences (Error since v0.1.2)
 
 | #   | Input                          | Expected   |
 | --- | ------------------------------ | ---------- |
@@ -473,17 +473,14 @@ Need value side; it is now covered by `GetNeedTests.Case03`.
 
 ### Threading (Q17, spec §27)
 
-Documented as main-thread only. No test added — the contract is
-documentary. A misuse test would require a thread to misuse, which is
-outside the EditMode test runner's scope.
+Written down as main-thread only. No test added — the rule is only written down, not tested. A misuse test would need a thread to misuse, which is outside what the EditMode test runner can do.
 
 ---
 
 ## Phase_2_4_3 — Lock pipeline sub-questions (Q-S1, Q-S2, Q-S3)
 
-These three resolutions pinned previously-undefined corners of the Lock
-specification. See `docs/decisions/v0.1.5_ambiguity_resolution.md` and
-spec §24.3.1 / §24.4.1 / §9.2 (T0 phase) for the rationale.
+These three answers pinned down corners of the Lock spec that were open before. See `docs/decisions/v0.1.5_ambiguity_resolution.md` and
+spec §24.3.1 / §24.4.1 / §9.2 (T0 phase) for the reasons.
 
 ### LockEdgeCase additions
 
@@ -496,23 +493,20 @@ spec §24.3.1 / §24.4.1 / §9.2 (T0 phase) for the rationale.
 
 ### Bus injection (deferred to Phase 3)
 
-Direct verification that Step 3 Bus.Publish *fires* during Lock (vs.
-"Need updates" indirection) requires a MockBus injection point on the
-Engine constructor. That is filed as a Phase 3 testability follow-up;
-v0.1.5 nails the Need-update precondition that makes the Threshold
-firing possible at all.
+To check straight that Step 3 Bus.Publish *fires* during Lock (not by the
+"Need updates" side road) we need a MockBus put into the Engine constructor. That is left as a Phase 3 follow-up; v0.1.5 pins down the Need-update step
+that makes the Threshold fire at all.
 
 ---
 
 ## Phase_2_4_4 — API surface sub-questions (Q-S4, Q-S5, Q-S6)
 
-These three close C# idiom and operational-reality gaps in the user-
-facing API. See `docs/decisions/v0.1.5_ambiguity_resolution.md` and
-spec §9.7.2 / §11.2 / §26.3 for the rationale.
+These three close C# habit gaps and real-use gaps in the API the user sees. See `docs/decisions/v0.1.5_ambiguity_resolution.md` and
+spec §9.7.2 / §11.2 / §26.3 for the reasons.
 
 ### Q-S4 — ScenarioRunner timed events
 
-Spec-only fix; `ScenarioRunner` is implemented in Phase 6 so no Red test
+A spec-only fix; `ScenarioRunner` is implemented in Phase 6 so no Red test
 is added in the Phase 2 baseline. The signature change (Dict → list)
 is recorded in spec §26.3.
 
@@ -535,8 +529,8 @@ is recorded in spec §26.3.
 
 ## Phase_2_4_5 — Frame-1 / startup sub-questions (Q-S7, Q-S8, Q-S9)
 
-These three close startup-time gaps (Awake crash, first-frame threshold
-storm, all-zero tie-break). See decision log Q-S7/S8/S9 and spec §10.3,
+These three close startup gaps: an Awake crash, a first-frame threshold
+storm, and an all-zero tie-break. See the decision log Q-S7/S8/S9 and spec §10.3,
 §13.1 A016, §16.4-5, §9.2.0a, §9.2 Step 5.
 
 ### Q-S7 — Composer fills missing Binding (new Composer test file)

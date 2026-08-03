@@ -2,24 +2,23 @@
 
 **Date**: end of Phase 3 (Task 3-6 Exit Gate complete)
 **Author**: h.adachi (STUDIO MeowToon)
-**Status**: Core engine functionally complete; Unity integration and packaging pending.
+**Status**: The core engine works; Unity integration and packaging are still to do.
 
-This document captures a snapshot of Animo at the close of Phase 3. It serves
-two purposes:
+This document is a snapshot of Animo at the end of Phase 3. It has two aims:
 
-1. **Status assessment** — what works, what is proven, what is shipped.
-2. **Gap analysis** — what is missing between "engineering complete" and
-   "product complete", with a prioritized action list for Phase 4+.
+1. **Status** — what works, what is proven, what is shipped.
+2. **Gap** — what is missing between "engineering done" and "product done",
+   with an ordered action list for Phase 4 and on.
 
 ---
 
-## 1. Phase Progression Overview
+## 1. Phase Overview
 
 ```mermaid
 flowchart LR
-  P1["<b>Phase 1</b><br/>Spec Definition<br/>v0.1.0"]
-  P2["<b>Phase 2</b><br/>Red Baseline +<br/>Spec Stabilization<br/>v0.2.0"]
-  P3["<b>Phase 3</b><br/>Core Engine +<br/>ScenarioRunner<br/><b>v0.3.0</b>"]
+  P1["Phase 1<br/>Spec Definition<br/>v0.1.0"]
+  P2["Phase 2<br/>Red Baseline +<br/>Spec Stabilization<br/>v0.2.0"]
+  P3["Phase 3<br/>Core Engine +<br/>ScenarioRunner<br/>v0.3.0"]
   P4["Phase 4<br/>Unity Integration<br/>+ CLI<br/>v0.4.0"]
   P5["Phase 5<br/>Asset Store +<br/>Production Polish<br/>v1.0.0"]
 
@@ -32,11 +31,11 @@ flowchart LR
   style P5 fill:#fff,stroke-dasharray:4 4
 ```
 
-We are at the boundary between Phase 3 (done) and Phase 4 (next).
+We are at the line between Phase 3 (done) and Phase 4 (next).
 
 ---
 
-## 2. What Phase 3 Delivers
+## 2. What Phase 3 Gives
 
 ### 2.1 Test and Build Status
 
@@ -107,9 +106,9 @@ flowchart TB
 references — verified by grep. They run identically inside Unity and in a
 headless CLI.
 
-### 2.4 Refinement Discipline
+### 2.4 How the Work Was Checked
 
-Across 5 rounds of Gemini adversarial review during Phase 3 implementation:
+Across 5 rounds of hard Gemini review during Phase 3:
 
 ```mermaid
 pie title "Gemini critiques (28 total)"
@@ -118,25 +117,25 @@ pie title "Gemini critiques (28 total)"
   "Deferred (Phase 4 spec)" : 1
 ```
 
-Each critique was settled by physical `grep` of the codebase, not by argument
-or AI consensus.
+Each note was settled by a real `grep` of the code, not by argument or by an
+AI agreeing with itself.
 
 ---
 
 ## 3. Where Animo Stands as a Product
 
-### 3.1 Honest evaluation per dimension
+### 3.1 An Honest Score per Part
 
-| Dimension                       | Stars | Verdict                             |
-| ------------------------------- | ----- | ----------------------------------- |
-| Engineering quality             | ★★★★★ | Commercial-grade core               |
-| Test discipline                 | ★★★★★ | 452 Green, physically verified      |
-| Performance                     | ★★★★★ | 10x margin against 10 µs target     |
-| Spec precision                  | ★★★★★ | 151 Q-S patches, all traceable      |
-| Product completeness            | ★★★☆☆ | Functional core, no shipping skin   |
-| Market readiness                | ★★☆☆☆ | No Quick Start, no demo, no package |
-| Monetization (today)            | ★★☆☆☆ | Effectively zero until Phase 4+     |
-| Educational / methodology value | ★★★★★ | Case study in LLM-driven OSS        |
+| Dimension                       | Stars | Verdict                                 |
+| ------------------------------- | ----- | --------------------------------------- |
+| Engineering quality             | ★★★★★ | Ready for real use                      |
+| Test discipline                 | ★★★★★ | 452 Green, physically verified          |
+| Performance                     | ★★★★★ | 10x margin against 10 µs target         |
+| Spec precision                  | ★★★★★ | 151 Q-S patches, all traceable          |
+| Product completeness            | ★★★☆☆ | The core works, but has no product skin |
+| Market readiness                | ★★☆☆☆ | No start guide, no demo, no package     |
+| Monetization (today)            | ★★☆☆☆ | Almost none until Phase 4 and on        |
+| Educational / methodology value | ★★★★★ | A worked example of LLM-led OSS         |
 
 ### 3.2 What Animo IS today
 
@@ -276,7 +275,7 @@ gantt
     G-7 Test depth audit     :p4d, after p4a, 2w
 ```
 
-The dates above are illustrative scaffolding, not a commitment.
+The dates above are only a rough shape, not a promise.
 
 ---
 
@@ -289,8 +288,8 @@ The dates above are illustrative scaffolding, not a commitment.
 | Behavior Designer Pro | not disclosed  | not disclosed       | API doc only    | $95       |
 | NodeCanvas            | not disclosed  | not disclosed       | tutorial-heavy  | $95       |
 
-Animo's **engineering rigor and transparency** exceed the commercial
-incumbents. The current gap is **product polish**, not engineering quality.
+Animo's **care in building and its openness** go past the paid tools. The gap
+now is **product finish**, not build quality.
 
 ---
 

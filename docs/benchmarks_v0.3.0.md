@@ -1,7 +1,7 @@
 # Animo Performance Benchmarks — v0.3.0
 
 **Date**: Phase_3_5_1
-**Build**: .NET 8.0 / Release configuration
+**Build**: .NET 8.0 / Release build
 **Platform**: Windows 11 (developer machine)
 **Status**: ✅ All zero-GC contracts honored
 
@@ -31,7 +31,7 @@ long alloc_after  = GC.GetAllocatedBytesForCurrentThread();
 Assert.That(alloc_after - alloc_before, Is.EqualTo(0));
 ```
 
-## Realistic Persona Fixture
+## A Real-Case Persona
 
 Benchmarks use a representative Persona profile:
 
@@ -46,7 +46,7 @@ This profile exercises every Step (1–5) of `Live(dt)` including Maslow dynamic
 suppression, Influence cascade with topological order, commitment bonus,
 threshold hysteresis with OnSignal, and tie-break logic.
 
-## Zero-GC Architecture Enablers
+## What Makes Zero-GC Hold
 
 The zero-allocation contract is achieved through these architectural decisions
 (spec §16.1–16.5):
@@ -70,9 +70,9 @@ The zero-allocation contract is achieved through these architectural decisions
 Measured on a developer-grade machine; representative not authoritative.
 
 + `Live(dt)` ≈ **0.86 µs** per call (86ms / 100,000 calls)
-+ Per-Live target: < 10 µs ✅ (10x margin)
-+ 100 agents @ 60 fps frame budget: 16.67 ms — Animo consumes ~86 µs (0.5%)
-+ 1000 agents @ 60 fps: ~860 µs (5% of frame budget)
++ Per-Live aim: < 10 µs ✅ (10x room)
++ 100 agents @ 60 fps frame time: 16.67 ms — Animo consumes ~86 µs (0.5%)
++ 1000 agents @ 60 fps: ~860 µs (5% of frame time)
 
 ## What Is NOT Zero-Alloc (and Why)
 
@@ -82,7 +82,7 @@ Measured on a developer-grade machine; representative not authoritative.
 + Per-frame `TraceFrame` + 3 inner Dictionaries (needs, effective, scores)
 + `signals_fired` capture buffer
 
-These are part of the observation surface for trace analysis and CSV export.
+These are part of the observation surface so a run can be studied and sent out as CSV.
 The underlying engine loop remains zero-alloc; allocation is linear in frame
 count (verified by `ScenarioRunnerAllocationTests`).
 

@@ -1,0 +1,136 @@
+# Technical Terms
+
+> The one place where the technical terms are given their sense.
+> The writing standard turns off the simple-word rule only for words in this
+> list. If a term is not here, do not use it in a document — add it here first.
+> The sense of each term is given in simple words, so a reader whose first
+> language is not English, and an agent too, can take it in.
+
+Each entry has a short sense, and where it helps, a note on how the term is
+used in real work. This list is tuned to this repository: it keeps the terms
+that any repository needs, and adds the terms of the utility AI engine.
+
+---
+
+## Version control (Git)
+
+**repository** — The place where all the files of a project are kept, together
+with the full record of their changes over time. Often said in the short form
+"repo".
+
+**commit** — To put a set of changes into the record of the repository, as one
+step with a note on what changed. Also the name of that one saved step.
+
+**push** — To send the commits made on your own machine up to the shared
+repository.
+
+**pull** — To get the newest commits from the shared repository down to your
+own machine.
+
+**branch** — A line of commits that goes its own way, apart from the main line.
+The main line is often named `master` or `main`.
+
+**PAT** — Short for "personal access token". A secret key that lets a tool act
+on a repository in your name, without a password each time.
+
+---
+
+## Language models and agents
+
+**LLM** — Short for "large language model". A model that takes in words and
+gives back words. It is not sure or fixed: the same input may give a different
+output. For this reason its work is kept to judgment, not to sure steps.
+
+**agent** — An LLM set up to do work on its own: it reads, it makes a choice,
+it takes an act, and it goes on by steps toward an end.
+
+**prompt** — The words given to an LLM to set it to work.
+
+---
+
+## Programs and interfaces
+
+**API** — Short for "application programming interface". A fixed way for one
+program to ask another program to do something or give data.
+
+**CLI** — Short for "command-line interface". A program run by typing a line,
+not by clicking.
+
+**C#** — The language this engine is written in. It runs on the dot-net
+platform.
+
+**JSON** — A plain-text way to write down data as names and values. In this
+project you write a persona as a JSON file, and the engine reads it.
+
+**Unity** — A program for making games in 3D. The engine can run inside it, or
+on its own with no window.
+
+---
+
+## The engine
+
+**agent** (in game) — A thing in a game that acts on its own: an enemy, a
+non-player character, anything that needs to want something. Not to be mixed up
+with an LLM agent above; here it is the game character the engine drives.
+
+**utility AI** — A way to choose what an agent does by giving each possible act
+a score, then taking the act with the top score. No behavior tree, no state
+machine.
+
+**need** — One inner drive of an agent, such as hunger or rest. It rises and
+falls over time. The set of needs is what the agent cares about.
+
+**Maslow hierarchy** — A known ordering of human needs, from the base ones
+(food, safety) up to the higher ones. The engine uses this shape to order an
+agent's needs.
+
+**tier** — The level of a need in the Maslow order. Base needs are tier 1; the
+higher needs are tier 2 and up.
+
+**suppression** — The way the engine holds down the higher tiers while a base
+need is not yet met, so first things come first.
+
+**score** — A number the engine works out for each possible act, from the
+current needs. The act with the top score is the one the agent takes.
+
+**influence** — A tie between two needs, where a change in one moves the other.
+
+**cascade** — The run of influences in order, where each one may move the next.
+
+**threshold** — A set point on a need. When the need goes past it, the engine
+fires a signal, so the agent can act on it.
+
+**commitment** — A short hold on the agent's current act, with a bonus to its
+score, so the agent does not flip from one act to another every frame.
+
+**hot path** — The part of the code that runs very often, every frame. It must
+be fast and must make no new memory, or the game slows down.
+
+**allocation** — The making of new memory while the code runs. The hot path
+aims for zero allocation.
+
+**zero-alloc** — Short for zero allocation: a path that makes no new memory.
+
+**zero-GC** — A state where the hot path makes no new memory, so the system
+that cleans up memory never has to run there. This keeps the frame time even.
+
+**persona** — The JSON file that describes one agent: its needs, and what it
+cares about. The engine reads a persona and brings the agent to life.
+
+**Composer** — The part that builds a full persona from its kinds, folding
+their fields together in order.
+
+**Validator** — The part that checks a persona file for faults before it runs,
+by a set of named rules (A000 and up).
+
+**ScenarioRunner** — A tool that runs a persona through a set path of steps, so
+its behavior can be watched and tested without a full game.
+
+---
+
+## How to keep this list
+
++ One term, one sense. Give the sense in one place only — here.
++ Keep the sense in simple words, by the writing standard.
++ Add a term **before** it is first used in any document.
++ When a term is no longer used anywhere, it may be taken out.
