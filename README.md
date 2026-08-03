@@ -5,8 +5,8 @@
 > Part of the **G+B+A stack** (Germio + Briko + Animo).
 
 [![.NET](https://img.shields.io/badge/.NET-8-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Phase](https://img.shields.io/badge/phase-3-blue)]()
-[![Version](https://img.shields.io/badge/version-v0.3.9-orange)]()
+![Phase](https://img.shields.io/badge/phase-3-blue)
+![Version](https://img.shields.io/badge/version-v0.3.9-orange)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
@@ -78,12 +78,12 @@ proven (452 tests Green, zero-GC verified), and Unity-independent (`Animo.Core` 
 `Animo.Model` / `Animo.Tools` have zero `UnityEngine` references). Phase 4 wraps
 the proven core in Unity components and ships a CLI runner.
 
-- 📄 [English specification (current)](docs/animo_spec_v0.1.5_EN.md) — implementation truth
-- 📄 [Japanese specification](docs/animo_spec_v0.1.5_JP.md) — original design discussion
-- 📊 [State of Animo v0.3.0](docs/state_of_animo_v0.3.0.md) — Phase 3 retrospective + Phase 4 gap analysis
-- ⚡ [Benchmarks v0.3.0](docs/benchmarks_v0.3.0.md) — zero-GC measurement methodology
-- 📝 [CHANGELOG](CHANGELOG.md) — release notes
-- 🗺️ [Roadmap to v1.0.0](docs/animo_roadmap_to_v1.0.0.md)
++ 📄 [English specification (current)](docs/animo_spec_v0.1.5_EN.md) — implementation truth
++ 📄 [Japanese specification](docs/animo_spec_v0.1.5_JP.md) — original design discussion
++ 📊 [State of Animo v0.3.0](docs/state_of_animo_v0.3.0.md) — Phase 3 retrospective + Phase 4 gap analysis
++ ⚡ [Benchmarks v0.3.0](docs/benchmarks_v0.3.0.md) — zero-GC measurement methodology
++ 📝 [CHANGELOG](CHANGELOG.md) — release notes
++ 🗺️ [Roadmap to v1.0.0](docs/animo_roadmap_to_v1.0.0.md)
 
 ---
 
@@ -295,11 +295,11 @@ flowchart LR
 
 Three reference personas live under `examples/`:
 
-| Sample | Style | Notes |
-|---|---|---|
-| `goblin_scout.json` | Zelda-style monster | multi-kind (`goblin` + `scout`), standard 8 Needs, threshold with hysteresis |
-| `tanukichi.json` | Animal Crossing-style NPC | three-kind cascade (`villager` + `energetic`), binding without thresholds |
-| `shiori.json` | Tokimeki-style heroine | custom Needs (`anger`, `longing`, `jealousy`), three-kind cascade, two thresholds |
+| Sample              | Style                     | Notes                                                                             |
+| ------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `goblin_scout.json` | Zelda-style monster       | multi-kind (`goblin` + `scout`), standard 8 Needs, threshold with hysteresis      |
+| `tanukichi.json`    | Animal Crossing-style NPC | three-kind cascade (`villager` + `energetic`), binding without thresholds         |
+| `shiori.json`       | Tokimeki-style heroine    | custom Needs (`anger`, `longing`, `jealousy`), three-kind cascade, two thresholds |
 
 All three validate Green; a 25-case negative test confirms the schema rejects malformed input as expected (including empty `thresholds[]`, out-of-range needs, non-snake_case keys, and unknown fields).
 
@@ -354,16 +354,17 @@ flowchart LR
 
 The breakdown matches the spec's decomposition (§13 Validator rules, §10 Composer, §9 Engine, §4.6.3 Edge catalog):
 
-| Layer | Files | Tests |
-|---|---|---|
-| Validator (A000–A032, A020 split into a/b/c) | 35 | 92 |
-| Composer (deep copy, cascade, fill, multi-kind) | 4 | 24 |
-| Engine (5 steps + Maslow / Commitment / Lock / ForceReset) | 9 | 44 |
-| Edge cases (numeric, empty/null, volume, time) | 4 | 23 |
-| **Total** | **52** | **183** |
+| Layer                                                      | Files  | Tests   |
+| ---------------------------------------------------------- | ------ | ------- |
+| Validator (A000–A032, A020 split into a/b/c)               | 35     | 92      |
+| Composer (deep copy, cascade, fill, multi-kind)            | 4      | 24      |
+| Engine (5 steps + Maslow / Commitment / Lock / ForceReset) | 9      | 44      |
+| Edge cases (numeric, empty/null, volume, time)             | 4      | 23      |
+| **Total**                                                  | **52** | **183** |
 
 The 4 MiniUnity self-tests are the only Green tests at this stage. Combined runner output:
-```
+
+```text
 Tests run: 187, Passed: 4, Failed: 183
 ```
 
@@ -441,20 +442,20 @@ Across Gemini reviews 5–21, the cumulative score is **79 hits, 79 adopted, 0 h
 
 The 9 true hits and the 3 hallucinations:
 
-| Verdict | Attack | Resolution |
-|---|---|---|
-| ✅ true | Agent.Update missing — NPCs would freeze after Awake | Q-S80 adds `void Update() { _engine.Live(dt: Time.deltaTime); }` |
-| ✅ true | Store.Unregister signature mismatch (concrete `Animo.Agent` vs interface `IAnimoAgent`) | Q-S81 unifies on interface form |
-| ✅ true | Scripts/Tools/ScenarioRunner.cs + TraceResult.cs files missing | Q-S82 ships the directory + 3 files |
-| ✅ true | Scripts/Agent.cs file missing despite §11.4.1 spec narrative | Q-S83 ships the file (`#if UNITY_5_3_OR_NEWER` bracketed) |
-| ✅ true | ScenarioRunner `current_time += dt` IEEE-754 drift breaks Q-S35's "exactly floor(duration / dt)" promise | Q-S84 switches to integer `for (int i = 0; i < total_steps; i++)` |
-| ✅ true | ThresholdsMatch EPSILON non-transitive → merge non-deterministic on input order | Q-S85 codifies first-occurrence-wins semantics |
-| ✅ true | Step3 `reset_threshold ?? Math.Max(...)` is dead code per Q-S11 contract | Q-S86 replaces with `t.reset_threshold!.Value` |
-| ✅ true | MockScene Tick allocates ToArray + new[] every frame → 432K allocs in 1-hour Soak Test | Q-S87 introduces reusable List<T> scratch buffers |
-| ✅ true | §16.2.2.1 Q-S27 pseudocode parallels §3.5.2 PHASE A canonical ctor | Q-S88 marks it as conceptual sketch with explicit pointer |
-| ❌ HALLUCINATION | "_persona.needs.Keys at line 1435" — Q-S65 modification gap | Grep: 0 hits. Q-S65 fixed everything. **Rejected** |
-| ❌ HALLUCINATION | "Engine.cs missing using System.Linq" — cascade from #1 | Engine.cs uses no LINQ. **Chain-rejected** |
-| ❌ HALLUCINATION | "§6.3 requires Agent public properties: behavior, is_locked, locked_behavior" | These are Engine API (§3.4), not Agent. §6.3 has no such requirement. **Rejected** |
+| Verdict          | Attack                                                                                                   | Resolution                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| ✅ true          | Agent.Update missing — NPCs would freeze after Awake                                                     | Q-S80 adds `void Update() { _engine.Live(dt: Time.deltaTime); }`                   |
+| ✅ true          | Store.Unregister signature mismatch (concrete `Animo.Agent` vs interface `IAnimoAgent`)                  | Q-S81 unifies on interface form                                                    |
+| ✅ true          | Scripts/Tools/ScenarioRunner.cs + TraceResult.cs files missing                                           | Q-S82 ships the directory + 3 files                                                |
+| ✅ true          | Scripts/Agent.cs file missing despite §11.4.1 spec narrative                                             | Q-S83 ships the file (`#if UNITY_5_3_OR_NEWER` bracketed)                          |
+| ✅ true          | ScenarioRunner `current_time += dt` IEEE-754 drift breaks Q-S35's "exactly floor(duration / dt)" promise | Q-S84 switches to integer `for (int i = 0; i < total_steps; i++)`                  |
+| ✅ true          | ThresholdsMatch EPSILON non-transitive → merge non-deterministic on input order                          | Q-S85 codifies first-occurrence-wins semantics                                     |
+| ✅ true          | Step3 `reset_threshold ?? Math.Max(...)` is dead code per Q-S11 contract                                 | Q-S86 replaces with `t.reset_threshold!.Value`                                     |
+| ✅ true          | MockScene Tick allocates ToArray + new[] every frame → 432K allocs in 1-hour Soak Test                   | Q-S87 introduces reusable `List<T>` scratch buffers                                |
+| ✅ true          | §16.2.2.1 Q-S27 pseudocode parallels §3.5.2 PHASE A canonical ctor                                       | Q-S88 marks it as conceptual sketch with explicit pointer                          |
+| ❌ HALLUCINATION | "_persona.needs.Keys at line 1435" — Q-S65 modification gap                                              | Grep: 0 hits. Q-S65 fixed everything. **Rejected**                                 |
+| ❌ HALLUCINATION | "Engine.cs missing using System.Linq" — cascade from #1                                                  | Engine.cs uses no LINQ. **Chain-rejected**                                         |
+| ❌ HALLUCINATION | "§6.3 requires Agent public properties: behavior, is_locked, locked_behavior"                            | These are Engine API (§3.4), not Agent. §6.3 has no such requirement. **Rejected** |
 
 Phase_2_4_19 again applied **N-round consistency review until fixpoint**. Round 1 caught 2 contradictions: README missing Q-S80-S88 paragraph (this section), and Composer.cs / Engine.cs lacking Q-S85 / Q-S86 contract comments. Both fixed. Rounds 2–4 caught 0 contradictions.
 
@@ -462,20 +463,21 @@ Across Gemini reviews 5–22, the cumulative score is **88 hits adopted out of 9
 
 **Q-S89/S90/S91/S92/S93/S94** is Phase_2_4_20's six-pack — Gemini's 23rd review. Six attacks delivered, six grep-verified true, **zero hallucinations**. Gemini caught itself this round and stayed precise — no fabricated line numbers, no cascading layer-confusion. Every attack was a real "spec promised X / repository missing X" or "decision-log decided X / file declares Y" gap. Phase_2_4_20 closes them all.
 
-| Q | Attack | Resolution |
-|---|---|---|
-| Q-S89 | Schemas/animo.schema.json missing `needs_meta` property in kind/persona; `additionalProperties: false` would block every spec-compliant Q-S30 needs_meta block at ajv before reaching the C# Validator | Added `needs_meta_map` definition + `need_meta` definition + `needs_meta` property to both kind and persona |
-| Q-S90 | All 4 Stage 2 test files (A025/A035/A036/A037) called `Validator.Validate(root)` which is Stage 1 ONLY per the Q-S71 split; tests would stay Red FOREVER even when Phase 3 implements Stage 2 correctly | Rewrote 6 test cases to call `Composer.Compose(persona, root)` then `Validator.ValidateStage2(composed)` |
-| Q-S91 | EditMode asmdef references missing `Animo.Tools`; 12 Tools tests would fail Unity Editor compilation with namespace-not-found | Added `"Animo.Tools"` to references array |
-| Q-S92 | Q-S60 decided `Engine _engine` single-field but Q-S82's file materialization left `_engine` undeclared; Phase 3 implementer would hit compile error | Added `Engine? _engine;` to ScenarioRunner with Q-S60 cross-reference comment |
-| Q-S93 | spec §26.3 promised TraceResult.behavior_count / behavior_total_time / ToCsv() / ToJson() but Q-S82 shipped only agent_id/duration/dt/frames; analysis surface completely missing | Added all 4 spec-promised members as Phase 3 stubs |
-| Q-S94 | spec narrative coded `com.meowtoon.{animo,germio,briko,utilo}` but actual package.json shipped `com.studiomeowtoon.*`; UPM dependency resolution would fail | sed-unified spec EN+JP on `com.studiomeowtoon.*` (implementation side, matches author identity) |
+| Q     | Attack                                                                                                                                                                                                  | Resolution                                                                                                  |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Q-S89 | Schemas/animo.schema.json missing `needs_meta` property in kind/persona; `additionalProperties: false` would block every spec-compliant Q-S30 needs_meta block at ajv before reaching the C# Validator  | Added `needs_meta_map` definition + `need_meta` definition + `needs_meta` property to both kind and persona |
+| Q-S90 | All 4 Stage 2 test files (A025/A035/A036/A037) called `Validator.Validate(root)` which is Stage 1 ONLY per the Q-S71 split; tests would stay Red FOREVER even when Phase 3 implements Stage 2 correctly | Rewrote 6 test cases to call `Composer.Compose(persona, root)` then `Validator.ValidateStage2(composed)`    |
+| Q-S91 | EditMode asmdef references missing `Animo.Tools`; 12 Tools tests would fail Unity Editor compilation with namespace-not-found                                                                           | Added `"Animo.Tools"` to references array                                                                   |
+| Q-S92 | Q-S60 decided `Engine _engine` single-field but Q-S82's file materialization left `_engine` undeclared; Phase 3 implementer would hit compile error                                                     | Added `Engine? _engine;` to ScenarioRunner with Q-S60 cross-reference comment                               |
+| Q-S93 | spec §26.3 promised TraceResult.behavior_count / behavior_total_time / ToCsv() / ToJson() but Q-S82 shipped only agent_id/duration/dt/frames; analysis surface completely missing                       | Added all 4 spec-promised members as Phase 3 stubs                                                          |
+| Q-S94 | spec narrative coded `com.meowtoon.{animo,germio,briko,utilo}` but actual package.json shipped `com.studiomeowtoon.*`; UPM dependency resolution would fail                                             | sed-unified spec EN+JP on `com.studiomeowtoon.*` (implementation side, matches author identity)             |
 
 Phase_2_4_20 N-round consistency review:
-- **Round 1** caught 1 contradiction: §17 Repository Layout had two parallel layout examples, only one was updated to `Schemas/` (capital S); fixed both.
-- **Round 2** (deeper grep over actual code blocks): 0 contradictions.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S89-S94 paragraph (this section), decision log missing Q-S89-S94 entries; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** caught 1 contradiction: §17 Repository Layout had two parallel layout examples, only one was updated to `Schemas/` (capital S); fixed both.
++ **Round 2** (deeper grep over actual code blocks): 0 contradictions.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S89-S94 paragraph (this section), decision log missing Q-S89-S94 entries; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–23, the cumulative score is **94 hits adopted out of 97 attacks, 3 hallucinations rejected with grep evidence**. Hallucination rate sustained at 3/97 = 3.1% across the 23-round adversarial protocol. The Red baseline grows from 333 to **343 EditMode tests** through Phase_2_4_20 (10 new test cases — all Q-S89-S94 fixes verifiable via reflection or file-content assertions, mostly Green when shipped).
 
@@ -483,107 +485,112 @@ Across Gemini reviews 5–23, the cumulative score is **94 hits adopted out of 9
 
 The pattern this round was "missed during Q-S X / Y / Z's earlier sweep":
 
-| Q | Attack | Resolution |
-|---|---|---|
-| Q-S95 | A019_TypoNeedsKeyTests called Stage 1 entry but Q-S39 moved A019 to Stage 2; Q-S90 fixed A025/A035/A036/A037 but missed A019 | Rewrote 3 cases to Composer.Compose then ValidateStage2 |
-| Q-S96 | Awake's Q-S38 fail-loud catch left `_composed_persona == null`; OnDestroy → Store.Unregister → agent_id getter → NullReferenceException at scene unload | Made agent_id getter null-safe (`?.agent_id ?? "<uninitialized>"`) + added OnDestroy early-return when `_composed_persona == null` |
-| Q-S97 | §11.6.5 declared AnimoBootstrapper as spec text and Bootstrapper test file referenced it, but no `Scripts/AnimoBootstrapper.cs` existed; same gap pattern as Q-S83 (Agent.cs) | Shipped `Scripts/AnimoBootstrapper.cs` bracketed in `#if UNITY_5_3_OR_NEWER` with Awake/OnDestroy stubs |
-| Q-S98 | Q-S84's `(int)Math.Floor(duration / dt)` does FLOAT division; `float32 (10.0f/0.1f) = 99.9999985... → Floor = 99` — Q-S35's "exactly floor(duration/dt)" was STILL false even after Q-S84 | Promoted to double + Math.Round: `(int)Math.Round((double)duration / (double)dt)` — corrects sub-LSB drift symmetrically |
-| Q-S99 | Q-S42 declared `${template_id}_run_${_seq++}` auto-generation but Q-S82's file materialization missed the `_seq` field — same pattern as Q-S92's `_engine` omission | Added `int _seq = 0;` instance field with #pragma CS0169 suppression |
-| Q-S100 | Tests asserted `rule_id: "A011"` but spec §13.1 v0.1.5 split into A011a/A011b; Phase 3 emitting "A011a" would fail | sed-unified 2 test files on `"A011a"` |
+| Q      | Attack                                                                                                                                                                                    | Resolution                                                                                                                         |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Q-S95  | A019_TypoNeedsKeyTests called Stage 1 entry but Q-S39 moved A019 to Stage 2; Q-S90 fixed A025/A035/A036/A037 but missed A019                                                              | Rewrote 3 cases to Composer.Compose then ValidateStage2                                                                            |
+| Q-S96  | Awake's Q-S38 fail-loud catch left `_composed_persona == null`; OnDestroy → Store.Unregister → agent_id getter → NullReferenceException at scene unload                                   | Made agent_id getter null-safe (`?.agent_id ?? "<uninitialized>"`) + added OnDestroy early-return when `_composed_persona == null` |
+| Q-S97  | §11.6.5 declared AnimoBootstrapper as spec text and Bootstrapper test file referenced it, but no `Scripts/AnimoBootstrapper.cs` existed; same gap pattern as Q-S83 (Agent.cs)             | Shipped `Scripts/AnimoBootstrapper.cs` bracketed in `#if UNITY_5_3_OR_NEWER` with Awake/OnDestroy stubs                            |
+| Q-S98  | Q-S84's `(int)Math.Floor(duration / dt)` does FLOAT division; `float32 (10.0f/0.1f) = 99.9999985... → Floor = 99` — Q-S35's "exactly floor(duration/dt)" was STILL false even after Q-S84 | Promoted to double + Math.Round: `(int)Math.Round((double)duration / (double)dt)` — corrects sub-LSB drift symmetrically           |
+| Q-S99  | Q-S42 declared `${template_id}_run_${_seq++}` auto-generation but Q-S82's file materialization missed the `_seq` field — same pattern as Q-S92's `_engine` omission                       | Added `int _seq = 0;` instance field with #pragma CS0169 suppression                                                               |
+| Q-S100 | Tests asserted `rule_id: "A011"` but spec §13.1 v0.1.5 split into A011a/A011b; Phase 3 emitting "A011a" would fail                                                                        | sed-unified 2 test files on `"A011a"`                                                                                              |
 
 Phase_2_4_21 N-round consistency review:
-- **Round 1** caught 0 contradictions (all 6 fixes immediately consistent across spec + code).
-- **Round 2** (deeper grep over actual code blocks): 1 contradiction caught — ScenarioRunner.cs class docstring (line 50) still wrote `Math.Floor(duration / dt)` after Q-S98 spec narrative was fixed; corrected to mirror the Q-S98 Math.Round form.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S95-S100 paragraph (this section), decision log missing Q-S95-S100 entries; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** caught 0 contradictions (all 6 fixes immediately consistent across spec + code).
++ **Round 2** (deeper grep over actual code blocks): 1 contradiction caught — ScenarioRunner.cs class docstring (line 50) still wrote `Math.Floor(duration / dt)` after Q-S98 spec narrative was fixed; corrected to mirror the Q-S98 Math.Round form.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S95-S100 paragraph (this section), decision log missing Q-S95-S100 entries; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–24, the cumulative score is **100 hits adopted out of 103 attacks, 3 hallucinations rejected with grep evidence**. Hallucination rate 3/103 = 2.9% across the 24-round adversarial protocol. The Red baseline grows from 346 to **352 EditMode tests** through Phase_2_4_21 (6 new test cases). Q-S100 is the centennial — a hundred grep-verified Master-vs-Gemini findings, all integrated into the spec without a single phantom fix entering the codebase.
 
 **Q-S101** is Phase_2_4_22's single-pack — Gemini's 25th review. One attack delivered, one grep-verified true, **zero hallucinations**. Notably, the attack was a meta-fix on Phase_2_4_21 itself — Gemini correctly identified that Q-S96 (Agent.OnDestroy null-safe) had been written into the spec narrative §11.4.1 EN+JP code blocks, and recorded in the decision log + README cumulative paragraph, but the physical `Scripts/Agent.cs` file (shipped in Q-S83) had been overlooked. Phase_2_4_21's N-round consistency review covered EN+JP+code-blocks integrity but never extended its grep to `Scripts/*.cs`.
 
-| Q | Attack | Resolution |
-|---|---|---|
+| Q      | Attack                                                                                                                                           | Resolution                                                                                                                                                                                                                                                                     |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Q-S101 | Q-S96 spec ↔ physical file mismatch — agent_id getter still `_composed_persona.agent_id`, OnDestroy still entered Store.Unregister with no guard | Backported the two-line fix to physical Scripts/Agent.cs + extended class docstring with Q-S101 cross-reference. **Process upgrade**: From Q-S101 forward, every spec patch touching a code block triggers a grep over `Scripts/*.cs` to verify physical file synchronization. |
 
 Phase_2_4_22 N-round consistency review (with the new Scripts/*.cs sync layer):
-- **Round 1** caught 0 contradictions (the single Q-S101 fix was immediately consistent across spec EN+JP+§3.1 paragraphs+§3.1.4+code).
-- **Round 2** (deeper grep — actual code blocks vs all `Scripts/*.cs` and `Scripts/Tools/*.cs`): 0 contradictions. The new layer's first sweep confirmed all 14 Scripts files synced — Agent.cs (Q-S101 fix), AnimoBootstrapper.cs (Q-S97), ScenarioRunner.cs (Q-S98+Q-S92+Q-S99 fixes), TraceResult.cs (Q-S93 API), and the rest (AnimoLog, Composer, Const, Data, Engine, Json, PersonaCache, Store, Validator) all match their respective spec narrative.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S101 paragraph (this section), decision log missing Q-S101 entry; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** caught 0 contradictions (the single Q-S101 fix was immediately consistent across spec EN+JP+§3.1 paragraphs+§3.1.4+code).
++ **Round 2** (deeper grep — actual code blocks vs all `Scripts/*.cs` and `Scripts/Tools/*.cs`): 0 contradictions. The new layer's first sweep confirmed all 14 Scripts files synced — Agent.cs (Q-S101 fix), AnimoBootstrapper.cs (Q-S97), ScenarioRunner.cs (Q-S98+Q-S92+Q-S99 fixes), TraceResult.cs (Q-S93 API), and the rest (AnimoLog, Composer, Const, Data, Engine, Json, PersonaCache, Store, Validator) all match their respective spec narrative.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S101 paragraph (this section), decision log missing Q-S101 entry; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–25, the cumulative score is **101 hits adopted out of 104 attacks, 3 hallucinations rejected with grep evidence**. Hallucination rate sustained at 3/104 = 2.9% across the 25-round adversarial protocol. Q-S101 is the post-centennial first finding — and it caught the very category of bug (spec ↔ file lag) that the centennial-era N-round review hadn't yet codified.
 
 **Q-S102/S103/S104/S105/S106/S107/S108/S109/S110/S111/S112/S113** is Phase_2_4_23's twelve-pack — Gemini's 26th review. Twelve attacks delivered, **all twelve grep-verified true, zero hallucinations**. The largest Round adoption since the Phase_2_4_19 nine-pack, with full 100% adoption rate matching the Phase_2_4_20-22 streak. The 12 attacks span an unusually diverse failure surface — Unity Animator semantics, exception-type discipline, schema-vs-Validator dead-rule traps, test-helper false-positive bugs, hot-path defense-in-depth, and a brand-new Validator rule (A040) for `actions[].id` uniqueness.
 
-| Q | Attack | Resolution |
-|---|---|---|
-| Q-S102 | Q-S44's Animator state-name expansion crashed every spawn — Unity Animator Controllers use static edit-time state names, not runtime-expanded strings with GetInstanceID(). T-pose for every NPC. | Partial revert of Q-S44: `_animator?.Play(stateName: _engine.behavior)` (raw id); `GetExpandedActionTrigger` reserved for the Bus path. |
-| Q-S103 | PersonaCache.GetComposed empty fallback (`new Persona { agent_id = template_id }`) had actions=null → Engine ctor NRE; Q-S38's "scene-alive" promise broken. | Throw `PersonaTemplateRejectedException` instead. Routes through the same Awake-catch path as stage-2 validation failures. |
-| Q-S104 | ScenarioRunner.Run defaults `events = null` but loops accessed `events.Count` directly — first iteration NRE on default invocation. | `events ??= System.Array.Empty<TimedAffectEvent>();` once at Run entry. |
-| Q-S105 | A039 pseudocode wrote `next.trigger - prev.trigger` but `Threshold.trigger` is `string`; the float field is `trigger_threshold`. Naive transcription = compile error. | sed-corrected pseudocode to `trigger_threshold` everywhere. |
-| Q-S106 | AssertResult.HasError checked has_errors AND HasRule (severity-agnostic). HasError(result, "A028") passed when A028 fired only as Warning. | Added `ValidationResult.HasRuleWithSeverity(rule_id, severity)`; AssertResult.HasError/HasWarning use it. |
-| Q-S107 | Step3_Thresholds wrote `_persona.binding.thresholds` directly while ctor used `?.thresholds ?? Array.Empty<...>()` — defense-in-depth inconsistent; hand-built Persona NREs every frame. | Step 3 now uses the same null-coalesce form as ctor. |
-| Q-S108 | schema `reset_threshold` had `"minimum": 0.0`; ajv hard-rejected before Validator A034 (Q-S11) could surface its human-readable Error. A034 was a permanently-unreachable dead rule. | Removed schema minimum so values flow to A034. Upper bound 100.0 preserved. |
-| Q-S109 | Q-S42 narrative wrote `${template_id}_run_${seq++}` but `Run(string agent_id, ...)` parameter is named `agent_id`; `template_id` not in scope → "name does not exist" compile error. | sed-unified narrative on `${agent_id}_run_${_seq++}`. |
-| Q-S110 | §16.6 listed `_previous_behavior` (Q-S31 silent-first-transition contract); Engine.cs declared only `_persona`/`_lock_remaining`. Same physical-gap pattern as Q-S70. | Added `string _previous_behavior = "";` with #pragma CS0414. |
+| Q      | Attack                                                                                                                                                                                                                                                                   | Resolution                                                                                                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q-S102 | Q-S44's Animator state-name expansion crashed every spawn — Unity Animator Controllers use static edit-time state names, not runtime-expanded strings with GetInstanceID(). T-pose for every NPC.                                                                        | Partial revert of Q-S44: `_animator?.Play(stateName: _engine.behavior)` (raw id); `GetExpandedActionTrigger` reserved for the Bus path.                                             |
+| Q-S103 | PersonaCache.GetComposed empty fallback (`new Persona { agent_id = template_id }`) had actions=null → Engine ctor NRE; Q-S38's "scene-alive" promise broken.                                                                                                             | Throw `PersonaTemplateRejectedException` instead. Routes through the same Awake-catch path as stage-2 validation failures.                                                          |
+| Q-S104 | ScenarioRunner.Run defaults `events = null` but loops accessed `events.Count` directly — first iteration NRE on default invocation.                                                                                                                                      | `events ??= System.Array.Empty<TimedAffectEvent>();` once at Run entry.                                                                                                             |
+| Q-S105 | A039 pseudocode wrote `next.trigger - prev.trigger` but `Threshold.trigger` is `string`; the float field is `trigger_threshold`. Naive transcription = compile error.                                                                                                    | sed-corrected pseudocode to `trigger_threshold` everywhere.                                                                                                                         |
+| Q-S106 | AssertResult.HasError checked has_errors AND HasRule (severity-agnostic). HasError(result, "A028") passed when A028 fired only as Warning.                                                                                                                               | Added `ValidationResult.HasRuleWithSeverity(rule_id, severity)`; AssertResult.HasError/HasWarning use it.                                                                           |
+| Q-S107 | Step3_Thresholds wrote `_persona.binding.thresholds` directly while ctor used `?.thresholds ?? Array.Empty<...>()` — defense-in-depth inconsistent; hand-built Persona NREs every frame.                                                                                 | Step 3 now uses the same null-coalesce form as ctor.                                                                                                                                |
+| Q-S108 | schema `reset_threshold` had `"minimum": 0.0`; ajv hard-rejected before Validator A034 (Q-S11) could surface its human-readable Error. A034 was a permanently-unreachable dead rule.                                                                                     | Removed schema minimum so values flow to A034. Upper bound 100.0 preserved.                                                                                                         |
+| Q-S109 | Q-S42 narrative wrote `${template_id}_run_${seq++}` but `Run(string agent_id, ...)` parameter is named `agent_id`; `template_id` not in scope → "name does not exist" compile error.                                                                                     | sed-unified narrative on `${agent_id}_run_${_seq++}`.                                                                                                                               |
+| Q-S110 | §16.6 listed `_previous_behavior` (Q-S31 silent-first-transition contract); Engine.cs declared only `_persona`/`_lock_remaining`. Same physical-gap pattern as Q-S70.                                                                                                    | Added `string _previous_behavior = "";` with #pragma CS0414.                                                                                                                        |
 | Q-S111 | PersonaCache.GetComposed threw bare InvalidOperationException for two architecturally-different errors (Initialize-not-called vs per-template authoring); Awake's catch claimed "stage-2 fail-loud" for both. Bootstrapper-missing was diagnostically indistinguishable. | Two distinct exception types: `PersonaCacheNotInitializedException` (architectural startup; propagate) and `PersonaTemplateRejectedException` (per-Agent authoring; catch+disable). |
-| Q-S112 | §12.1 declared "log Warning once, then go silent" for null Bus, but Awake relied on `_bus?.Publish(...)` to silently skip. Build-pipeline-null-stripped Bus = silent every-Threshold-fire-vanishes. | Awake start: `if (_bus == null) AnimoLog.Warning(...)` once before remainder. |
-| Q-S113 | A009 protected `actions[].id` non-empty but assumed (never validated) uniqueness. LLM duplicates → `_cached_action_triggers` silent overwrite. | New Stage-2 Error rule **A040** (composed-actions uniqueness). **Validator rule count: 40 → 41** (A000-A040). |
+| Q-S112 | §12.1 declared "log Warning once, then go silent" for null Bus, but Awake relied on `_bus?.Publish(...)` to silently skip. Build-pipeline-null-stripped Bus = silent every-Threshold-fire-vanishes.                                                                      | Awake start: `if (_bus == null) AnimoLog.Warning(...)` once before remainder.                                                                                                       |
+| Q-S113 | A009 protected `actions[].id` non-empty but assumed (never validated) uniqueness. LLM duplicates → `_cached_action_triggers` silent overwrite.                                                                                                                           | New Stage-2 Error rule **A040** (composed-actions uniqueness). **Validator rule count: 40 → 41** (A000-A040).                                                                       |
 
 Phase_2_4_23 N-round consistency review:
-- **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
-- **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 0 contradictions. Engine.cs has `_previous_behavior` (Q-S110), Validator.cs has HasRuleWithSeverity (Q-S106), PersonaCache.cs has both new exception types (Q-S111). Spec narrative Awake stub matches the Q-S102/Q-S111/Q-S112 cross-reference recorded in Agent.cs class docstring. The three Q-S that touch Awake bodies (Q-S102/Q-S111/Q-S112) live entirely in the spec narrative because Agent.cs Awake is `throw NotImplementedException()` until Phase 3.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S102-S113 paragraph (this section), decision log missing Q-S102-S113 entries; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
++ **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 0 contradictions. Engine.cs has `_previous_behavior` (Q-S110), Validator.cs has HasRuleWithSeverity (Q-S106), PersonaCache.cs has both new exception types (Q-S111). Spec narrative Awake stub matches the Q-S102/Q-S111/Q-S112 cross-reference recorded in Agent.cs class docstring. The three Q-S that touch Awake bodies (Q-S102/Q-S111/Q-S112) live entirely in the spec narrative because Agent.cs Awake is `throw NotImplementedException()` until Phase 3.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S102-S113 paragraph (this section), decision log missing Q-S102-S113 entries; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–26, the cumulative score is **113 hits adopted out of 116 attacks, 3 hallucinations rejected with grep evidence**. Hallucination rate sustained at 3/116 = 2.6% across the 26-round adversarial protocol. Eight distinct categories of self-bug now surfaced. Validator rule count: 40 → 41 (Q-S113 added A040). Two new exception types: `PersonaCacheNotInitializedException`, `PersonaTemplateRejectedException`. The Red baseline grows from 356 to **368 EditMode tests** through Phase_2_4_23 (12 new file-content/reflection/spec-content cases).
 
 **Q-S114/S115/S116/S117/S118/S119** is Phase_2_4_24's six-pack — Gemini's 27th review. Six attacks delivered, **all six grep-verified true, zero hallucinations**. Notable: Q-S114 and Q-S119 are both protocol-self-corrections — Q-S114 cleans up Q-S109's sed-overreach (Bash-style string interpolation left in C# code blocks) and Q-S119 closes a docstring listing Q-S113 forgot to update. The protocol now surfaces a 9th category of self-bug: **process-discipline gaps** — the protocol's prior sweeps left residue that the next round caught.
 
-| Q | Attack | Resolution |
-|---|---|---|
-| Q-S114 | Q-S109's sed accidentally swept C# code blocks; `${agent_id}_run_${_seq++}` (Bash/JS) left in C# string-interp contexts | Restore C# form `$"{agent_id}_run_{_seq++}"` in code blocks; narrative historical citations preserved. |
-| Q-S115 | Agent.Update hardcodes `Time.deltaTime` so MockScene EditMode tests freeze simulated time | Document `ITimeProvider` Phase 3 DI seam in spec §11.4.1 + Agent.cs class docstring. v0.1.5 stub unchanged (it never runs). |
-| Q-S116 | §9.6.5 / §9.3 mermaid use `Mathf.Clamp` (UnityEngine) in Animo.Core hot path; violates §5 + asmdef noEngineReferences:true | Replace with `System.Math.Clamp` (BCL). Adapter-layer code unchanged. |
-| Q-S117 | ScenarioRunner.Run dt=0 → +Infinity → (int)int.MinValue → silent empty TraceResult | Run entry: `if (dt <= 0.0f) throw new ArgumentException(...)`. |
-| Q-S118 | Q-S58's static-state cleanup runs on every scene unload, wiping DontDestroyOnLoad Agents' Store entries | Editor-only guard: `if (!Application.isEditor || Application.isPlaying) return;`. |
-| Q-S119 | Q-S113 added rule A040 to spec §13 + §17 Layout but missed Validator.cs ValidateStage2 docstring + §11.6.2 enumerations | Update docstring + spec §11.6.2 to enumerate A040. **Process upgrade**: new Validator rule must trigger docstring listing grep. |
+| Q      | Attack                                                                                                                     | Resolution                                                                                                                      |     |                                  |
+| ------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --- | -------------------------------- |
+| Q-S114 | Q-S109's sed accidentally swept C# code blocks; `${agent_id}_run_${_seq++}` (Bash/JS) left in C# string-interp contexts    | Restore C# form `$"{agent_id}_run_{_seq++}"` in code blocks; narrative historical citations preserved.                          |     |                                  |
+| Q-S115 | Agent.Update hardcodes `Time.deltaTime` so MockScene EditMode tests freeze simulated time                                  | Document `ITimeProvider` Phase 3 DI seam in spec §11.4.1 + Agent.cs class docstring. v0.1.5 stub unchanged (it never runs).     |     |                                  |
+| Q-S116 | §9.6.5 / §9.3 mermaid use `Mathf.Clamp` (UnityEngine) in Animo.Core hot path; violates §5 + asmdef noEngineReferences:true | Replace with `System.Math.Clamp` (BCL). Adapter-layer code unchanged.                                                           |     |                                  |
+| Q-S117 | ScenarioRunner.Run dt=0 → +Infinity → (int)int.MinValue → silent empty TraceResult                                         | Run entry: `if (dt <= 0.0f) throw new ArgumentException(...)`.                                                                  |     |                                  |
+| Q-S118 | Q-S58's static-state cleanup runs on every scene unload, wiping DontDestroyOnLoad Agents' Store entries                    | Editor-only guard: `if (!Application.isEditor                                                                                   |     | Application.isPlaying) return;`. |
+| Q-S119 | Q-S113 added rule A040 to spec §13 + §17 Layout but missed Validator.cs ValidateStage2 docstring + §11.6.2 enumerations    | Update docstring + spec §11.6.2 to enumerate A040. **Process upgrade**: new Validator rule must trigger docstring listing grep. |     |                                  |
 
 Phase_2_4_24 N-round consistency review (Q-S101 NEW LAYER applied for the third time):
-- **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
-- **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 1 contradiction caught. Validator.cs ValidateStage2 XML docstring missed A040 — Q-S119 itself is the catch+fix from this very layer. The new layer paid for itself again. Process refinement: docstring-listing-currency now part of new-rule sync checklist.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S114-S119 paragraph (this section), decision log missing Q-S114-S119 entries; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
++ **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 1 contradiction caught. Validator.cs ValidateStage2 XML docstring missed A040 — Q-S119 itself is the catch+fix from this very layer. The new layer paid for itself again. Process refinement: docstring-listing-currency now part of new-rule sync checklist.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S114-S119 paragraph (this section), decision log missing Q-S114-S119 entries; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–27, the cumulative score is **119 hits adopted out of 122 attacks, 3 hallucinations rejected with grep evidence**. Hallucination rate sustained at 3/122 = 2.5% across the 27-round adversarial protocol. Nine distinct categories of self-bug now surfaced. Validator rule count remains 41 (A000-A040). The Red baseline grows from 370 to **376 EditMode tests** through Phase_2_4_24 (6 new file-content/spec-content/reflection cases).
 
 **Q-S120/S121/S122/S123/S124/S125/S126/S127/S128/S129/S130** is Phase_2_4_25's eleven-pack — Gemini's 28th review. Twelve attacks delivered, **eleven grep-verified true and adopted**, **one rejected as HALLUCINATION #4** (the protocol's first new hallucination since Phase_2_4_19, six rounds clean). Notable: three of the eleven adopted attacks are direct protocol-self-corrections — Q-S120 (Q-S54 test sync), Q-S121 (Q-S108 generalization), Q-S129 (Q-S100 sed completion). The 9th category (process-discipline gaps) deepened.
 
-| Q | Attack | Resolution |
-|---|---|---|
-| Q-S120 | Step3 Test Case01 asserts `GetNeed("anger")==0` after Influence cascade, conflicting with Q-S54's GetNeed=effective contract | Switch assertion to `GetBaseNeed("anger")` matching documented intent. |
-| Q-S121 | Schema's seven range constraints (A005/A006/A007/A008/A010/A012/A028) dead-code their Validator counterparts | Remove all minimum/maximum from schema; descriptions document Validator delegation. Generalizes Q-S108. |
-| Q-S122 | A039 pseudocode `< 1.0f` vs test "78/79 boundary fires" requirement (English "within 1.0f" is inclusive) | Pseudocode + mermaid + §13 row + Q-S122 inclusive note: `<= 1.0f`. |
-| Q-S123 | ScenarioRunner.Run `current_time = total_steps * dt` is unused (CS0219) | Remove the dead line; sweep semantics unchanged. |
-| Q-S124 | A019 typo coverage scans 3 sites, A038 scans 5 (asymmetric since Q-S49/Q-S57 grew A038) | Extend A019 to A038's union: needs ∪ actions ∪ influences ∪ thresholds ∪ rates. |
-| Q-S125 | Engine ctor's two foreach loops over actions are raw while threshold loops defended (Q-S12/Q-S53/Q-S107) | `_composed_persona.actions ?? new List<Action>()` for both loops. |
-| Q-S126 | §9.2 Lock(0) narrative implies "is_locked stays true until next Live(dt)" but test requires immediate `is_locked=False` | Clarify: `is_locked => _lock_remaining > 0` makes Lock(0) immediately observable; no special path needed. |
-| Q-S127 | AnimoLog.cs comment mentions `Console.Error.WriteLine` but file has no `using System;` | Comment changed to `System.Console.Error.WriteLine` (fully qualified). |
-| Q-S128 | Const.NEED_INDICES_BY_TIER int[] elements mutable; external code can corrupt tier mapping | `IReadOnlyDictionary<int, IReadOnlyList<int>>` + `Array.AsReadOnly`. NeedTierMapTests consumer updated. |
-| Q-S129 | Test method name `FailsA011` mismatches assertion `"A011a"` (Q-S100 sed cosmetic残渣) | sed: `Case01_NoKindIdsNoActions_FailsA011` → `_FailsA011a`. |
-| Q-S130 | Q-S118 editor-only guard `(isEditor && !isPlaying)` matches NUnit EditMode test runner — cleanup runs mid-suite, risking cross-fixture Store contamination | Spec-level the test-side discipline (`Store.ResetForTesting()` in `[SetUp]`); Bootstrapper guard remains production-correct. |
-| **HALLUC #4** | A035 Case01 trigger=0 is "zombie flow" — Stage 1 rejects so Stage 2 should never run | **Rejected**. spec line 3170-3181 explicitly allows caller to invoke Stage 2 even when Stage 1 has_errors; test docstring documents defense-in-depth. |
+| Q             | Attack                                                                                                                                                     | Resolution                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q-S120        | Step3 Test Case01 asserts `GetNeed("anger")==0` after Influence cascade, conflicting with Q-S54's GetNeed=effective contract                               | Switch assertion to `GetBaseNeed("anger")` matching documented intent.                                                                                |
+| Q-S121        | Schema's seven range constraints (A005/A006/A007/A008/A010/A012/A028) dead-code their Validator counterparts                                               | Remove all minimum/maximum from schema; descriptions document Validator delegation. Generalizes Q-S108.                                               |
+| Q-S122        | A039 pseudocode `< 1.0f` vs test "78/79 boundary fires" requirement (English "within 1.0f" is inclusive)                                                   | Pseudocode + mermaid + §13 row + Q-S122 inclusive note: `<= 1.0f`.                                                                                    |
+| Q-S123        | ScenarioRunner.Run `current_time = total_steps * dt` is unused (CS0219)                                                                                    | Remove the dead line; sweep semantics unchanged.                                                                                                      |
+| Q-S124        | A019 typo coverage scans 3 sites, A038 scans 5 (asymmetric since Q-S49/Q-S57 grew A038)                                                                    | Extend A019 to A038's union: needs ∪ actions ∪ influences ∪ thresholds ∪ rates.                                                                       |
+| Q-S125        | Engine ctor's two foreach loops over actions are raw while threshold loops defended (Q-S12/Q-S53/Q-S107)                                                   | `_composed_persona.actions ?? new List<Action>()` for both loops.                                                                                     |
+| Q-S126        | §9.2 Lock(0) narrative implies "is_locked stays true until next Live(dt)" but test requires immediate `is_locked=False`                                    | Clarify: `is_locked => _lock_remaining > 0` makes Lock(0) immediately observable; no special path needed.                                             |
+| Q-S127        | AnimoLog.cs comment mentions `Console.Error.WriteLine` but file has no `using System;`                                                                     | Comment changed to `System.Console.Error.WriteLine` (fully qualified).                                                                                |
+| Q-S128        | Const.NEED_INDICES_BY_TIER int[] elements mutable; external code can corrupt tier mapping                                                                  | `IReadOnlyDictionary<int, IReadOnlyList<int>>` + `Array.AsReadOnly`. NeedTierMapTests consumer updated.                                               |
+| Q-S129        | Test method name `FailsA011` mismatches assertion `"A011a"` (Q-S100 sed cosmetic残渣)                                                                      | sed: `Case01_NoKindIdsNoActions_FailsA011` → `_FailsA011a`.                                                                                           |
+| Q-S130        | Q-S118 editor-only guard `(isEditor && !isPlaying)` matches NUnit EditMode test runner — cleanup runs mid-suite, risking cross-fixture Store contamination | Spec-level the test-side discipline (`Store.ResetForTesting()` in `[SetUp]`); Bootstrapper guard remains production-correct.                          |
+| **HALLUC #4** | A035 Case01 trigger=0 is "zombie flow" — Stage 1 rejects so Stage 2 should never run                                                                       | **Rejected**. spec line 3170-3181 explicitly allows caller to invoke Stage 2 even when Stage 1 has_errors; test docstring documents defense-in-depth. |
 
 Phase_2_4_25 N-round consistency review (Q-S101 NEW LAYER applied for the fourth time):
-- **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
-- **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 0 contradictions. Const.cs, AnimoLog.cs updated; consumer NeedTierMapTests.cs updated; Validator.cs unchanged this round.
-- **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S120-S130 paragraph (this section), decision log missing Q-S120-S130 entries; both fixed.
-- **Round 4**: FIXPOINT REACHED.
+
++ **Round 1** (per-fix verification): 0 contradictions on the EN+JP narrative cross-checks.
++ **Round 2** (NEW LAYER from Q-S101 — actual code blocks vs all `Scripts/*.cs`): 0 contradictions. Const.cs, AnimoLog.cs updated; consumer NeedTierMapTests.cs updated; Validator.cs unchanged this round.
++ **Round 3** (README + decision log cross-check): 2 contradictions caught — README missing Q-S120-S130 paragraph (this section), decision log missing Q-S120-S130 entries; both fixed.
++ **Round 4**: FIXPOINT REACHED.
 
 Across Gemini reviews 5–28, the cumulative score is **130 hits adopted out of 134 attacks, 4 hallucinations rejected with grep evidence**. Hallucination rate **3.0%** across the 28-round adversarial protocol. Nine distinct categories of self-bug now surfaced, with the 9th category (process-discipline gaps) deepening — three of Phase_2_4_25's eleven adopted attacks are direct protocol-self-corrections. Validator rule count remains 41 (A000-A040). The Red baseline grows from 378 to **388 EditMode tests** through Phase_2_4_25 (10 new file-content/spec-content/reflection cases + 1 Q-S120 existing-file modification — all 10 new tests Green per spec/code grep assertions).
 
-```
+```text
 Tests run: 388, Passed: 77, Failed: 311
 ```
 
@@ -591,7 +598,7 @@ Tests run: 388, Passed: 77, Failed: 311
 
 Across Gemini reviews 5–29, the cumulative score is **139 hits adopted out of 146 attacks, 7 hallucinations rejected with grep evidence**. Hallucination rate **4.8%** across the 29-round adversarial protocol (elevated this round but all caught). The Red baseline grows from 388 to **404 EditMode tests** through Phase_2_4_26 (16 new tests: 5 ConstReadOnlyList Green, 4 NeedMetaDeepCopy Green, 6 Round29Contract Green, 1 A039-Case02 Red — Phase 3 pending).
 
-```
+```text
 Tests run: 404, Passed: 92, Failed: 312
 ```
 
@@ -599,19 +606,19 @@ Tests run: 404, Passed: 92, Failed: 312
 
 Across Gemini reviews 5–30, the cumulative score is **148 hits adopted out of 166 attacks, 18 hallucinations rejected**. Hallucination rate **10.8%** (rising from 4.8% after round 29 — driven by this round's 11/20). The Red baseline holds at **312**; all 9 new tests are Green (spec-compliance assertions, structural checks, behavior contracts). Total EditMode tests: **413 (101 Green / 312 Red)**.
 
-```
+```text
 Tests run: 413, Passed: 101, Failed: 312
 ```
 
 **Q-S149/S150** is Phase_2_4_28 — Gemini round 31. Two attacks adopted (Q-S149: has_errors/has_warnings safe bool defaults; Q-S150: NEED_TIER_BY_NAME IReadOnlyDictionary). Eight rejected as HALLUCINATIONS #19-#26. Record-low 20% adoption rate. Notable: HALLUC #21 self-correction — Gemini correctly identified that `79.3f-78.3f=1.0f` in C#, but exhaustive C# search confirms `2.4f-1.4f=1.0000001f` — Q-S135 EPSILON justified via 12 confirmed drift pairs. Protocol corrects its original Python float64 arithmetic evidence.
 
-```
+```text
 Tests run: 419, Passed: 107, Failed: 312
 ```
 
 **Q-S151** is Phase_2_4_29 — Gemini round 32. One adopted (Needs/Rates JSON-bridge deserialization contract — empirically verified that Newtonsoft default produces values.Count=0); two rejected as HALLUCINATIONS #27, #28. Round 32 is the protocol's FIRST instance of fabricated source-code citations: Gemini quoted specific 3-line code snippets that physically do not exist in PersonaCache.cs. grep-first defense caught both with zero false positives. The Q-S151 fix documents the [JsonExtensionData] pattern (Option A) in Data.cs and Json.cs docstrings, preserving the existing 8 `.values` call sites established by Q-S65.
 
-```
+```text
 Tests run: 423, Passed: 111, Failed: 312
 ```
 
@@ -642,10 +649,11 @@ flowchart TB
 ```
 
 Examples:
-- **A002** — `agent_id` must be snake_case
-- **A025** — Influence cycles are an error (since v0.1.2)
-- **A028** — `commitment.bonus` ≥ 30 raises a warning (chattering risk)
-- **A031** — `lock.duration` over 5s raises a warning (frozen agent)
+
++ **A002** — `agent_id` must be snake_case
++ **A025** — Influence cycles are an error (since v0.1.2)
++ **A028** — `commitment.bonus` ≥ 30 raises a warning (chattering risk)
++ **A031** — `lock.duration` over 5s raises a warning (frozen agent)
 
 The full list is in [§13 of the spec](docs/animo_spec_v0.1.5_EN.md).
 
@@ -653,28 +661,28 @@ The full list is in [§13 of the spec](docs/animo_spec_v0.1.5_EN.md).
 
 ## Key Features
 
-- 🧠 **Pure need-driven** — every action emerges from an inner need, not a script
-- ⛰️ **Maslow dynamic suppression** — low-tier needs suppress high-tier ones automatically
-- 🎨 **CSS-style cascading** — `kind_ids` array gives multiple inheritance with deterministic merge
-- 🚀 **Hot path optimized** — zero string lookup, zero GC allocation, indexed `float[]` storage
-- 🤖 **LLM-first** — JSON schema designed for LLM editing
-- 🔒 **Behavior Lock API** — sync animation states with decisions (v0.1.4)
-- 📉 **Frustration feedback** — agents fail, learn, switch (v0.1.1)
-- ⚡ **Commitment hysteresis** — anti-chattering without time-decay (v0.1.3)
-- 🪶 **Engine is Unity-free** — `Animo.Core` and `Animo.Model` test in pure C#
++ 🧠 **Pure need-driven** — every action emerges from an inner need, not a script
++ ⛰️ **Maslow dynamic suppression** — low-tier needs suppress high-tier ones automatically
++ 🎨 **CSS-style cascading** — `kind_ids` array gives multiple inheritance with deterministic merge
++ 🚀 **Hot path optimized** — zero string lookup, zero GC allocation, indexed `float[]` storage
++ 🤖 **LLM-first** — JSON schema designed for LLM editing
++ 🔒 **Behavior Lock API** — sync animation states with decisions (v0.1.4)
++ 📉 **Frustration feedback** — agents fail, learn, switch (v0.1.1)
++ ⚡ **Commitment hysteresis** — anti-chattering without time-decay (v0.1.3)
++ 🪶 **Engine is Unity-free** — `Animo.Core` and `Animo.Model` test in pure C#
 
 ---
 
 ## Roadmap
 
-| Phase | Goal | Status |
-|---|---|---|
-| Phase 0 | Concept (v0.1.0) | ✅ Done |
-| Phase 1 | Design (v0.1.5) | ✅ Done |
-| Phase 2 | Schema + Red tests (v0.2.0) | ✅ Done |
+| Phase       | Goal                                      | Status      |
+| ----------- | ----------------------------------------- | ----------- |
+| Phase 0     | Concept (v0.1.0)                          | ✅ Done     |
+| Phase 1     | Design (v0.1.5)                           | ✅ Done     |
+| Phase 2     | Schema + Red tests (v0.2.0)               | ✅ Done     |
 | **Phase 3** | **Core Engine + ScenarioRunner (v0.3.0)** | ✅ **Done** |
-| Phase 4 | Unity integration + CLI (v0.4.0) | 🔥 Next |
-| Phase 5 | Stabilize and Asset Store (v1.0.0) | ⬜ |
+| Phase 4     | Unity integration + CLI (v0.4.0)          | 🔥 Next     |
+| Phase 5     | Stabilize and Asset Store (v1.0.0)        | ⬜          |
 
 See [animo_roadmap_to_v1.0.0.md](docs/animo_roadmap_to_v1.0.0.md) for the full task graph.
 
@@ -696,6 +704,6 @@ Copyright (c) STUDIO MeowToon. All rights reserved.
 
 ## See also
 
-- [Germio](https://github.com/hiroxpepe/stemic) — game logic library (**WHAT**)
-- [Briko](https://github.com/hiroxpepe/briko) — level construction library (**WHERE**)
-- **Animo** — agent inner motivation library (**WHY**) ← you are here
++ [Germio](https://github.com/hiroxpepe/stemic) — game logic library (**WHAT**)
++ [Briko](https://github.com/hiroxpepe/briko) — level construction library (**WHERE**)
++ **Animo** — agent inner motivation library (**WHY**) ← you are here
