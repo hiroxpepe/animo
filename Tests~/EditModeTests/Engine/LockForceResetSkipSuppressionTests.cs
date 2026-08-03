@@ -33,13 +33,13 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 30f }
             });
             e.Live(0.016f);  // Talk wins (idle=80 > fear=20)
-            Assert.That(e.behavior, Is.EqualTo("Talk"), "precondition: Talk selected");
+            Assert.That(e.Behavior, Is.EqualTo("Talk"), "precondition: Talk selected");
             e.Lock(1.0f, LockMode.Hard);
 
             // force_reset during lock: Q-S13 skip suppressed, Talk keeps bonus
             e.Affect("fear", +30f, force_reset: true);  // fear=50
             e.Live(0.2f);
-            Assert.That(e.behavior, Is.EqualTo("Talk"),
+            Assert.That(e.Behavior, Is.EqualTo("Talk"),
                 "Q-S13: Hard-locked behavior must not change; force_reset skip suppressed.");
         }
 
@@ -54,19 +54,19 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 30f }
             });
             e.Live(0.016f);
-            Assert.That(e.behavior, Is.EqualTo("Talk"), "precondition");
+            Assert.That(e.Behavior, Is.EqualTo("Talk"), "precondition");
             e.Lock(5.0f, LockMode.Hard);
             e.Affect("fear", +20f, force_reset: true);
 
             for (int i = 0; i < 4; i++) {
                 e.Live(1.0f);
-                Assert.That(e.is_locked, Is.True, $"still locked at sample {i}");
-                Assert.That(e.behavior, Is.EqualTo("Talk"),
+                Assert.That(e.IsLocked, Is.True, $"still locked at sample {i}");
+                Assert.That(e.Behavior, Is.EqualTo("Talk"),
                     $"Q-S13: locked behavior must persist at sample {i}.");
             }
             // Unlock frame
             e.Live(1.5f);
-            Assert.That(e.is_locked, Is.False, "lock expired");
+            Assert.That(e.IsLocked, Is.False, "lock expired");
         }
     }
 }

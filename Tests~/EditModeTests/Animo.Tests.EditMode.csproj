@@ -12,9 +12,35 @@
     <PackageReference Include="NUnit"                   Version="4.2.2"   />
     <PackageReference Include="NUnit3TestAdapter"       Version="4.6.0"   />
     <PackageReference Include="NUnit.Analyzers"         Version="4.4.0"   />
-    <PackageReference Include="coverlet.collector"      Version="6.0.2"   />
     <PackageReference Include="Newtonsoft.Json"         Version="13.0.3"  />
   </ItemGroup>
+
+  <!-- The convention tests read the sources with Roslyn.
+
+       Normally that comes from the package. In a sandbox without access to the
+       package feed, the same assemblies ship inside the SDK itself, so they are
+       referenced from there instead. Set UseSdkRoslyn=true to take that path:
+
+         dotnet test Tests~/EditModeTests/Animo.Tests.EditMode.csproj -p:UseSdkRoslyn=true
+
+       Both paths are declared here on purpose. Editing this file by hand to switch
+       between them once left a Linux path committed, which broke the build on
+       Windows. Nothing has to be edited now. -->
+  <ItemGroup Condition="'$(UseSdkRoslyn)' != 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseSdkRoslyn)' == 'true'">
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>$(NetCoreRoot)sdk/$(NETCoreSdkVersion)/Roslyn/bincore/Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>$(NetCoreRoot)sdk/$(NETCoreSdkVersion)/Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Compile Animo.Core / Animo.Model directly into the test assembly via Animo.csproj -->
     <ProjectReference Include="..\..\Scripts\Animo.csproj" />

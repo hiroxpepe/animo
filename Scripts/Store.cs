@@ -21,17 +21,13 @@ namespace Animo {
         // Singleton
 
         static Store? _instance;
+        readonly Dictionary<string, IAnimoAgent> _agents = new();
         public static Store Instance => _instance ??= new Store();
 
         /// <summary>Reset the singleton state. Test-only seam (no spec contract).</summary>
         public static void ResetForTesting() {
             _instance = null;
         }
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-        // Internal state
-
-        readonly Dictionary<string, IAnimoAgent> _agents = new();
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Methods [verb]

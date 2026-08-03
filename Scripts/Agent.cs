@@ -43,7 +43,7 @@ namespace Animo {
     ///
     /// (v0.1.5, Q-S102 + Q-S111 + Q-S112) Phase 3 Awake implementation
     /// must observe additional cross-references from §11.4.1 spec:
-    ///   - Q-S102: `_animator?.Play(stateName: _engine.behavior)` —
+    ///   - Q-S102: `_animator?.Play(stateName: _engine.Behavior)` —
     ///     pass the RAW behavior id, NOT the GetExpandedActionTrigger
     ///     output. Animator Controllers use static state names.
     ///   - Q-S111: catch `PersonaTemplateRejectedException` (per-Agent
@@ -103,8 +103,8 @@ namespace Animo {
                 _engine.Live(dt: 0.0f);
 
                 // Step 8 (Q-S75): Sync Animator to initial behavior.
-                _animator?.Play(stateName: _engine.behavior);
-                _last_played_behavior = _engine.behavior;
+                _animator?.Play(stateName: _engine.Behavior);
+                _last_played_behavior = _engine.Behavior;
             }
             catch (PersonaCacheNotInitializedException) {
                 // (Q-S111) Bootstrapper architectural error — PROPAGATE, do not catch.
@@ -130,7 +130,7 @@ namespace Animo {
             // Engine.OnSignal fires for BOTH Step 3 threshold events AND Step 5 behavior
             // switches; calling Play on every signal would restart the current animation
             // from frame 0 each time a threshold crosses, causing visible stutter.
-            string current = _engine.behavior;
+            string current = _engine.Behavior;
             if (current != _last_played_behavior) {
                 _animator?.Play(stateName: current);
                 _last_played_behavior = current;

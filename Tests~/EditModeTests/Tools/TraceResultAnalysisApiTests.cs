@@ -12,7 +12,7 @@ using Animo.Tools;
 namespace Animo.Tests.EditMode.ToolsTests {
     /// <summary>
     /// Compile-time test for Q-S93 (v0.1.5): TraceResult exposes the
-    /// behavior_count, behavior_total_time, ToCsv, ToJson surface that
+    /// behavior_count, behavior_total_time, ToCSV, ToJSON surface that
     /// spec §26.3 promised.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
@@ -39,19 +39,19 @@ namespace Animo.Tests.EditMode.ToolsTests {
         [Test] public void Case03_TraceResult_DeclaresToCsv() {
             var t = typeof(TraceResult);
             var method = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(m => m.Name == "ToCsv" && m.GetParameters().Length == 0);
-            Assert.That(method, Is.Not.Null, "Q-S93: TraceResult.ToCsv() required.");
+                .FirstOrDefault(m => m.Name == "ToCSV" && m.GetParameters().Length == 0);
+            Assert.That(method, Is.Not.Null, "Q-S93: TraceResult.ToCSV() required.");
             Assert.That(method!.ReturnType, Is.EqualTo(typeof(string)),
-                "Q-S93: ToCsv must return string.");
+                "Q-S93: ToCSV must return string.");
         }
 
         [Test] public void Case04_TraceResult_DeclaresToJson() {
             var t = typeof(TraceResult);
             var method = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(m => m.Name == "ToJson" && m.GetParameters().Length == 0);
-            Assert.That(method, Is.Not.Null, "Q-S93: TraceResult.ToJson() required.");
+                .FirstOrDefault(m => m.Name == "ToJSON" && m.GetParameters().Length == 0);
+            Assert.That(method, Is.Not.Null, "Q-S93: TraceResult.ToJSON() required.");
             Assert.That(method!.ReturnType, Is.EqualTo(typeof(string)),
-                "Q-S93: ToJson must return string.");
+                "Q-S93: ToJSON must return string.");
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             e.Live(dt: 0.016f);
             Assert.That(e.GetActionScore("Flee"), Is.GreaterThan(e.GetActionScore("Idle")),
                 "Step 4: higher need value must produce higher score.");
-            Assert.That(e.behavior, Is.EqualTo("Flee"),
+            Assert.That(e.Behavior, Is.EqualTo("Flee"),
                 "Step 4: action with highest score must be selected.");
         }
 

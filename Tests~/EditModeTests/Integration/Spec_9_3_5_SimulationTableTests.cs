@@ -47,7 +47,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             var e = MakeSimEngine(hunger: 20f, idle: 70f);
             Assert.That(e.GetActionScore("Daydream"), Is.EqualTo(98.4f).Within(0.01f),
                 "§9.3.5 row 1: Daydream score = (70+50)*0.82 = 98.4");
-            Assert.That(e.behavior, Is.EqualTo("Daydream"),
+            Assert.That(e.Behavior, Is.EqualTo("Daydream"),
                 "§9.3.5 row 1: Daydream wins (peaceful state).");
         }
 
@@ -59,7 +59,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             var e = MakeSimEngine(hunger: 50f, idle: 70f);
             Assert.That(e.GetActionScore("Daydream"), Is.EqualTo(66.0f).Within(0.01f),
                 "§9.3.5 row 2: Daydream score = (70+50)*0.55 = 66.0");
-            Assert.That(e.behavior, Is.EqualTo("Daydream"),
+            Assert.That(e.Behavior, Is.EqualTo("Daydream"),
                 "§9.3.5 row 2: Daydream still wins.");
         }
 
@@ -78,7 +78,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             var e = new Engine(p);
             e.Live(dt: 0.016f);  // Daydream wins (peaceful)
             e.Live(dt: 0.016f);  // bonus now on Daydream
-            Assume.That(e.behavior, Is.EqualTo("Daydream"), "pre: Daydream is current");
+            Assume.That(e.Behavior, Is.EqualTo("Daydream"), "pre: Daydream is current");
             e.Affect("hunger", +50f);  // hunger 20 → 70
             e.Live(dt: 0.016f);
             // Now Daydream's score (with bonus): (70+50)*0.37 = 44.4
@@ -100,7 +100,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             };
             var e = new Engine(p);
             e.Live(dt: 0.016f); e.Live(dt: 0.016f);
-            Assume.That(e.behavior, Is.EqualTo("Daydream"));
+            Assume.That(e.Behavior, Is.EqualTo("Daydream"));
             e.Affect("hunger", +80f);  // hunger → 100
             e.Live(dt: 0.016f);
             // Daydream(current) = (70+50)*(1-0.9*1.0) = 120*0.10 = 12.0

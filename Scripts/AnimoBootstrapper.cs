@@ -15,7 +15,7 @@ namespace Animo {
     /// in the repository — every spec reference to
     /// `Animo.AnimoBootstrapper` would have failed to resolve at compile
     /// time. Q-S97 ships the file with method declarations matching
-    /// §11.6.5's signatures: Awake (loads JSON via Animo.Json.Parse +
+    /// §11.6.5's signatures: Awake (loads JSON via Animo.JSON.Parse +
     /// initializes PersonaCache; Q-S76+Q-S29) and OnDestroy (clears
     /// both PersonaCache and Store; Q-S58+Q-S78). Phase 3 wires up the
     /// bodies.
@@ -55,7 +55,7 @@ namespace Animo {
             }
             Animo.Model.Root root;
             try {
-                root = Animo.Json.Parse(_animo_json.text);
+                root = Animo.JSON.Parse(_animo_json.text);
             } catch (System.Exception ex) {
                 AnimoLog.Error($"AnimoBootstrapper: failed to parse animo.json: {ex.Message}");
                 throw;  // re-throw: keep Unity's exception dialog + full stack trace

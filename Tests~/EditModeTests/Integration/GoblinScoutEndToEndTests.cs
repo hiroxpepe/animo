@@ -11,7 +11,7 @@ using Animo.Tools;
 namespace Animo.Tests.EditMode.IntegrationTests {
     /// <summary>
     /// Task 3-6 Exit Gate: ScenarioRunner runs the goblin_scout example end-to-end.
-    /// Loads examples/goblin_scout.json from disk, parses via Animo.Json,
+    /// Loads examples/goblin_scout.json from disk, parses via Animo.JSON,
     /// runs ScenarioRunner.Run for 10 seconds @ 60Hz, verifies output integrity.
     /// </summary>
     [TestFixture]
@@ -31,7 +31,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             Assume.That(File.Exists(path), $"goblin_scout.json must exist at {path}");
             string text = File.ReadAllText(path);
 
-            var root   = Json.Parse(text);
+            var root   = JSON.Parse(text);
             var runner = new ScenarioRunner(root);
             var result = runner.Run(agent_id: "goblin_scout_01", duration: 10.0f, dt: 1.0f / 60.0f);
 
@@ -46,11 +46,11 @@ namespace Animo.Tests.EditMode.IntegrationTests {
         [Test] public void GoblinScout_ToCsv_RoundTripsBasic() {
             string path = Path.Combine(RepoRoot(), "examples", "goblin_scout.json");
             Assume.That(File.Exists(path));
-            var root   = Json.Parse(File.ReadAllText(path));
+            var root   = JSON.Parse(File.ReadAllText(path));
             var runner = new ScenarioRunner(root);
             var result = runner.Run(agent_id: "goblin_scout_01", duration: 1.0f, dt: 0.1f);
 
-            string csv = result.ToCsv();
+            string csv = result.ToCSV();
             Assert.That(csv, Is.Not.Empty, "Phase 3 Exit Gate: CSV must not be empty.");
             Assert.That(csv, Does.Contain("time,behavior"),
                 "Phase 3 Exit Gate: CSV header must include time and behavior columns.");

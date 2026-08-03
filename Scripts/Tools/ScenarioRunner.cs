@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using Animo.Core;
@@ -15,25 +17,27 @@ namespace Animo.Tools {
     /// force_reset)`.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
+    [Serializable]
     public readonly struct AffectEvent {
-        public string need        { get; }
-        public float  delta       { get; }
-        public bool   force_reset { get; }
         public AffectEvent(string need, float delta, bool force_reset = false) {
             this.need        = need;
             this.delta       = delta;
             this.force_reset = force_reset;
         }
+        public string need        { get; }
+        public float  delta       { get; }
+        public bool   force_reset { get; }
     }
 
     /// <summary>(v0.1.5, Q-S4) Timed Affect injection for ScenarioRunner.</summary>
+    [Serializable]
     public readonly struct TimedAffectEvent {
-        public float       time { get; }
-        public AffectEvent ev   { get; }
         public TimedAffectEvent(float time, AffectEvent ev) {
             this.time = time;
             this.ev   = ev;
         }
+        public float       time { get; }
+        public AffectEvent ev   { get; }
     }
 
     /// <summary>
@@ -176,14 +180,14 @@ namespace Animo.Tools {
             // (#2 Phase_3_5_2) Cache need names and action ids once.
             // Persona structure is fixed at ctor time, so per-frame GetAllNeedNames()
             // and GetAllActionIds() would allocate a string[] and a List<string> on
-            // every RecordFrame call (216,000 allocations per 1-hour soak test).
-            // Cache once; pass into RecordFrame to keep observation layer zero-alloc.
-            var _need_names_cache = _engine.GetAllNeedNames();
-            var _action_ids_cache = _engine.GetAllActionIds();
+            // every recordFrame call (216,000 allocations per 1-hour soak test).
+            // Cache once; pass into recordFrame to keep observation layer zero-alloc.
+            var need_names_cache = _engine.GetAllNeedNames();
+            var action_ids_cache = _engine.GetAllActionIds();
 
             // (#2 Q-S26) Subscribe to Engine.OnSignal so signals_fired is populated per frame.
-            var _pending_signals = new System.Collections.Generic.List<string>();
-            _engine.OnSignal += s => _pending_signals.Add(s);
+            var pending_signals = new System.Collections.Generic.List<string>();
+            _engine.OnSignal += s => pending_signals.Add(s);
             var result = new TraceResult();
 
             // (#5 + Q-S35) Normalize and sort events by time. spec §26.3.1 requires
@@ -210,7 +214,7 @@ namespace Animo.Tools {
 
             // Spawn frame (Q-S34)
             _engine.Live(0.0f);
-            RecordFrame(result, 0f, _engine, _pending_signals, _need_names_cache, _action_ids_cache);
+            recordFrame(result, 0f, _engine, pending_signals, need_names_cache, action_ids_cache);
 
             // (Q-S84 + Q-S98) Integer step counter with double-precision Math.Round.
             int   total_steps = (int)System.Math.Round((double)duration / (double)dt);
@@ -226,7 +230,7 @@ namespace Animo.Tools {
                 }
 
                 _engine.Live(dt);
-                RecordFrame(result, frame_end, _engine, _pending_signals, _need_names_cache, _action_ids_cache);
+                recordFrame(result, frame_end, _engine, pending_signals, need_names_cache, action_ids_cache);
             }
 
             // (Q-S40) Post-loop sweep: events at time == duration (or missed by loop).
@@ -238,7 +242,7 @@ namespace Animo.Tools {
             }
             if (sweep_any) {
                 _engine.Live(0.0f);
-                RecordFrame(result, duration, _engine, _pending_signals, _need_names_cache, _action_ids_cache);
+                recordFrame(result, duration, _engine, pending_signals, need_names_cache, action_ids_cache);
             }
 
             // (Q-S93) Populate analysis counters in a single post-run pass.
@@ -249,15 +253,15 @@ namespace Animo.Tools {
             return result;
         }
 
-        static void RecordFrame(TraceResult result, float time, Engine engine,
+        static void recordFrame(TraceResult result, float time, Engine engine,
                                    System.Collections.Generic.List<string> pending_signals,
                                    System.Collections.Generic.IReadOnlyList<string> need_names,
                                    System.Collections.Generic.IReadOnlyList<string> action_ids) {
             var frame = new TraceFrame();
             frame.time            = time;
-            frame.behavior        = engine.behavior;
-            frame.is_locked       = engine.is_locked;
-            frame.locked_behavior = engine.locked_behavior;
+            frame.behavior        = engine.Behavior;
+            frame.is_locked       = engine.IsLocked;
+            frame.locked_behavior = engine.LockedBehavior;
             // (#1 Q-S62) Collect signals fired since last frame and clear the buffer.
             frame.signals_fired.AddRange(pending_signals);
             pending_signals.Clear();

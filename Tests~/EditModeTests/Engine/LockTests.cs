@@ -29,20 +29,20 @@ namespace Animo.Tests.EditMode.EngineTests {
             return new Engine(persona: p);
         }
         [Test] public void Case01_InitialState_NotLocked() {
-            Engine e = MakeEngine(); Assert.That(e.is_locked, Is.False);
+            Engine e = MakeEngine(); Assert.That(e.IsLocked, Is.False);
         }
         [Test] public void Case02_LockSetsIsLockedTrue() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f); Assert.That(e.is_locked, Is.True);
+            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f); Assert.That(e.IsLocked, Is.True);
         }
         [Test] public void Case03_LockedBehaviorIsCurrentBehavior() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f); Assert.That(e.locked_behavior, Is.EqualTo(expected: e.behavior));
+            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f); Assert.That(e.LockedBehavior, Is.EqualTo(expected: e.Behavior));
         }
         [Test] public void Case04_LockExpiresAfterDuration() {
             Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 0.5f);
-            e.Live(dt: 0.6f); Assert.That(e.is_locked, Is.False);
+            e.Live(dt: 0.6f); Assert.That(e.IsLocked, Is.False);
         }
         [Test] public void Case05_UnlockReleasesImmediately() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 10f); e.Unlock(); Assert.That(e.is_locked, Is.False);
+            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 10f); e.Unlock(); Assert.That(e.IsLocked, Is.False);
         }
         [Test] public void Case06_LockDurationOver30s_TriggersA031Warning() {
             // (A031, roadmap §5.5.1) Engine.Lock with duration > LOCK_DURATION_WARN_THRESHOLD
@@ -64,8 +64,8 @@ namespace Animo.Tests.EditMode.EngineTests {
         }
         [Test] public void Case07_HardLockMode_PreventsBehaviorChange() {
             Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 2.0f, mode: LockMode.Hard);
-            string before = e.behavior; e.Affect(need: "fear", delta: +60f); e.Live(dt: 0.016f);
-            Assert.That(e.behavior, Is.EqualTo(expected: before));
+            string before = e.Behavior; e.Affect(need: "fear", delta: +60f); e.Live(dt: 0.016f);
+            Assert.That(e.Behavior, Is.EqualTo(expected: before));
         }
     }
 }
