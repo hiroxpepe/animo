@@ -39,4 +39,17 @@ public class NamingConventionTests
             $"{found.Count} naming violation(s) (showing first 40):\n  "
             + string.Join("\n  ", found.Take(40)));
     }
+
+    [Test]
+    public void FileNames_FollowPrintForm()
+    {
+        var found = new List<string>();
+        foreach (var path in ConventionScan.source_files())
+            found.AddRange(ConventionRules.find_filename_violations(Path.GetFileName(path)));
+
+        found.Sort(StringComparer.Ordinal);
+        Assert.That(found, Is.Empty,
+            $"{found.Count} file-name violation(s) (showing first 40):\n  "
+            + string.Join("\n  ", found.Take(40)));
+    }
 }

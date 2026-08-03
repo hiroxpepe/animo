@@ -90,3 +90,45 @@ The convention tests hold two small word lists that put this standard to work:
 Each project adds to these lists the short forms and letter words that show up
 in its own code, judged by the print rule. The lists are the only part that
 changes from project to project; the print rule itself does not change.
+
+## What is checked (decision table)
+
+Every kind of name is checked, in the same way, on three points: its case
+shape, short forms (the full-word list), and letter words (the all-caps list).
+The table is the full set; no kind of name is left out.
+
+| Name kind             | Case shape                      | Short form | Letter word |
+| --------------------- | ------------------------------- | ---------- | ----------- |
+| const / static field  | `UPPER_SNAKE`                   | yes        | yes         |
+| private field         | `_snake_case`                   | yes        | yes         |
+| exposed field         | `PascalCase` (JSON: snake_case) | yes        | yes         |
+| local                 | `snake_case`                    | yes        | yes         |
+| foreach variable      | `snake_case`                    | yes        | yes         |
+| parameter             | `snake_case`                    | yes        | yes         |
+| method                | exposed `Pascal`, else `camel`  | yes        | yes         |
+| property              | exposed `Pascal`, else `camel`  | yes        | yes         |
+| JSON property / field | `snake_case` or `PascalCase`    | yes        | yes         |
+| enum member           | `PascalCase`                    | yes        | yes         |
+| type                  | `PascalCase`                    | yes        | yes         |
+| namespace segment     | `PascalCase`                    | yes        | yes         |
+| file name             | (print form of its type)        | yes        | yes         |
+
+A "JSON property or field" is an exposed member on a type marked
+`[Serializable]`; its name is an external JSON key, so `snake_case` is allowed
+there and only there.
+
+## Edge cases
+
+These cases are settled on purpose, and each has a test that holds the line:
+
+| Case                                      | What happens       | Why                                     |
+| ----------------------------------------- | ------------------ | --------------------------------------- |
+| `override` member                         | not checked        | name is fixed by the base               |
+| explicit interface member                 | not checked        | name is fixed by the interface          |
+| member inside an interface                | not checked        | the interface sets the name             |
+| `extern` method                           | not checked        | name comes from outside                 |
+| exposed member on `[Serializable]`        | snake_case allowed | it is a JSON key                        |
+| event (field form and property form)      | checked as exposed | an event is a member                    |
+| a unit mark such as `Hz`                  | left as is         | not a letter word; keeps its print form |
+| a call to an outside type (`JsonConvert`) | not checked        | the name is not ours to change          |
+| the plural `Ids`                          | left as is         | reads as a word, not the mark `ID`      |

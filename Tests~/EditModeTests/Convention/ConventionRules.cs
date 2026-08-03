@@ -72,7 +72,17 @@ static class ConventionRules
                 if (is_const || is_static_readonly) {
                     if (!UPPER_SNAKE.IsMatch(id))
                         found.Add($"{label}:{line(variable)}: const '{id}' must be UPPER_SNAKE");
-                } else if (!exposed(field.Modifiers)) {
+                } else if (exposed(field.Modifiers)) {
+                    // An exposed mutable field on a [Serializable] type is a
+                    // JSON-mapping field: snake_case is its external key.
+                    // Anywhere else an exposed field is PascalCase.
+                    if (in_serializable_type(variable)) {
+                        if (!PASCAL.IsMatch(id) && !SNAKE.IsMatch(id))
+                            found.Add($"{label}:{line(variable)}: json field '{id}' must be snake_case or PascalCase");
+                    } else if (!PASCAL.IsMatch(id)) {
+                        found.Add($"{label}:{line(variable)}: field '{id}' must be PascalCase");
+                    }
+                } else {
                     if (!SNAKE_FIELD.IsMatch(id))
                         found.Add($"{label}:{line(variable)}: field '{id}' must be _snake_case");
                 }
@@ -145,6 +155,24 @@ static class ConventionRules
                 found.Add($"{label}:{line(member)}: enum member '{id}' must be PascalCase");
         }
 
+        // Type names (class, struct, interface, enum, record) are always
+        // PascalCase. The print rule holds here too: a letter word in a type
+        // name is all caps (JSON, not Json), enforced by the spelling pass below.
+        foreach (var type in root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>()) {
+            var id = type.Identifier.ValueText;
+            if (!PASCAL.IsMatch(id))
+                found.Add($"{label}:{line(type)}: type '{id}' must be PascalCase");
+        }
+
+        // Namespace names are PascalCase in every dotted segment (Animo.Core,
+        // not animo.core). The spelling pass below also holds for each segment.
+        foreach (var ns in root.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()) {
+            foreach (var seg in ns.Name.ToString().Split('.')) {
+                if (!PASCAL.IsMatch(seg))
+                    found.Add($"{label}:{line(ns)}: namespace segment '{seg}' must be PascalCase");
+            }
+        }
+
         // Spelling applies only to names WE declare. Names that come from outside
         // (platform and SDK members) are not ours to rename, so call sites and
         // member accesses are not scanned.
@@ -183,6 +211,10 @@ static class ConventionRules
         foreach (var declarator in root.DescendantNodes().OfType<VariableDeclaratorSyntax>())
             yield return (declarator.Identifier.ValueText, line(declarator));
 
+        foreach (var ns in root.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>())
+            foreach (var seg in ns.Name.ToString().Split('.'))
+                yield return (seg, line(ns));
+
         foreach (var each in root.DescendantNodes().OfType<ForEachStatementSyntax>())
             yield return (each.Identifier.ValueText, line(each));
 
@@ -203,6 +235,24 @@ static class ConventionRules
         bool ok = want_pascal ? PASCAL.IsMatch(id) : CAMEL.IsMatch(id);
         if (!ok)
             found.Add($"{label}:{line(node)}: {kind} '{id}' must be {(want_pascal ? "PascalCase" : "camelCase")}");
+    }
+
+    // ---- file name ------------------------------------------------------
+
+    // The file name (without .cs) must follow the same print rule as a type
+    // name: no short forms, letter words in all caps. A file holding type JSON
+    // is JSON.cs, not Json.cs.
+    internal static List<string> find_filename_violations(string file_name)
+    {
+        var found = new List<string>();
+        var stem = file_name.EndsWith(".cs") ? file_name.Substring(0, file_name.Length - 3) : file_name;
+        foreach (var pair in EXPAND)
+            if (is_hump(stem, pair.Key))
+                found.Add($"{file_name}: file name uses '{pair.Key}', expand to '{pair.Value}'");
+        foreach (var pair in UPPER)
+            if (is_hump(stem, pair.Key))
+                found.Add($"{file_name}: file name uses '{pair.Key}', use '{pair.Value}'");
+        return found;
     }
 
     // ---- order -----------------------------------------------------------
