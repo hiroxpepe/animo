@@ -55,7 +55,7 @@ namespace Animo.Tests.EditMode.EdgeCases {
                 actions = new List<Action> { ActionOf(id: "Idle", need: "idle", tier: 5) } };
             Engine e = new Engine(persona: p);
             for (int i = 0; i < 60; i++) e.Live(dt: 1f / 60f);
-            Assert.That(e.behavior, Is.Not.Null);
+            Assert.That(e.Behavior, Is.Not.Null);
         }
     }
 }

@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using System;
+
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -15,6 +17,7 @@ namespace Animo.Tools {
     /// Dictionary for API clarity; Phase 4 optimization may switch to
     /// shared key arrays + parallel float[] per Q-S132 contract.
     /// </summary>
+    [Serializable]
     public sealed class TraceFrame {
         public float time;
         public string behavior = "";
@@ -30,6 +33,7 @@ namespace Animo.Tools {
     /// (v0.1.5, Q-S93) Aggregate result of ScenarioRunner.Run.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
+    [Serializable]
     public sealed class TraceResult {
         public string agent_id = "";
         public float  duration;
@@ -39,6 +43,50 @@ namespace Animo.Tools {
         // (Q-S93) Populated by ScenarioRunner.Run in a single post-run pass.
         public Dictionary<string, int>   behavior_count      { get; } = new();
         public Dictionary<string, float> behavior_total_time { get; } = new();
+
+        /// <summary>
+        /// (Q-S93) Serialize to CSV. Columns: time, behavior, is_locked,
+        /// locked_behavior, needs.*, effective_needs.*, action_scores.*, signals_fired.
+        /// Column order is stable (sorted keys) for regression diffing.
+        /// </summary>
+        public string ToCSV() {
+            if (frames.Count == 0) return "";
+            var need_keys   = sortedKeys(frames[0].needs);
+            var eff_keys    = sortedKeys(frames[0].effective_needs);
+            var score_keys  = sortedKeys(frames[0].action_scores);
+
+            var ic = CultureInfo.InvariantCulture;
+            var sb = new StringBuilder();
+            // Header
+            sb.Append("time,behavior,is_locked,locked_behavior");
+            foreach (var k in need_keys)  sb.Append($",needs.{k}");
+            foreach (var k in eff_keys)   sb.Append($",eff.{k}");
+            foreach (var k in score_keys) sb.Append($",score.{k}");
+            sb.AppendLine(",signals_fired");
+
+            // Rows
+            foreach (var f in frames) {
+                sb.Append($"{f.time.ToString("F4", ic)},{csv(f.behavior)},{f.is_locked},{csv(f.locked_behavior)}");
+                foreach (var k in need_keys)  sb.Append($",{f.needs.GetValueOrDefault(k).ToString("F4", ic)}");
+                foreach (var k in eff_keys)   sb.Append($",{f.effective_needs.GetValueOrDefault(k).ToString("F4", ic)}");
+                foreach (var k in score_keys) sb.Append($",{f.action_scores.GetValueOrDefault(k).ToString("F4", ic)}");
+                sb.AppendLine($",\"{string.Join(";", f.signals_fired)}\"");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>(Q-S93) Serialize to JSON.</summary>
+        public string ToJSON() {
+            var obj = new {
+                agent_id,
+                duration,
+                dt,
+                behavior_count,
+                behavior_total_time,
+                frames
+            };
+            return JsonConvert.SerializeObject(obj, Formatting.Indented);
+        }
 
         /// <summary>
         /// Populate behavior_count and behavior_total_time from frames[].
@@ -62,56 +110,14 @@ namespace Animo.Tools {
             }
         }
 
-        /// <summary>
-        /// (Q-S93) Serialize to CSV. Columns: time, behavior, is_locked,
-        /// locked_behavior, needs.*, effective_needs.*, action_scores.*, signals_fired.
-        /// Column order is stable (sorted keys) for regression diffing.
-        /// </summary>
-        public string ToCsv() {
-            if (frames.Count == 0) return "";
-            var need_keys   = SortedKeys(frames[0].needs);
-            var eff_keys    = SortedKeys(frames[0].effective_needs);
-            var score_keys  = SortedKeys(frames[0].action_scores);
 
-            var ic = CultureInfo.InvariantCulture;
-            var sb = new StringBuilder();
-            // Header
-            sb.Append("time,behavior,is_locked,locked_behavior");
-            foreach (var k in need_keys)  sb.Append($",needs.{k}");
-            foreach (var k in eff_keys)   sb.Append($",eff.{k}");
-            foreach (var k in score_keys) sb.Append($",score.{k}");
-            sb.AppendLine(",signals_fired");
 
-            // Rows
-            foreach (var f in frames) {
-                sb.Append($"{f.time.ToString("F4", ic)},{Csv(f.behavior)},{f.is_locked},{Csv(f.locked_behavior)}");
-                foreach (var k in need_keys)  sb.Append($",{f.needs.GetValueOrDefault(k).ToString("F4", ic)}");
-                foreach (var k in eff_keys)   sb.Append($",{f.effective_needs.GetValueOrDefault(k).ToString("F4", ic)}");
-                foreach (var k in score_keys) sb.Append($",{f.action_scores.GetValueOrDefault(k).ToString("F4", ic)}");
-                sb.AppendLine($",\"{string.Join(";", f.signals_fired)}\"");
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>(Q-S93) Serialize to JSON.</summary>
-        public string ToJson() {
-            var obj = new {
-                agent_id,
-                duration,
-                dt,
-                behavior_count,
-                behavior_total_time,
-                frames
-            };
-            return JsonConvert.SerializeObject(obj, Formatting.Indented);
-        }
-
-        static List<string> SortedKeys(Dictionary<string, float> d) {
+        static List<string> sortedKeys(Dictionary<string, float> d) {
             var keys = new List<string>(d.Keys);
             keys.Sort(System.StringComparer.Ordinal);
             return keys;
         }
-        static string Csv(string s) =>
+        static string csv(string s) =>
             s.Contains(',') || s.Contains('"') ? $"\"{s.Replace("\"", "\"\"")}\"" : s;
     }
 }

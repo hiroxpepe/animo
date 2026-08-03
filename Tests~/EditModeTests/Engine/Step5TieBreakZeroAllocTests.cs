@@ -17,7 +17,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             };
             var e = new Engine(p);
             e.Live(0.0f);
-            Assert.That(e.behavior, Is.EqualTo("First"),
+            Assert.That(e.Behavior, Is.EqualTo("First"),
                 "Q-S9: tie → first declaration in actions[] wins.");
         }
     }

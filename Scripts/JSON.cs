@@ -16,8 +16,8 @@ namespace Animo {
     /// shape. JSON: {"hunger": 40, "fatigue": 20} → Needs.values["hunger"]=40.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
-    public static class Json {
-        static readonly JsonSerializerSettings _settings = new JsonSerializerSettings {
+    public static class JSON {
+        static readonly JsonSerializerSettings SETTINGS = new JsonSerializerSettings {
             Converters = { new NeedsConverter(), new RatesConverter() },
             MissingMemberHandling = MissingMemberHandling.Ignore
         };
@@ -29,9 +29,9 @@ namespace Animo {
         public static Root Parse(string text) {
             if (string.IsNullOrEmpty(text))
                 throw new ArgumentException("JSON text cannot be null or empty.", nameof(text));
-            var root = JsonConvert.DeserializeObject<Root>(text, _settings);
+            var root = JsonConvert.DeserializeObject<Root>(text, SETTINGS);
             if (root == null)
-                throw new InvalidOperationException("Json.Parse: deserialization returned null.");
+                throw new InvalidOperationException("JSON.Parse: deserialization returned null.");
             return root;
         }
 

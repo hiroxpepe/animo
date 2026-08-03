@@ -39,7 +39,7 @@ namespace Animo {
         static Root? _root;
         static ValidationResult? _validation;
         #pragma warning restore CS0414
-        static readonly Dictionary<string, Persona> _cache = new();
+        static readonly Dictionary<string, Persona> CACHE = new();
 
         /// <summary>
         /// Set the Root once at app startup. Runs Validator on Root
@@ -49,7 +49,7 @@ namespace Animo {
         public static void Initialize(Root root) {
             _root       = root;
             _validation = Validator.Validate(root);
-            _cache.Clear();
+            CACHE.Clear();
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Animo {
                     "PersonaCache.GetComposed: Initialize(root) has not been called. " +
                     "Ensure AnimoBootstrapper runs before any Agent.Awake.");
 
-            if (_cache.TryGetValue(template_id, out var cached)) return cached;
+            if (CACHE.TryGetValue(template_id, out var cached)) return cached;
 
             Persona? raw = null;
             foreach (var p in _root.personas)
@@ -94,7 +94,7 @@ namespace Animo {
             }
 
             if (_validation != null) _validation.Merge(stage2);
-            _cache[template_id] = composed;
+            CACHE[template_id] = composed;
             return composed;
         }
 
@@ -106,7 +106,7 @@ namespace Animo {
         public static void ClearForTesting() {
             _root = null;
             _validation = null;
-            _cache.Clear();
+            CACHE.Clear();
         }
     }
 

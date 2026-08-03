@@ -111,7 +111,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
             e.Live(dt: 0.016f);    // let commitment build up on current behavior
-            string before = e.behavior;
+            string before = e.Behavior;
 
             // Within-frame multi-call:
             e.Affect(need: "fear",   delta: +50f, force_reset: true);

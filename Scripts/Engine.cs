@@ -49,7 +49,7 @@ namespace Animo.Core {
 
         float  _lock_remaining       = 0.0f;       // Q-S70
         // (Q-S48) Per-Need decay multiplier cache. Built in PHASE C via
-        // ApplyNonTierMetadata. Applied in Step 1 to rates[] values.
+        // applyNonTierMetadata. Applied in Step 1 to rates[] values.
         // Index parallel to _needs[]. Default 1.0f (no change).
         float[] _decay_rates = Array.Empty<float>();
         // (§16.3.4 Pre-cache Principle) Flat parallel array for Step 1 (natural decay).
@@ -63,10 +63,9 @@ namespace Animo.Core {
 
         LockMode _lock_mode          = LockMode.Hard;
 
-        ///////////////////////////////////////////////////////////////////////
-        // Public event
-
-        public event Action<string>? OnSignal;      // Q-S26
+        // (#2 Zero-GC) Pre-cached non-null List<Threshold> reference avoids per-frame
+        // IReadOnlyList cast boxing in Step 3 hot path. Set in ctor.
+        List<Threshold> _thresholds = null!;
 
         ///////////////////////////////////////////////////////////////////////
         // Constructor
@@ -138,12 +137,12 @@ namespace Animo.Core {
             _need_tier_indices = new Dictionary<int, int[]>();
             foreach (var kv in scratch) _need_tier_indices[kv.Key] = kv.Value.ToArray();
 
-            // PHASE C Step 3: ApplyNonTierMetadata for all needs
+            // PHASE C Step 3: applyNonTierMetadata for all needs
             foreach (var entry in _need_index) {
                 NeedMeta meta = (_persona.needs_meta != null &&
                                  _persona.needs_meta.TryGetValue(entry.Key, out var em))
                                 ? em : NeedMeta.DefaultFor(entry.Key);
-                ApplyNonTierMetadata(entry.Value, meta);
+                applyNonTierMetadata(entry.Value, meta);
             }
 
             // ── Action score array ─────────────────────────────────────────
@@ -163,17 +162,19 @@ namespace Animo.Core {
                 t.expanded_trigger = t.trigger.Replace("{agent_id}", _persona.agent_id);
 
             // ── PHASE D (Q-S8 + Q-S23 + Q-S25): seed previous_eff + is_above
-            Step2_EffectiveNeeds();
+            step2EffectiveNeeds();
             foreach (var t in _thresholds)
                 t.is_above = _effective_needs[t.need_index] >= t.trigger_threshold;
         }
 
+        public event Action<string>? OnSignal;      // Q-S26
+
         ///////////////////////////////////////////////////////////////////////
         // Public properties
 
-        public string behavior   => _current_behavior;
-        public bool   is_locked  => _lock_remaining > 0f;  // Q-S126: computed property
-        public string locked_behavior =>
+        public string Behavior   => _current_behavior;
+        public bool   IsLocked   => _lock_remaining > 0f;  // Q-S126: computed property
+        public string LockedBehavior =>
             (_locked_behavior_index >= 0 && _persona.actions != null &&
              _locked_behavior_index < _persona.actions.Count)
             ? _persona.actions[_locked_behavior_index].id : "";
@@ -188,7 +189,7 @@ namespace Animo.Core {
             if (dt < 0f)
                 throw new ArgumentException($"dt must be >= 0. Got {dt}.", nameof(dt));
             // T0: Lock timer (Q-S3)
-            if (is_locked) {
+            if (IsLocked) {
                 _lock_remaining -= dt;
                 if (_lock_remaining <= 0f) {
                     _lock_remaining = 0f;
@@ -208,13 +209,13 @@ namespace Animo.Core {
             }
 
             // Step 2: EffectiveNeeds cascade
-            Step2_EffectiveNeeds();
+            step2EffectiveNeeds();
 
             // Step 3: Threshold check
-            Step3_Thresholds();
+            step3Thresholds();
 
             // Step 4: Action score calc
-            Step4_ScoreActions();
+            step4ScoreActions();
 
             // Step 5: switch decision.
             // (Q-S2, spec §24 line 5525, DECISION LOG Q-S2 line 334)
@@ -223,154 +224,8 @@ namespace Animo.Core {
             // threshold, score), NOT to Step 5 (switch). ROADMAP §5.6.1 3-3-k
             // "Step 5 runs but output is frozen" was an outdated description superseded
             // by the Q-S2 decision and spec §24 table.
-            if (!is_locked)
-                Step5_Switch();
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        // Step 2: EffectiveNeeds
-
-        void Step2_EffectiveNeeds() {
-            // Start from base needs
-            Array.Copy(_needs, _effective_needs, _needs.Length);
-
-            if (_persona.influences == null || _persona.influences.Count == 0) return;
-
-            // (§16.3.4 Pre-cache Principle) Use pre-sorted order from Composer.
-            // Zero allocation: iterate int[] built once at compose time.
-            // If _sorted_influence_order is null (directly-constructed Persona),
-            // fall back to declaration order (safe; A025 catches cycles at validate time).
-            var edges = _persona.influences;
-            var order = _persona._sorted_influence_order;
-
-            if (order != null) {
-                for (int oi = 0; oi < order.Length; oi++) {
-                    var inf = edges[order[oi]];
-                    int si  = inf.source_index;
-                    int ti  = inf.target_index;
-                    if (si < 0 || ti < 0) continue;
-                    float intensity = _effective_needs[si] / 100f;
-                    float delta     = inf.coefficient * intensity * _effective_needs[si];
-                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
-                }
-            } else {
-                // Cold fallback: declaration order (direct Persona construction without Composer)
-                for (int i = 0; i < edges.Count; i++) {
-                    var inf = edges[i];
-                    if (!_need_index.TryGetValue(inf.source, out var si)) continue;
-                    if (!_need_index.TryGetValue(inf.target, out var ti)) continue;
-                    float intensity = _effective_needs[si] / 100f;
-                    float delta     = inf.coefficient * intensity * _effective_needs[si];
-                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
-                }
-            }
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        // Step 3: Thresholds
-
-        // (#2 Zero-GC) Pre-cached non-null List<Threshold> reference avoids per-frame
-        // IReadOnlyList cast boxing in Step 3 hot path. Set in ctor.
-        List<Threshold> _thresholds = null!;
-
-        void Step3_Thresholds() {
-            // foreach over concrete List<T> uses struct-enumerator (no alloc).
-            foreach (var t in _thresholds) {
-                float curr  = _effective_needs[t.need_index];
-                // (Q-S86) Composer always fills reset_threshold (Q-S11 contract).
-                // Use !.Value — NRE on first frame is the correct fail-loud signal
-                // if contract is violated (preferable to silent wrong-value fallback).
-                float reset = t.reset_threshold!.Value;
-                if (!t.is_above) {
-                    if (curr >= t.trigger_threshold) {
-                        t.is_above = true;
-                        RaiseSignal(t.expanded_trigger);
-                    }
-                } else {
-                    if (curr <= reset) t.is_above = false;
-                }
-            }
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        // Step 4: Score
-
-        void Step4_ScoreActions() {
-            if (_persona.actions == null) return;
-            for (int i = 0; i < _persona.actions.Count; i++) {
-                var act     = _persona.actions[i];
-                float eff   = _effective_needs[act.need_index];
-                float inten = eff / 100f;
-                float score = (float)System.Math.Pow(inten, act.exponent) * 100f;
-
-                // (Q-S13) While locked, the bonus-skip is suppressed.
-                // The latch (_force_reset_pending) survives the lock but does NOT
-                // skip the bonus mid-lock — it is consumed on the first post-unlock Step 4.
-                bool is_current = (act.id == _current_behavior);
-                bool locked_act = (_locked_behavior_index >= 0 && _locked_behavior_index == i);
-                bool skip_bonus = _force_reset_pending && !is_locked;
-                if ((is_current || locked_act) && !skip_bonus) {
-                    float bonus = _persona.commitment?.bonus ?? 0f;
-                    score += bonus;
-                }
-
-                // Apply Maslow dynamic suppression (§9.3.4)
-                // score × (1 - suppression_factor[act.tier] × max_lower_tier_intensity)
-                // suppression_factor is keyed on ACT.TIER (one value), not on t2 (loop var).
-                float supp_factor = 0f;
-                if (_persona.suppression != null && act.tier > 1) {
-                    // Determine the suppression coefficient for THIS action's tier.
-                    float sf = act.tier == 2 ? _persona.suppression.tier2 :
-                               act.tier == 3 ? _persona.suppression.tier3 :
-                               act.tier == 4 ? _persona.suppression.tier4 :
-                                               _persona.suppression.tier5;
-                    if (sf > 0f) {
-                        // Accumulate max need intensity from ALL lower tiers.
-                        float max_lower = 0f;
-                        for (int t2 = 1; t2 < act.tier; t2++) {
-                            if (!_need_tier_indices.TryGetValue(t2, out var idxs)) continue;
-                            foreach (var ni in idxs) {
-                                float v = _effective_needs[ni] / 100f;
-                                if (v > max_lower) max_lower = v;
-                            }
-                        }
-                        supp_factor = sf * max_lower;
-                    }
-                }
-                score *= (1f - supp_factor);
-
-                _action_scores[i] = score;
-            }
-
-            // Clear force_reset if not locked (Q-S13)
-            if (!is_locked) _force_reset_pending = false;
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        // Step 5: Switch
-
-        void Step5_Switch() {
-            if (_persona.actions == null || _persona.actions.Count == 0) return;
-
-            // Pick best score (tie-break: declaration order / lowest index, Q-S9)
-            int   best_idx   = 0;
-            float best_score = _action_scores[0];
-            for (int i = 1; i < _action_scores.Length; i++)
-                if (_action_scores[i] > best_score) { best_score = _action_scores[i]; best_idx = i; }
-
-            string new_behavior = _persona.actions[best_idx].id;
-            if (new_behavior != _current_behavior) {
-                string prev = _current_behavior;
-                _current_behavior = new_behavior;
-                OnBehaviorChanged(prev, new_behavior);
-            }
-            _previous_behavior = _current_behavior;
-        }
-
-        void OnBehaviorChanged(string previous, string next_b) {
-            if (previous == "") return;  // Q-S31: silent first transition
-            if (_cached_action_triggers.TryGetValue(next_b, out var sig))
-                RaiseSignal(sig);
+            if (!IsLocked)
+                step5Switch();
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -416,10 +271,10 @@ namespace Animo.Core {
                     "Runaway Lock state risk.");
             _lock_remaining        = duration;
             _lock_mode             = mode;
-            if (is_locked && !string.IsNullOrEmpty(_current_behavior) &&
+            if (IsLocked && !string.IsNullOrEmpty(_current_behavior) &&
                 _action_id_to_index.TryGetValue(_current_behavior, out var idx))
                 _locked_behavior_index = idx;
-            else if (!is_locked)
+            else if (!IsLocked)
                 _locked_behavior_index = -1;
         }
 
@@ -464,7 +319,149 @@ namespace Animo.Core {
         internal string GetExpandedActionTrigger(string beh) =>
             _cached_action_triggers.TryGetValue(beh, out var t) ? t : beh;
 
-        private void ApplyNonTierMetadata(int need_index, NeedMeta meta) {
+        protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 2: EffectiveNeeds
+
+        void step2EffectiveNeeds() {
+            // Start from base needs
+            Array.Copy(_needs, _effective_needs, _needs.Length);
+
+            if (_persona.influences == null || _persona.influences.Count == 0) return;
+
+            // (§16.3.4 Pre-cache Principle) Use pre-sorted order from Composer.
+            // Zero allocation: iterate int[] built once at compose time.
+            // If sorted_influence_order is null (directly-constructed Persona),
+            // fall back to declaration order (safe; A025 catches cycles at validate time).
+            var edges = _persona.influences;
+            var order = _persona.sorted_influence_order;
+
+            if (order != null) {
+                for (int oi = 0; oi < order.Length; oi++) {
+                    var inf = edges[order[oi]];
+                    int si  = inf.source_index;
+                    int ti  = inf.target_index;
+                    if (si < 0 || ti < 0) continue;
+                    float intensity = _effective_needs[si] / 100f;
+                    float delta     = inf.coefficient * intensity * _effective_needs[si];
+                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
+                }
+            } else {
+                // Cold fallback: declaration order (direct Persona construction without Composer)
+                for (int i = 0; i < edges.Count; i++) {
+                    var inf = edges[i];
+                    if (!_need_index.TryGetValue(inf.source, out var si)) continue;
+                    if (!_need_index.TryGetValue(inf.target, out var ti)) continue;
+                    float intensity = _effective_needs[si] / 100f;
+                    float delta     = inf.coefficient * intensity * _effective_needs[si];
+                    _effective_needs[ti] = (float)System.Math.Clamp(_effective_needs[ti] + delta, 0f, 100f);
+                }
+            }
+        }
+
+        void step3Thresholds() {
+            // foreach over concrete List<T> uses struct-enumerator (no alloc).
+            foreach (var t in _thresholds) {
+                float curr  = _effective_needs[t.need_index];
+                // (Q-S86) Composer always fills reset_threshold (Q-S11 contract).
+                // Use !.Value — NRE on first frame is the correct fail-loud signal
+                // if contract is violated (preferable to silent wrong-value fallback).
+                float reset = t.reset_threshold!.Value;
+                if (!t.is_above) {
+                    if (curr >= t.trigger_threshold) {
+                        t.is_above = true;
+                        RaiseSignal(t.expanded_trigger);
+                    }
+                } else {
+                    if (curr <= reset) t.is_above = false;
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 4: Score
+
+        void step4ScoreActions() {
+            if (_persona.actions == null) return;
+            for (int i = 0; i < _persona.actions.Count; i++) {
+                var act     = _persona.actions[i];
+                float eff   = _effective_needs[act.need_index];
+                float inten = eff / 100f;
+                float score = (float)System.Math.Pow(inten, act.exponent) * 100f;
+
+                // (Q-S13) While locked, the bonus-skip is suppressed.
+                // The latch (_force_reset_pending) survives the lock but does NOT
+                // skip the bonus mid-lock — it is consumed on the first post-unlock Step 4.
+                bool is_current = (act.id == _current_behavior);
+                bool locked_act = (_locked_behavior_index >= 0 && _locked_behavior_index == i);
+                bool skip_bonus = _force_reset_pending && !IsLocked;
+                if ((is_current || locked_act) && !skip_bonus) {
+                    float bonus = _persona.commitment?.bonus ?? 0f;
+                    score += bonus;
+                }
+
+                // Apply Maslow dynamic suppression (§9.3.4)
+                // score × (1 - suppression_factor[act.tier] × max_lower_tier_intensity)
+                // suppression_factor is keyed on ACT.TIER (one value), not on t2 (loop var).
+                float supp_factor = 0f;
+                if (_persona.suppression != null && act.tier > 1) {
+                    // Determine the suppression coefficient for THIS action's tier.
+                    float sf = act.tier == 2 ? _persona.suppression.tier2 :
+                               act.tier == 3 ? _persona.suppression.tier3 :
+                               act.tier == 4 ? _persona.suppression.tier4 :
+                                               _persona.suppression.tier5;
+                    if (sf > 0f) {
+                        // Accumulate max need intensity from ALL lower tiers.
+                        float max_lower = 0f;
+                        for (int t2 = 1; t2 < act.tier; t2++) {
+                            if (!_need_tier_indices.TryGetValue(t2, out var idxs)) continue;
+                            foreach (var ni in idxs) {
+                                float v = _effective_needs[ni] / 100f;
+                                if (v > max_lower) max_lower = v;
+                            }
+                        }
+                        supp_factor = sf * max_lower;
+                    }
+                }
+                score *= (1f - supp_factor);
+
+                _action_scores[i] = score;
+            }
+
+            // Clear force_reset if not locked (Q-S13)
+            if (!IsLocked) _force_reset_pending = false;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Step 5: Switch
+
+        void step5Switch() {
+            if (_persona.actions == null || _persona.actions.Count == 0) return;
+
+            // Pick best score (tie-break: declaration order / lowest index, Q-S9)
+            int   best_idx   = 0;
+            float best_score = _action_scores[0];
+            for (int i = 1; i < _action_scores.Length; i++)
+                if (_action_scores[i] > best_score) { best_score = _action_scores[i]; best_idx = i; }
+
+            string new_behavior = _persona.actions[best_idx].id;
+            if (new_behavior != _current_behavior) {
+                string prev = _current_behavior;
+                _current_behavior = new_behavior;
+                onBehaviorChanged(prev, new_behavior);
+            }
+            _previous_behavior = _current_behavior;
+        }
+
+        void onBehaviorChanged(string previous, string next_b) {
+            if (previous == "") return;  // Q-S31: silent first transition
+            if (_cached_action_triggers.TryGetValue(next_b, out var sig))
+                RaiseSignal(sig);
+        }
+
+
+        private void applyNonTierMetadata(int need_index, NeedMeta meta) {
             // (Q-S45 + Q-S48) Apply non-tier NeedMeta fields.
             // decay_multiplier: scales the rates[] value for this Need.
             // 1.0 = no change (default). Applied to _decay_rates[] cache;
@@ -473,6 +470,5 @@ namespace Animo.Core {
                 _decay_rates[need_index] = meta.decay_multiplier;
         }
 
-        protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
     }
 }

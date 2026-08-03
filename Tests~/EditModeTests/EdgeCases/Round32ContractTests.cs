@@ -47,7 +47,7 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
         }
 
         [Test] public void Case02_JsonCs_DocumentsPhase3DeserializeContract() {
-            var path = Path.Combine(RepoRoot(), "Scripts", "Json.cs");
+            var path = Path.Combine(RepoRoot(), "Scripts", "JSON.cs");
             Assert.That(File.Exists(path), Is.True);
             var text = File.ReadAllText(path);
             Assert.That(text, Does.Contain("Q-S151"),

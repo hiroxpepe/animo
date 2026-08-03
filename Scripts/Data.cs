@@ -3,12 +3,15 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Animo.Model {
 
     /// <summary>JSON root: schema_version + kinds + personas.</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
+    [Serializable]
     public class Root {
         public string schema_version { get; set; } = "";
         public List<Kind> kinds { get; set; } = new();
@@ -16,6 +19,7 @@ namespace Animo.Model {
     }
 
     /// <summary>Type definition. Cascades into Personas via kind_ids.</summary>
+    [Serializable]
     public class Kind {
         public string kind_id { get; set; } = "";
         public Rates? rates { get; set; }
@@ -31,6 +35,7 @@ namespace Animo.Model {
     }
 
     /// <summary>Individual agent definition. Inherits via kind_ids.</summary>
+    [Serializable]
     public class Persona {
         public string agent_id { get; set; } = "";
         public string? persona_name { get; set; }
@@ -46,12 +51,13 @@ namespace Animo.Model {
 
         /// <summary>
         /// (§16.3.4 Pre-cache Principle) Topo-sorted edge order produced by
-        /// Composer.TopoSortInfluences (cold path, once per composed Persona).
+        /// Composer.topoSortInfluences (cold path, once per composed Persona).
         /// Engine Step 2 iterates this int[] with zero allocation per frame.
         /// null = not yet composed (direct construction); Engine falls back to
         /// declaration order (safe, possibly non-topo for cyclic graphs).
         /// </summary>
-        public int[]? _sorted_influence_order { get; set; }
+        [JsonIgnore]
+        public int[]? sorted_influence_order { get; set; }
 
         /// <summary>
         /// (v0.1.5, Q-S64) Deep-clone the composed Persona so each
@@ -135,7 +141,7 @@ namespace Animo.Model {
                 foreach (var kv in this.needs_meta) copy.needs_meta[kv.Key] = kv.Value.DeepCopy();
             }
             // (§16.3.4) Copy pre-sorted order array (int[] is immutable after Compose; safe to share).
-            copy._sorted_influence_order = this._sorted_influence_order;
+            copy.sorted_influence_order = this.sorted_influence_order;
 
             return copy;
         }
@@ -150,15 +156,16 @@ namespace Animo.Model {
     ///
     /// `tier` ∈ [1, 5] — Validator A038 enforces the range.
     /// </summary>
+    [Serializable]
     public class NeedMeta {
         public int   tier            { get; set; }
         /// <summary>
         /// (v0.1.5, Q-S48) Per-Need decay rate multiplier applied in Engine
-        /// PHASE C via ApplyNonTierMetadata. 1.0 = no change (default).
+        /// PHASE C via applyNonTierMetadata. 1.0 = no change (default).
         /// Values &lt; 1.0 slow decay; values &gt; 1.0 accelerate decay.
         /// Used to give different Needs different "drain speeds" without
         /// requiring explicit rates[] overrides in every Persona.
-        /// Phase 3 Engine.ApplyNonTierMetadata multiplies the base rates[]
+        /// Phase 3 Engine.applyNonTierMetadata multiplies the base rates[]
         /// value by this factor before storing it in a per-Need rate cache.
         /// </summary>
         public float decay_multiplier { get; set; } = 1.0f;
@@ -234,6 +241,7 @@ namespace Animo.Model {
     /// Q-S151 chooses Option A; the v0.1.5 stub keeps the simple
     /// Dictionary-backed shape because Phase 3 wires up the converter.
     /// The contract is documented here so Phase 3 cannot regress.
+    [Serializable]
     public class Needs {
         public Dictionary<string, float> values { get; set; } = new();
         public float Get(string need) =>
@@ -253,11 +261,13 @@ namespace Animo.Model {
     /// JSON shape is FLAT <c>{"hunger": -0.5, "fatigue": -0.3}</c>,
     /// not a wrapper. Phase 3 implements the same [JsonExtensionData]
     /// projection pattern.
+    [Serializable]
     public class Rates {
         public Dictionary<string, float> values { get; set; } = new();
     }
 
     /// <summary>Tier suppression factors [0, 1]. Only tier2..tier5 are valid.</summary>
+    [Serializable]
     public class Suppression {
         public float tier2 { get; set; } = 0f;
         public float tier3 { get; set; } = 0f;
@@ -266,6 +276,7 @@ namespace Animo.Model {
     }
 
     /// <summary>Directed need-to-need effect. Coefficient in [-1, 1].</summary>
+    [Serializable]
     public class Influence {
         public string source { get; set; } = "";
         public string target { get; set; } = "";
@@ -300,13 +311,14 @@ namespace Animo.Model {
     }
 
     /// <summary>Action definition. need is required since v0.1.1.</summary>
+    [Serializable]
     public class Action {
+        // need_index cache is internal in spec; tests use the public API only.
+        internal int need_index;
         public string id { get; set; } = "";
         public string need { get; set; } = "";
         public int tier { get; set; } = 1;
         public float exponent { get; set; } = 1.0f;
-        // need_index cache is internal in spec; tests use the public API only.
-        internal int need_index;
 
         /// <summary>
         /// (v0.1.5, Q-S141) Q-S134 pattern: explicit DeepCopy() so future
@@ -328,6 +340,7 @@ namespace Animo.Model {
     }
 
     /// <summary>Action continuation bonus. v0.1.3 dropped 'decay' field.</summary>
+    [Serializable]
     public class Commitment {
         public float bonus { get; set; } = 0f;
 
@@ -338,6 +351,7 @@ namespace Animo.Model {
     }
 
     /// <summary>Germio integration binding.</summary>
+    [Serializable]
     public class Binding {
         public string? on_action_change { get; set; }
         // v0.1.5 (Q-S12): non-nullable with empty-list default. Awake-time
@@ -358,11 +372,8 @@ namespace Animo.Model {
     }
 
     /// <summary>Two-stage hysteresis threshold trigger (v0.1.1).</summary>
+    [Serializable]
     public class Threshold {
-        public string need { get; set; } = "";
-        public float trigger_threshold { get; set; } = 0f;
-        public float? reset_threshold { get; set; }
-        public string trigger { get; set; } = "";
         internal int need_index;
         // v0.1.5 (Q-S14): per-Threshold pre-expanded trigger string.
         // Replaces the old `_cached_threshold_triggers[t.need]` dictionary
@@ -383,6 +394,10 @@ namespace Animo.Model {
         // first Live(dt). Step 3 fire branch transitions Below → Above;
         // Step 3 reset branch transitions Above → Below.
         internal bool is_above;
+        public string need { get; set; } = "";
+        public float trigger_threshold { get; set; } = 0f;
+        public float? reset_threshold { get; set; }
+        public string trigger { get; set; } = "";
 
         /// <summary>
         /// (v0.1.5, Q-S141) Threshold carries internal state fields

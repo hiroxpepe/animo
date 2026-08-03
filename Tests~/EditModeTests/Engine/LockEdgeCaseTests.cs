@@ -38,9 +38,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
             e.Lock(duration: 5f);
-            Assert.That(e.is_locked, Is.True, "precondition: engine should be locked");
+            Assert.That(e.IsLocked, Is.True, "precondition: engine should be locked");
             e.Lock(duration: 0f);
-            Assert.That(e.is_locked, Is.False, "Lock(0) must release the existing lock");
+            Assert.That(e.IsLocked, Is.False, "Lock(0) must release the existing lock");
         }
 
         [Test] public void Case01b_LockZeroDuration_FromUnlockedStaysUnlocked() {
@@ -48,9 +48,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             // Together with Case01, this pins down the full Lock(0) contract.
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
-            Assert.That(e.is_locked, Is.False, "precondition: not locked");
+            Assert.That(e.IsLocked, Is.False, "precondition: not locked");
             e.Lock(duration: 0f);
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
         }
 
         [Test] public void Case02_LockNegativeDuration_ThrowsArgumentException() {
@@ -68,7 +68,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             e.Lock(duration: 0.5f);
             // After 0.6s, the second (shorter) duration must have expired.
             e.Live(dt: 0.6f);
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
         }
 
         [Test] public void Case04_LockWhileLocked_ReplacesDurationToShorter() {
@@ -78,10 +78,10 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
             e.Lock(duration: 10f);
-            Assert.That(e.is_locked, Is.True, "precondition: locked for 10s");
+            Assert.That(e.IsLocked, Is.True, "precondition: locked for 10s");
             e.Lock(duration: 0.1f);                 // replace with shorter
             e.Live(dt: 0.2f);                       // should auto-release
-            Assert.That(e.is_locked, Is.False, "shorter Lock duration must replace, not extend");
+            Assert.That(e.IsLocked, Is.False, "shorter Lock duration must replace, not extend");
         }
 
         [Test] public void Case05_LockWhileLocked_DoesNotThrow() {
@@ -92,16 +92,16 @@ namespace Animo.Tests.EditMode.EngineTests {
             e.Live(dt: 0.016f);
             e.Lock(duration: 10f, mode: LockMode.Hard);
             Assert.DoesNotThrow(code: () => e.Lock(duration: 10f, mode: LockMode.Soft));
-            Assert.That(e.is_locked, Is.True);
+            Assert.That(e.IsLocked, Is.True);
         }
 
         [Test] public void Case06_UnlockWhileNotLocked_NoOp() {
             // Q15: Unlock is idempotent.
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
             Assert.DoesNotThrow(code: () => e.Unlock());
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
         }
 
         [Test] public void Case07_UnlockTwice_NoOpSecondTime() {
@@ -110,10 +110,10 @@ namespace Animo.Tests.EditMode.EngineTests {
             e.Live(dt: 0.016f);
             e.Lock(duration: 0.1f);
             e.Live(dt: 0.2f);  // auto-release
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
             Assert.DoesNotThrow(code: () => e.Unlock());
             Assert.DoesNotThrow(code: () => e.Unlock());
-            Assert.That(e.is_locked, Is.False);
+            Assert.That(e.IsLocked, Is.False);
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -131,19 +131,19 @@ namespace Animo.Tests.EditMode.EngineTests {
             // locked_behavior must equal behavior throughout the Soft lock.
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
-            string snapshot = e.behavior;
+            string snapshot = e.Behavior;
             e.Lock(duration: 5f, mode: LockMode.Soft);
-            Assert.That(e.locked_behavior, Is.EqualTo(expected: snapshot));
+            Assert.That(e.LockedBehavior, Is.EqualTo(expected: snapshot));
             // Push fear high so internal score would prefer Flee.
             e.Affect(need: "fear", delta: +60f);
             e.Live(dt: 0.016f);
             // (Q-S2 deep assertion) BOTH locked_behavior AND behavior must be frozen.
-            // Pre-fix: only locked_behavior was checked; e.behavior could silently change
+            // Pre-fix: only locked_behavior was checked; e.Behavior could silently change
             // if Step 5 ran (the original implementation bug).
-            Assert.That(e.locked_behavior, Is.EqualTo(expected: snapshot),
+            Assert.That(e.LockedBehavior, Is.EqualTo(expected: snapshot),
                 "Q-S2: locked_behavior must be unchanged during Soft Lock.");
-            Assert.That(e.behavior, Is.EqualTo(expected: snapshot),
-                "Q-S2 + spec §24: e.behavior must also be frozen during Soft Lock " +
+            Assert.That(e.Behavior, Is.EqualTo(expected: snapshot),
+                "Q-S2 + spec §24: e.Behavior must also be frozen during Soft Lock " +
                 "(Step 5 skipped — pre-fix this assertion caught the Engine.cs:199 bug).");
         }
 
@@ -189,10 +189,10 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngine();
             e.Live(dt: 0.016f);
             e.Lock(duration: 0.1f);
-            Assert.That(e.is_locked, Is.True, "precondition: locked");
+            Assert.That(e.IsLocked, Is.True, "precondition: locked");
             e.Affect(need: "fear", delta: +60f);  // queue a strong reason to switch
             e.Live(dt: 0.1f);                     // T0 should release the lock
-            Assert.That(e.is_locked, Is.False, "T0 must auto-release in this frame");
+            Assert.That(e.IsLocked, Is.False, "T0 must auto-release in this frame");
             // The exact behavior chosen by Step 5 is up to the Engine, but the
             // observable contract is that is_locked transitioned in the same
             // Live() call as the timer expiry. A "decrement at end" buggy impl

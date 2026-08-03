@@ -25,9 +25,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             };
             var e = new Engine(p);
             e.Live(dt: 0.016f);   // Flee wins tie by declaration order
-            string first = e.behavior;
+            string first = e.Behavior;
             e.Live(dt: 0.016f);   // bonus=20 on Flee: 70 vs 50 → Flee stays
-            Assert.That(e.behavior, Is.EqualTo(first),
+            Assert.That(e.Behavior, Is.EqualTo(first),
                 "Commitment: bonus must hold the current action against a tie.");
         }
 
@@ -43,7 +43,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             };
             var e = new Engine(p);
             e.Live(dt: 0.016f);  // seeds behavior="Flee"
-            Assert.That(e.behavior, Is.EqualTo("Flee"), "pre: Flee wins");
+            Assert.That(e.Behavior, Is.EqualTo("Flee"), "pre: Flee wins");
             e.Live(dt: 0.016f);  // now _current="Flee" → Step4 adds bonus
             float flee_score = e.GetActionScore("Flee");
             Assert.That(flee_score, Is.EqualTo(80f).Within(0.1f),
@@ -60,11 +60,11 @@ namespace Animo.Tests.EditMode.EngineTests {
             };
             var e = new Engine(p);
             e.Live(dt: 0.016f);  // Idle wins (65 vs 60)
-            Assert.That(e.behavior, Is.EqualTo("Idle"), "pre");
+            Assert.That(e.Behavior, Is.EqualTo("Idle"), "pre");
             // force_reset: Idle bonus removed → Idle=65, Flee=60 → still Idle unless bonus pushed it
             e.Affect("fear", +10f, force_reset: true);  // fear=70, Idle has no bonus → Flee(70)>Idle(65)
             e.Live(dt: 0.016f);
-            Assert.That(e.behavior, Is.EqualTo("Flee"),
+            Assert.That(e.Behavior, Is.EqualTo("Flee"),
                 "Q-S5: force_reset must remove commitment bonus, allowing switch.");
         }
 
