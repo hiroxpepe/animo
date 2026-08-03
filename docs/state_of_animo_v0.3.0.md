@@ -1,4 +1,4 @@
-# State of Animo — v0.3.0-alpha
+# State of Animo — v0.3.0
 
 **Date**: end of Phase 3 (Task 3-6 Exit Gate complete)
 **Author**: h.adachi (STUDIO MeowToon)
@@ -18,9 +18,9 @@ two purposes:
 ```mermaid
 flowchart LR
   P1["<b>Phase 1</b><br/>Spec Definition<br/>v0.1.0"]
-  P2["<b>Phase 2</b><br/>Red Baseline +<br/>Spec Stabilization<br/>v0.2.0-alpha"]
-  P3["<b>Phase 3</b><br/>Core Engine +<br/>ScenarioRunner<br/><b>v0.3.0-alpha</b>"]
-  P4["Phase 4<br/>Unity Integration<br/>+ CLI<br/>v0.4.0-alpha"]
+  P2["<b>Phase 2</b><br/>Red Baseline +<br/>Spec Stabilization<br/>v0.2.0"]
+  P3["<b>Phase 3</b><br/>Core Engine +<br/>ScenarioRunner<br/><b>v0.3.0</b>"]
+  P4["Phase 4<br/>Unity Integration<br/>+ CLI<br/>v0.4.0"]
   P5["Phase 5<br/>Asset Store +<br/>Production Polish<br/>v1.0.0"]
 
   P1 --> P2 --> P3 --> P4 --> P5
@@ -261,7 +261,7 @@ flowchart LR
 
 ```mermaid
 gantt
-  title Path from v0.3.0-alpha to v1.0.0
+  title Path from v0.3.0 to v1.0.0
   dateFormat YYYY-MM
   axisFormat %b
   section Phase 4
@@ -284,7 +284,7 @@ The dates above are illustrative scaffolding, not a commitment.
 
 | Product                     | Tests verified | Perf guarantee     | Spec docs       | Price       |
 |-----------------------------|----------------|---------------------|-----------------|-------------|
-| **Animo v0.3.0-alpha**      | 452 Green      | Live 0.86 µs / 0 GC | 151 Q-S patches | OSS (MIT)   |
+| **Animo v0.3.0**      | 452 Green      | Live 0.86 µs / 0 GC | 151 Q-S patches | OSS (MIT)   |
 | Apex Utility AI             | not disclosed  | not disclosed       | API doc only    | $75         |
 | Behavior Designer Pro       | not disclosed  | not disclosed       | API doc only    | $95         |
 | NodeCanvas                  | not disclosed  | not disclosed       | tutorial-heavy  | $95         |
@@ -296,7 +296,7 @@ incumbents. The current gap is **product polish**, not engineering quality.
 
 ## 7. One-Line Summary
 
-> Animo v0.3.0-alpha is an **engineering masterpiece without a product
+> Animo v0.3.0 is an **engineering masterpiece without a product
 > wrapper**: a zero-GC, spec-proven Utility AI core ready to power real
 > games, blocked from adoption only by the absence of Unity packaging,
 > Quick Start documentation, and a visual demonstration.

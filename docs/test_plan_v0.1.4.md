@@ -3,7 +3,7 @@
 > **Status**: ⚠️ **LEGACY** — superseded by
 > [`test_plan_v0.1.5.md`](test_plan_v0.1.5.md). Kept for historical reference
 > only. The current Red baseline (and subsequent Green Phase 3 state) is
-> documented in the v0.1.5 plan and [`state_of_animo_v0.3.0-alpha.md`](state_of_animo_v0.3.0-alpha.md).
+> documented in the v0.1.5 plan and [`state_of_animo_v0.3.0.md`](state_of_animo_v0.3.0.md).
 
 This document is the decision table specification for Phase 2 Task 2-3.
 Every row of every table maps to one `[Test]` method in `Tests~/EditModeTests/`.
