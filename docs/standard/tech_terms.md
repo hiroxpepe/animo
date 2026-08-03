@@ -128,6 +128,37 @@ its behavior can be watched and tested without a full game.
 
 ---
 
+## Live monitor and networking
+
+**console** — A program with no window of its own, run and read from a text
+command line. The live monitor runs the engine as a console program.
+
+**server** — A program that waits for others to connect and then answers them.
+The monitor's server sits in the same process as the engine.
+
+**socket** — One end of a live link between two programs, kept open so both can
+send at any time.
+
+**WebSocket** — A kind of socket that runs over the web and stays open both
+ways, so a page in a browser and a program can send to each other freely.
+
+**endpoint** — The named place a client connects to on a server.
+
+**polling** — A way to get news by asking again and again on a timer, rather
+than being told when it happens. Slower to react than a WebSocket.
+
+**effective need** — A need value after the influence cascade has run for the
+frame, as against the raw need value before it. The engine chooses actions from
+the effective needs.
+
+**live** — Happening now, as the program runs, with no wait and no saved copy.
+A live monitor shows the state at the same time the engine works it out.
+
+**monitor** — A tool that watches a running program and shows its state as it
+changes, so a person can follow along and step in.
+
+---
+
 ## How to keep this list
 
 + One term, one sense. Give the sense in one place only — here.
