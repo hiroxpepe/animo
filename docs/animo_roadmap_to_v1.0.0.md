@@ -1,6 +1,6 @@
 # Animo Roadmap to v1.0.0
 
-> **The Master Plan: from spec FIX to commercial-grade release**
+> **The main plan: from spec fix to a release ready for real use**
 > **Document version**: 1.0
 > **Status**: Active — Phase 1/2/3 complete (v0.3.0), Phase 4 next
 > **Last updated**: end of Phase 3 (Task 3-6 Exit Gate)
@@ -11,7 +11,7 @@
 
 ## Table of Contents
 
-1. [Philosophy](#1-philosophy)
+1. [Guiding Idea](#1-guiding-idea)
 2. [Phase Overview](#2-phase-overview)
 3. [Phase 1 — Spec FIX (v0.1.4-design)](#3-phase-1--spec-fix-v014-design)
 4. [Phase 2 — Schema and Test Foundation (v0.2.0-test)](#4-phase-2--schema-and-test-foundation-v020-test)
@@ -26,18 +26,18 @@
 
 ---
 
-## 1. Philosophy
+## 1. Guiding Idea
 
 ### 1.1 Goal of v1.0.0
 
-> **"Provable, commercial-grade stability and performance — ready to drop into a shipping game."**
+> **"Stability and speed we can prove, ready to drop into a game that ships."**
 
-This is not a "0.x reaches feature parity, then we call it 1.0" plan. It is a **proof-driven** plan. Every phase has a target that can be measured, asserted, or benchmarked.
+This is not a "0.x catches up on features, then we call it 1.0" plan. It is a **proof-led** plan. Every phase has an aim we can measure, assert, or benchmark.
 
-### 1.2 Anti-Pattern We Reject
+### 1.2 The Way We Do Not Work
 
 ```text
-❌ "Implement → run in Unity → fix bugs as they appear" (waterfall-ish)
+❌ "Build → run in Unity → fix bugs as they show up" (loose and late)
 ```
 
 This wastes time on the slow Unity round-trip and lets logic bugs sneak past as "performance issues" or vice versa.

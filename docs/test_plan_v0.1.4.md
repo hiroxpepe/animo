@@ -5,7 +5,7 @@
 > only. The current Red baseline (and subsequent Green Phase 3 state) is
 > documented in the v0.1.5 plan and [`state_of_animo_v0.3.0.md`](state_of_animo_v0.3.0.md).
 
-This document is the decision table specification for Phase 2 Task 2-3.
+This document is the decision-table plan for Phase 2 Task 2-3.
 Every row of every table maps to one `[Test]` method in `Tests~/EditModeTests/`.
 
 **Totals:**
@@ -16,14 +16,14 @@ Every row of every table maps to one `[Test]` method in `Tests~/EditModeTests/`.
 + 4 EdgeCases test files
 + **183 test methods** (target: 180+)
 
-All tests are Red until Phase 3 implements the production classes. The 4
+All tests are Red until Phase 3 builds the real classes. The 4
 MiniUnity self-tests are the only Green tests in this phase.
 
 ---
 
 ## Validator Decision Tables (A000–A032)
 
-### A000 — schema_version exists and is not empty
+### A000 — schema_version is there and not empty
 
 | #   | Input                        | Expected   |
 | --- | ---------------------------- | ---------- |
@@ -31,7 +31,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | empty string schema_version  | Error A000 |
 | 03  | valid schema_version `"1.4"` | Pass       |
 
-### A001 — personas exists and is not empty
+### A001 — personas is there and not empty
 
 | #   | Input                | Expected   |
 | --- | -------------------- | ---------- |
@@ -61,7 +61,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 03  | duplicate kind_id | Error A003 |
 | 04  | valid kind_id     | Pass       |
 
-### A004 — persona.kind_ids reference exists in kinds
+### A004 — persona.kind_ids points to a kind that is there
 
 | #   | Input                                    | Expected   |
 | --- | ---------------------------------------- | ---------- |
@@ -69,7 +69,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | defined kind_id                          | Pass       |
 | 03  | partially undefined `["goblin","ghost"]` | Error A004 |
 
-### A005 — needs values in [0, 100]
+### A005 — needs values are in [0, 100]
 
 | #   | Input                 | Expected   |
 | --- | --------------------- | ---------- |
@@ -103,7 +103,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | exponent 5.1  | Error A008 |
 | 03  | exponent 5.0  | Pass       |
 
-### A009 — actions[].id not empty
+### A009 — actions[].id is not empty
 
 | #   | Input       | Expected   |
 | --- | ----------- | ---------- |
@@ -118,7 +118,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | trigger -10           | Error A010 |
 | 03  | trigger 100, reset 90 | Pass       |
 
-### A011 — persona without kind_ids must have actions
+### A011 — a persona with no kind_ids must have actions
 
 | #   | Input                         | Expected   |
 | --- | ----------------------------- | ---------- |
@@ -156,7 +156,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 01  | `x_{behavior}_y` | Error A015 |
 | 02  | `x_{agent_id}_y` | Pass       |
 
-### A016 — binding missing (Warning)
+### A016 — binding is missing (Warning)
 
 | #   | Input           | Expected     |
 | --- | --------------- | ------------ |
@@ -175,7 +175,7 @@ MiniUnity self-tests are the only Green tests in this phase.
 | --- | ----------------- | ------------------ |
 | 01  | kind_id 129 chars | Error A018 OR A003 |
 
-### A019 — unknown needs key looks like typo (Warning)
+### A019 — an unknown needs key looks like a typo (Warning)
 
 | #   | Input                      | Expected       |
 | --- | -------------------------- | -------------- |
@@ -225,14 +225,14 @@ MiniUnity self-tests are the only Green tests in this phase.
 | 02  | trigger 60, reset 70 | Error A023 |
 | 03  | trigger 80, reset 70 | Pass       |
 
-### A024 — idle action should be tier 5 (Warning)
+### A024 — the idle action should be tier 5 (Warning)
 
 | #   | Input          | Expected     |
 | --- | -------------- | ------------ |
 | 01  | idle at tier 1 | Warning A024 |
 | 02  | idle at tier 5 | Pass         |
 
-### A025 — cycle in influences (Error since v0.1.2)
+### A025 — a cycle in influences (Error since v0.1.2)
 
 | #   | Input                          | Expected   |
 | --- | ------------------------------ | ---------- |

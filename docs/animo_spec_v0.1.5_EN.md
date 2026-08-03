@@ -10,15 +10,15 @@
 ## About this document
 
 This is the **English reference specification** for Animo.
-It is written in **Simple English (ESL friendly)** style, so readers whose first language is not English can read it without trouble.
+It follows the project writing standard (`docs/standard/writing_standard.md`), so readers whose first language is not English can read it without trouble.
 
 Style rules:
 
 + Short sentences. One idea per sentence.
-+ Active voice. Avoid passive voice when possible.
-+ Technical terms (`Persona`, `Composer`, `EffectiveNeeds`, etc.) stay as they are.
-+ Avoid long modifier chains.
-+ Common verbs and nouns. Avoid rare words.
++ Active voice. Do not use passive voice where you can help it.
++ Technical terms stay as they are; each is given its sense in `docs/standard/tech_terms.md`.
++ Avoid long chains of describing words.
++ Common verbs and nouns. Do not use rare words.
 
 The Japanese version exists at `docs/animo_spec_v0.1.4_JP.md` for the original design discussion.
 **This English version is the reference for implementation.**
