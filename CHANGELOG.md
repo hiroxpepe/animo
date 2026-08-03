@@ -5,7 +5,7 @@ All notable changes to the Animo Utility AI engine are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.3.0-alpha] — Phase 3 Complete (Core Engine + ScenarioRunner)
+## [v0.3.0] — Phase 3 Complete (Core Engine + ScenarioRunner)
 
 ### Added
 
@@ -81,7 +81,7 @@ Across 4 review rounds, 28 critiques evaluated:
 
 ---
 
-## [v0.2.0-alpha] — Phase 2 (Red Baseline + Spec Stabilization)
+## [v0.2.0] — Phase 2 (Red Baseline + Spec Stabilization)
 
 ### Added
 
@@ -100,6 +100,6 @@ Across 4 review rounds, 28 critiques evaluated:
 
 ---
 
-[v0.3.0-alpha]: https://github.com/<owner>/animo/releases/tag/v0.3.0-alpha
-[v0.2.0-alpha]: https://github.com/<owner>/animo/releases/tag/v0.2.0-alpha
+[v0.3.0]: https://github.com/<owner>/animo/releases/tag/v0.3.0
+[v0.2.0]: https://github.com/<owner>/animo/releases/tag/v0.2.0
 [v0.1.0]:       https://github.com/<owner>/animo/releases/tag/v0.1.0

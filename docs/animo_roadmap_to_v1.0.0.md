@@ -2,7 +2,7 @@
 
 > **The Master Plan: from spec FIX to commercial-grade release**
 > **Document version**: 1.0
-> **Status**: Active — Phase 1/2/3 complete (v0.3.0-alpha), Phase 4 next
+> **Status**: Active — Phase 1/2/3 complete (v0.3.0), Phase 4 next
 > **Last updated**: end of Phase 3 (Task 3-6 Exit Gate)
 > **Author**: STUDIO MeowToon — h.adachi
 > **Companion spec**: [`animo_spec_v0.1.5_EN.md`](animo_spec_v0.1.5_EN.md)
@@ -15,8 +15,8 @@
 2. [Phase Overview](#2-phase-overview)
 3. [Phase 1 — Spec FIX (v0.1.4-design)](#3-phase-1--spec-fix-v014-design)
 4. [Phase 2 — Schema and Test Foundation (v0.2.0-test)](#4-phase-2--schema-and-test-foundation-v020-test)
-5. [Phase 3 — Core Implementation and Zero-GC Proof (v0.3.0-alpha)](#5-phase-3--core-implementation-and-zero-gc-proof-v030-alpha)
-6. [Phase 4 — Unity Integration and CLI (v0.4.0-alpha)](#6-phase-4--unity-integration-and-cli-v040-alpha)
+5. [Phase 3 — Core Implementation and Zero-GC Proof (v0.3.0)](#5-phase-3--core-implementation-and-zero-gc-proof-v030)
+6. [Phase 4 — Unity Integration and CLI (v0.4.0)](#6-phase-4--unity-integration-and-cli-v040)
 7. [Phase 5 — Scale and Stress Test (v0.5.0-beta)](#7-phase-5--scale-and-stress-test-v050-beta)
 8. [Phase 6 — G+B+A Integration (v0.6.0-beta)](#8-phase-6--gba-integration-v060-beta)
 9. [Phase 7 — Documentation and LLM Prompt Set (v0.9.0-rc)](#9-phase-7--documentation-and-llm-prompt-set-v090-rc)
@@ -83,8 +83,8 @@ flowchart LR
 |---|---|---|---|---|
 | **1** | `v0.1.4-design` | Spec FIX and operational pattern | ✅ Complete | EN/JP spec + 59 mermaid diagrams build-checked |
 | **2** | `v0.2.0-test` | Schema definition + pure C# test harness | 🔥 Next | All test cases Red. Schema validates 3 sample JSONs. |
-| **3** | `v0.3.0-alpha` | Core impl + zero-GC proof | | All tests Green. `GC.Alloc == 0` in `Live(dt)` over 100K calls. |
-| **4** | `v0.4.0-alpha` | Unity integration + CLI tool | | `animo-runner` CLI runs from terminal. `Animo.Agent` works in Unity. |
+| **3** | `v0.3.0` | Core impl + zero-GC proof | | All tests Green. `GC.Alloc == 0` in `Live(dt)` over 100K calls. |
+| **4** | `v0.4.0` | Unity integration + CLI tool | | `animo-runner` CLI runs from terminal. `Animo.Agent` works in Unity. |
 | **5** | `v0.5.0-beta` | Scale and stress test | | 100 agents × 60 fps stable in empty scene. 1-hour soak: no leak. |
 | **6** | `v0.6.0-beta` | G+B+A integration + 3 demos | | Three genre demos run with `Lock` and `frustration` working. |
 | **7** | `v0.9.0-rc` | Docs and LLM prompt set | | Tutorial works. LLM produces a valid `animo.json` from a prompt. |
@@ -539,7 +539,7 @@ All three must succeed. Then Phase 3 starts.
 | Schema and Validator drift | Validator is the single source of truth for runtime. Schema is regenerated from `Const.cs` ranges where possible. |
 ---
 
-## 5. Phase 3 — Core Implementation and Zero-GC Proof (v0.3.0-alpha)
+## 5. Phase 3 — Core Implementation and Zero-GC Proof (v0.3.0)
 
 **Status: pending Phase 2**
 
@@ -789,8 +789,8 @@ public void Engine_Live_HotPath_IsZeroAllocation_Over_100K_Calls() {
 - [ ] No `UnityEngine` reference in `Animo.Core`.
 - [ ] No `UnityEngine` reference in `Animo.Model`.
 - [ ] No `UnityEngine` reference in `Animo.Tools`.
-- [ ] CHANGELOG entry for v0.3.0-alpha written.
-- [ ] Git tag `v0.3.0-alpha` pushed.
+- [ ] CHANGELOG entry for v0.3.0 written.
+- [ ] Git tag `v0.3.0` pushed.
 
 #### 5.9.2 Proof of Phase 3
 
@@ -820,7 +820,7 @@ All three must pass.
 
 ---
 
-## 6. Phase 4 — Unity Integration and CLI (v0.4.0-alpha)
+## 6. Phase 4 — Unity Integration and CLI (v0.4.0)
 
 **Status: pending Phase 3**
 
@@ -970,8 +970,8 @@ animo-runner \
 - [ ] Behavior Trace mode works in both Inspector and CLI.
 - [ ] At least 10 PlayMode tests Green for the Unity layer.
 - [ ] Demo scene with one goblin walks → searches food → flees on damage.
-- [ ] CHANGELOG entry for v0.4.0-alpha written.
-- [ ] Git tag `v0.4.0-alpha` pushed.
+- [ ] CHANGELOG entry for v0.4.0 written.
+- [ ] Git tag `v0.4.0` pushed.
 
 #### 6.8.2 Proof of Phase 4
 
@@ -1828,7 +1828,7 @@ A consolidated view of all risks across phases.
 
 *Last updated: 2026-05-08 — STUDIO MeowToon — h.adachi*
 *Companion documents:*
-- *[`animo_spec_v0.1.4_EN.md`](animo_spec_v0.1.4_EN.md) — full spec (English reference)*
-- *[`animo_spec_v0.1.4_JP.md`](animo_spec_v0.1.4_JP.md) — full spec (Japanese)*
+- *[`animo_spec_v0.1.5_EN.md`](animo_spec_v0.1.5_EN.md) — full spec (English reference)*
+- *[`animo_spec_v0.1.5_JP.md`](animo_spec_v0.1.5_JP.md) — full spec (Japanese)*
 - *[`README.md`](../README.md) — project overview*
 - *[`LICENSE`](../LICENSE) — MIT*

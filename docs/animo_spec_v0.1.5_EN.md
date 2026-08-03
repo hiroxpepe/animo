@@ -1,7 +1,7 @@
 # Animo Specification
 
 > **Maslow-driven Utility AI for Game Agents**
-> **v0.1.5** (Phase 3 implementation complete, v0.3.0-alpha) / originally 2026-05-09
+> **v0.1.5** (Phase 3 implementation complete, v0.3.0) / originally 2026-05-09
 > STUDIO MeowToon — h.adachi
 > github.com/hiroxpepe/animo
 
@@ -63,8 +63,8 @@ The Japanese version exists at `docs/animo_spec_v0.1.4_JP.md` for the original d
 
 ```mermaid
 flowchart LR
-  G["<b>Germio</b><br/>v0.5.19-alpha<br/>WHAT happens<br/>game logic"]
-  B["<b>Briko</b><br/>v0.1.0-alpha<br/>WHERE it happens<br/>level layout"]
+  G["<b>Germio</b><br/>v0.5.19<br/>WHAT happens<br/>game logic"]
+  B["<b>Briko</b><br/>v0.1.0<br/>WHERE it happens<br/>level layout"]
   A["<b>Animo</b><br/>v0.1.4-design<br/>WHY it acts<br/>agent inner state"]
   G --> B --> A
   style G fill:#e8d5ff,stroke:#7e3ff2

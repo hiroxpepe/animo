@@ -3,9 +3,9 @@
 > **Status**: This is the **Phase 2 design document**. The Red baseline has
 > since transitioned to **Phase 3 Green**: 447 EditMode tests + 5 MiniUnity
 > self-tests = 452 Green, 0 Red, 0 Skipped (Debug + Release) as of
-> v0.3.0-alpha. The numerical totals below describe the original Phase 2
+> v0.3.0. The numerical totals below describe the original Phase 2
 > Red baseline at planning time, not the current state. See
-> [`state_of_animo_v0.3.0-alpha.md`](state_of_animo_v0.3.0-alpha.md) and
+> [`state_of_animo_v0.3.0.md`](state_of_animo_v0.3.0.md) and
 > [`benchmarks_v0.3.0.md`](benchmarks_v0.3.0.md) for the current state.
 
 This document is the decision table specification for Phase 2 Tasks 2-3

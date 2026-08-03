@@ -33,9 +33,9 @@ flowchart LR
     QH["<b>WHERE</b><br/>Where it happens<br/>level layout"]
     QY["<b>WHY</b><br/>Why it acts<br/>agent inner state"]
   end
-  G["<b>Germio</b><br/>v0.5.19-alpha"]
-  B["<b>Briko</b><br/>v0.1.0-alpha"]
-  A["<b>Animo</b><br/>v0.3.0-alpha"]
+  G["<b>Germio</b><br/>v0.5.19"]
+  B["<b>Briko</b><br/>v0.1.0"]
+  A["<b>Animo</b><br/>v0.3.0"]
   QW --> G
   QH --> B
   QY --> A
@@ -52,17 +52,17 @@ Most game AI mixes *what* the agent does with *why* it does it. Animo separates 
 ## Status
 
 🟢 **Phase 1 — Design Complete (v0.1.4 → v0.1.5)**
-🟢 **Phase 2 — Schema + Red Baseline Complete (v0.2.0-alpha)**
-🟢 **Phase 3 — Core Engine + ScenarioRunner Complete (v0.3.0-alpha)**
+🟢 **Phase 2 — Schema + Red Baseline Complete (v0.2.0)**
+🟢 **Phase 3 — Core Engine + ScenarioRunner Complete (v0.3.0)**
 ⬜ **Phase 4 — Unity Integration + CLI (next)**
 
 ```mermaid
 flowchart LR
   P0["<b>Phase 0</b><br/>Concept<br/>v0.1.0"]
   P1["<b>Phase 1</b><br/>Design<br/>v0.1.5"]
-  P2["<b>Phase 2</b><br/>Schema + Red tests<br/>v0.2.0-alpha"]
-  P3["<b>Phase 3</b><br/>Core Engine<br/>v0.3.0-alpha"]
-  P4["<b>Phase 4</b><br/>Unity integration<br/>v0.4.0-alpha"]
+  P2["<b>Phase 2</b><br/>Schema + Red tests<br/>v0.2.0"]
+  P3["<b>Phase 3</b><br/>Core Engine<br/>v0.3.0"]
+  P4["<b>Phase 4</b><br/>Unity integration<br/>v0.4.0"]
   P5["<b>Phase 5</b><br/>Stabilize<br/>v1.0.0"]
   P0 --> P1 --> P2 --> P3 --> P4 --> P5
   style P0 fill:#d1fae5,stroke:#059669
@@ -73,14 +73,14 @@ flowchart LR
   style P5 fill:#f1f5f9,stroke:#64748b
 ```
 
-**At v0.3.0-alpha** the core engine is functionally complete, mathematically
+**At v0.3.0** the core engine is functionally complete, mathematically
 proven (452 tests Green, zero-GC verified), and Unity-independent (`Animo.Core` /
 `Animo.Model` / `Animo.Tools` have zero `UnityEngine` references). Phase 4 wraps
 the proven core in Unity components and ships a CLI runner.
 
 - 📄 [English specification (current)](docs/animo_spec_v0.1.5_EN.md) — implementation truth
 - 📄 [Japanese specification](docs/animo_spec_v0.1.5_JP.md) — original design discussion
-- 📊 [State of Animo v0.3.0-alpha](docs/state_of_animo_v0.3.0-alpha.md) — Phase 3 retrospective + Phase 4 gap analysis
+- 📊 [State of Animo v0.3.0](docs/state_of_animo_v0.3.0.md) — Phase 3 retrospective + Phase 4 gap analysis
 - ⚡ [Benchmarks v0.3.0](docs/benchmarks_v0.3.0.md) — zero-GC measurement methodology
 - 📝 [CHANGELOG](CHANGELOG.md) — release notes
 - 🗺️ [Roadmap to v1.0.0](docs/animo_roadmap_to_v1.0.0.md)
@@ -671,9 +671,9 @@ The full list is in [§13 of the spec](docs/animo_spec_v0.1.5_EN.md).
 |---|---|---|
 | Phase 0 | Concept (v0.1.0) | ✅ Done |
 | Phase 1 | Design (v0.1.5) | ✅ Done |
-| Phase 2 | Schema + Red tests (v0.2.0-alpha) | ✅ Done |
-| **Phase 3** | **Core Engine + ScenarioRunner (v0.3.0-alpha)** | ✅ **Done** |
-| Phase 4 | Unity integration + CLI (v0.4.0-alpha) | 🔥 Next |
+| Phase 2 | Schema + Red tests (v0.2.0) | ✅ Done |
+| **Phase 3** | **Core Engine + ScenarioRunner (v0.3.0)** | ✅ **Done** |
+| Phase 4 | Unity integration + CLI (v0.4.0) | 🔥 Next |
 | Phase 5 | Stabilize and Asset Store (v1.0.0) | ⬜ |
 
 See [animo_roadmap_to_v1.0.0.md](docs/animo_roadmap_to_v1.0.0.md) for the full task graph.
