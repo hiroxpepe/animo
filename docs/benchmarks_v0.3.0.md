@@ -8,13 +8,13 @@
 ## Summary
 
 | Operation                              | Allocation       | Per-call (Release) | Contract |
-|----------------------------------------|------------------|---------------------|----------|
-| `Engine.Live(dt)` — hot path           | 0 B / 100K calls | < 1 µs              | §16.1    |
-| `Engine.Live(dt)` during Lock          | 0 B / 100K calls | < 1 µs              | §16.1    |
-| `Engine.Affect(need, delta)`           | 0 B / 100K calls | < 1 µs              | §16.1    |
-| `Engine.Affect(..., force_reset:true)` | 0 B / 100K calls | < 1 µs              | §16.1    |
-| `Engine.Lock + Unlock` cycle           | 0 B / 10K cycles | < 1 µs              | §16.1    |
-| `ScenarioRunner.Run` per-frame growth  | Linear           | N/A                 | bounded  |
+| -------------------------------------- | ---------------- | ------------------ | -------- |
+| `Engine.Live(dt)` — hot path           | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Live(dt)` during Lock          | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Affect(need, delta)`           | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Affect(..., force_reset:true)` | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Lock + Unlock` cycle           | 0 B / 10K cycles | < 1 µs             | §16.1    |
+| `ScenarioRunner.Run` per-frame growth  | Linear           | N/A                | bounded  |
 
 ## Measurement Method
 
@@ -34,12 +34,13 @@ Assert.That(alloc_after - alloc_before, Is.EqualTo(0));
 ## Realistic Persona Fixture
 
 Benchmarks use a representative Persona profile:
-- **8 needs**: hunger, fatigue, fear, anger, loneliness, confidence, curiosity, idle
-- **4 actions**: Eat (tier 1), Rest (tier 1), Flee (tier 2), Idle (tier 5)
-- **3 influences**: fear→confidence, fatigue→confidence, loneliness→curiosity
-- **2 thresholds**: fear_critical (80), hunger_critical (90)
-- **suppression**: tier2=0.5, tier3=0.4, tier4=0.3, tier5=0.2
-- **commitment**: bonus=5.0
+
++ **8 needs**: hunger, fatigue, fear, anger, loneliness, confidence, curiosity, idle
++ **4 actions**: Eat (tier 1), Rest (tier 1), Flee (tier 2), Idle (tier 5)
++ **3 influences**: fear→confidence, fatigue→confidence, loneliness→curiosity
++ **2 thresholds**: fear_critical (80), hunger_critical (90)
++ **suppression**: tier2=0.5, tier3=0.4, tier4=0.3, tier5=0.2
++ **commitment**: bonus=5.0
 
 This profile exercises every Step (1–5) of `Live(dt)` including Maslow dynamic
 suppression, Influence cascade with topological order, commitment bonus,
@@ -68,17 +69,18 @@ The zero-allocation contract is achieved through these architectural decisions
 
 Measured on a developer-grade machine; representative not authoritative.
 
-- `Live(dt)` ≈ **0.86 µs** per call (86ms / 100,000 calls)
-- Per-Live target: < 10 µs ✅ (10x margin)
-- 100 agents @ 60 fps frame budget: 16.67 ms — Animo consumes ~86 µs (0.5%)
-- 1000 agents @ 60 fps: ~860 µs (5% of frame budget)
++ `Live(dt)` ≈ **0.86 µs** per call (86ms / 100,000 calls)
++ Per-Live target: < 10 µs ✅ (10x margin)
++ 100 agents @ 60 fps frame budget: 16.67 ms — Animo consumes ~86 µs (0.5%)
++ 1000 agents @ 60 fps: ~860 µs (5% of frame budget)
 
 ## What Is NOT Zero-Alloc (and Why)
 
 `ScenarioRunner.Run` allocates intentionally:
-- `TraceResult` and its `frames` List
-- Per-frame `TraceFrame` + 3 inner Dictionaries (needs, effective, scores)
-- `signals_fired` capture buffer
+
++ `TraceResult` and its `frames` List
++ Per-frame `TraceFrame` + 3 inner Dictionaries (needs, effective, scores)
++ `signals_fired` capture buffer
 
 These are part of the observation surface for trace analysis and CSV export.
 The underlying engine loop remains zero-alloc; allocation is linear in frame
