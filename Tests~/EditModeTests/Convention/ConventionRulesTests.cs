@@ -211,4 +211,83 @@ class Watcher
     {
         Assert.That(order_count("interface I { void Run(); int Count { get; } }"), Is.Zero);
     }
+
+    // ---- type names ------------------------------------------------------
+
+    [Test]
+    public void Catches_TypeNameNotPascalCase()
+    {
+        Assert.That(caught("class json_data { }", "type 'json_data' must be PascalCase"), Is.True);
+    }
+
+    [Test]
+    public void Passes_PascalCaseTypeName()
+    {
+        Assert.That(naming_count("class NeedTable { }"), Is.Zero);
+    }
+
+    // ---- file names ------------------------------------------------------
+
+    [Test]
+    public void Catches_FileNameWithShortForm()
+    {
+        Assert.That(
+            ConventionRules.find_filename_violations("Cfg.cs").Any(v => v.Contains("expand to 'Config'")),
+            Is.True);
+    }
+
+    [Test]
+    public void Catches_FileNameWithLowerCaseAcronym()
+    {
+        Assert.That(
+            ConventionRules.find_filename_violations("Json.cs").Any(v => v.Contains("use 'JSON'")),
+            Is.True);
+    }
+
+    [Test]
+    public void Passes_CleanFileName()
+    {
+        Assert.That(ConventionRules.find_filename_violations("JSON.cs"), Is.Empty);
+        Assert.That(ConventionRules.find_filename_violations("Composer.cs"), Is.Empty);
+    }
+
+    // ---- exposed fields --------------------------------------------------
+
+    [Test]
+    public void Catches_ExposedFieldNotPascalCase()
+    {
+        Assert.That(caught("class M { public int tab_count; }", "field 'tab_count' must be PascalCase"), Is.True);
+    }
+
+    [Test]
+    public void Passes_ExposedFieldPascalCase()
+    {
+        Assert.That(naming_count("class M { public int TabCount; }"), Is.Zero);
+    }
+
+    // ---- namespaces ------------------------------------------------------
+
+    [Test]
+    public void Catches_NamespaceSegmentNotPascalCase()
+    {
+        Assert.That(caught("namespace animo.core { class M { } }",
+            "namespace segment 'animo' must be PascalCase"), Is.True);
+    }
+
+    [Test]
+    public void Passes_PascalCaseNamespace()
+    {
+        Assert.That(naming_count("namespace Animo.Core { class M { } }"), Is.Zero);
+    }
+
+    // ---- unit marks are not touched --------------------------------------
+
+    [Test]
+    public void Passes_UnitMarkInName()
+    {
+        // Hz is a unit mark, not a letter word: it keeps its print form and is
+        // not in the all-caps list, so a name that holds it is clean.
+        Assert.That(naming_count("class M { public float ToHz() => 0f; }"), Is.Zero);
+        Assert.That(ConventionRules.find_filename_violations("FrequencyHz.cs"), Is.Empty);
+    }
 }
