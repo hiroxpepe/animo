@@ -47,6 +47,7 @@ static class ConventionRules
     static readonly HashSet<string> BASIC_WORDS = load_words("basic_words.md");
     static readonly HashSet<string> LANG_WORDS = load_words("lang_words.md");
     static readonly HashSet<string> PLAIN_WORDS = load_words("plain_words.md");
+    static readonly HashSet<string> DRAFT_WORDS = load_words("draft_words.md");
     static readonly HashSet<string> PROJECT_WORDS = load_words("project_words.md");
     static readonly HashSet<string> UNIT_WORDS = load_words("unit_words.md");
     static readonly HashSet<string> LETTER_WORDS = load_words("letter_words.md");
@@ -107,7 +108,7 @@ static class ConventionRules
     static bool known_word(string part)
     {
         var lower = part.ToLowerInvariant();
-        return BASIC_WORDS.Contains(lower) || LANG_WORDS.Contains(lower) || PLAIN_WORDS.Contains(lower) || PROJECT_WORDS.Contains(lower)
+        return BASIC_WORDS.Contains(lower) || LANG_WORDS.Contains(lower) || PLAIN_WORDS.Contains(lower) || DRAFT_WORDS.Contains(lower) || PROJECT_WORDS.Contains(lower)
             || UNIT_WORDS.Contains(lower) || TECH_TERMS.Contains(lower)
             || (part.Length > 0 && char.IsDigit(part[0]));
     }
