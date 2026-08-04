@@ -162,6 +162,20 @@ changes, so a person can follow along and step in.
 **mock** — A stand-in object used in a test in place of a real one, so the test
 can drive the code under known, made-up conditions.
 
+**snapshot** — A read-only copy of a thing's whole state at one moment, taken so
+it can be read or sent on without holding up the thing itself.
+
+**socket** — One end of a live two-way link between two programs over a network.
+
+**port** — A numbered door on a machine that a network link connects to.
+
+**token** — A small value passed along to stand for a right, a place, or a
+request to stop.
+
+**buffer** — A block of memory held aside to take in bytes as they arrive.
+
+**serve** — To answer requests that come in over a network link.
+
 **node** — A single point in a graph or tree, joined to others by edges.
 
 **region** — A named area of a larger space, marked off for its own handling.

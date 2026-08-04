@@ -736,6 +736,8 @@ Basic English plus the plain code words this project accepts.
 + logger
 + long
 + look
++ loop
++ loops
 + loose
 + loss
 + loud
@@ -915,6 +917,7 @@ Basic English plus the plain code words this project accepts.
 + paste
 + path
 + pause
++ paused
 + payment
 + peace
 + pen
@@ -1004,6 +1007,7 @@ Basic English plus the plain code words this project accepts.
 + queue
 + quick
 + quiet
++ quietly
 + quite
 + rail
 + rain
@@ -1026,6 +1030,8 @@ Basic English plus the plain code words this project accepts.
 + receipt
 + receive
 + record
++ recording
++ recordings
 + red
 + referenced
 + region
