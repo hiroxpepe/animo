@@ -46,4 +46,7 @@
     <ProjectReference Include="..\..\Scripts\Animo.csproj" />
     <ProjectReference Include="..\MiniUnity\Animo.Tests.MiniUnity.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Convention\vocabulary\**\*.md" Link="vocabulary\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
