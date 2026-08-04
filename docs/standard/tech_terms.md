@@ -159,6 +159,13 @@ changes, so a person can follow along and step in.
 
 ---
 
+**mock** — A stand-in object used in a test in place of a real one, so the test
+can drive the code under known, made-up conditions.
+
+**node** — A single point in a graph or tree, joined to others by edges.
+
+**region** — A named area of a larger space, marked off for its own handling.
+
 ## How to keep this list
 
 + One term, one sense. Give the sense in one place only — here.

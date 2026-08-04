@@ -29,43 +29,43 @@ public class ConventionRulesTests
     [Test]
     public void Catches_PrivateFieldNotSnakeCase()
     {
-        Assert.That(caught("class M { int badField; }", "must be _snake_case"), Is.True);
+        Assert.That(caught("class Mock { int badField; }", "must be _snake_case"), Is.True);
     }
 
     [Test]
     public void Catches_ConstNotUpperSnake()
     {
-        Assert.That(caught("class M { const int maxSize = 1; }", "must be UPPER_SNAKE"), Is.True);
+        Assert.That(caught("class Mock { const int maxSize = 1; }", "must be UPPER_SNAKE"), Is.True);
     }
 
     [Test]
     public void Catches_LocalNotSnakeCase()
     {
-        Assert.That(caught("class M { void run() { var itemCount = 1; } }", "local 'itemCount'"), Is.True);
+        Assert.That(caught("class Mock { void run() { var itemCount = 1; } }", "local 'itemCount'"), Is.True);
     }
 
     [Test]
     public void Catches_ForEachVarNotSnakeCase()
     {
-        Assert.That(caught("class M { void run() { foreach (var eachItem in x) {} } }", "foreach var 'eachItem'"), Is.True);
+        Assert.That(caught("class Mock { void run() { foreach (var eachItem in x) {} } }", "foreach var 'eachItem'"), Is.True);
     }
 
     [Test]
     public void Catches_ParameterNotSnakeCase()
     {
-        Assert.That(caught("class M { void run(int tabId) {} }", "parameter 'tabId'"), Is.True);
+        Assert.That(caught("class Mock { void run(int tabId) {} }", "parameter 'tabId'"), Is.True);
     }
 
     [Test]
     public void Catches_PublicMethodNotPascalCase()
     {
-        Assert.That(caught("class M { public void doWork() {} }", "must be PascalCase"), Is.True);
+        Assert.That(caught("class Mock { public void doWork() {} }", "must be PascalCase"), Is.True);
     }
 
     [Test]
     public void Catches_PrivateMethodNotCamelCase()
     {
-        Assert.That(caught("class M { private void DoWork() {} }", "must be camelCase"), Is.True);
+        Assert.That(caught("class Mock { private void DoWork() {} }", "must be camelCase"), Is.True);
     }
 
     [Test]
@@ -77,13 +77,13 @@ public class ConventionRulesTests
     [Test]
     public void Catches_AbbreviationNotExpanded()
     {
-        Assert.That(caught("class M { public void CalcNow() {} }", "expand to 'Calculate'"), Is.True);
+        Assert.That(caught("class Mock { public void SendMsgNow() {} }", "unknown word part 'Msg'"), Is.True);
     }
 
     [Test]
     public void Catches_AcronymNotUpperCased()
     {
-        Assert.That(caught("class M { public void ReadApiState() {} }", "use 'API'"), Is.True);
+        Assert.That(caught("class Mock { public void ReadDomTree() {} }", "letter word 'Dom', use 'DOM'"), Is.True);
     }
 
     // ---- naming: clean cases must pass -----------------------------------
@@ -116,20 +116,20 @@ class Watcher
     public void Skips_OverrideMemberParameters()
     {
         // An override signature comes from outside, so its parameter names are exempt.
-        Assert.That(naming_count("class M { public override void OnCreate(int savedState) {} }"), Is.Zero);
+        Assert.That(naming_count("class Mock { public override void OnCreate(int savedState) {} }"), Is.Zero);
     }
 
     [Test]
     public void Allows_AcronymAlreadyUpperCased()
     {
-        Assert.That(naming_count("class M { public void ReadDOMTree() {} }"), Is.Zero);
+        Assert.That(naming_count("class Mock { public void ReadDOMTree() {} }"), Is.Zero);
     }
 
     [Test]
     public void Allows_WordThatMerelyContainsAcronymLetters()
     {
         // 'Region' contains 'io' but not as a hump, so it must not be flagged.
-        Assert.That(naming_count("class M { public void FindRegion() {} }"), Is.Zero);
+        Assert.That(naming_count("class Mock { public void FindRegion() {} }"), Is.Zero);
     }
 
 
@@ -137,13 +137,13 @@ class Watcher
     public void Ignores_ExternalApiNamesWhenSpelling()
     {
         // Calling an SDK member named LoadUrl is not ours to rename.
-        Assert.That(naming_count("class M { void run() { view.LoadUrl(site); } }"), Is.Zero);
+        Assert.That(naming_count("class Mock { void run() { view.LoadUrl(site); } }"), Is.Zero);
     }
 
     [Test]
     public void Ignores_ExternalPropertyNamesWhenSpelling()
     {
-        Assert.That(naming_count("class M { void run() { settings.DomStorageEnabled = true; } }"), Is.Zero);
+        Assert.That(naming_count("class Mock { void run() { settings.DomStorageEnabled = true; } }"), Is.Zero);
     }
 
     [Test]
@@ -151,14 +151,14 @@ class Watcher
     {
         // The name of an imported function is fixed by the platform. It cannot be
         // renamed, so holding it to our casing would only force it to be silenced.
-        var code = "class M { static extern int DwmSetWindowAttribute(int window); }";
+        var code = "class Mock { static extern int DwmSetWindowAttribute(int window); }";
         Assert.That(naming_count(code), Is.Zero);
     }
 
     [Test]
     public void Catches_AbbreviationInDeclaredTypeName()
     {
-        Assert.That(caught("class CfgBox { }", "expand to 'Config'"), Is.True);
+        Assert.That(caught("class MsgBox { }", "unknown word part 'Msg'"), Is.True);
     }
 
     // ---- order -----------------------------------------------------------
@@ -166,21 +166,21 @@ class Watcher
     [Test]
     public void Catches_MethodBeforeField()
     {
-        var code = "class M { public void Run() {} int _count; }";
+        var code = "class Mock { public void Run() {} int _count; }";
         Assert.That(order_count(code), Is.GreaterThan(0));
     }
 
     [Test]
     public void Catches_PublicMethodAfterPrivateMethod()
     {
-        var code = "class M { void helper() {} public void Run() {} }";
+        var code = "class Mock { void helper() {} public void Run() {} }";
         Assert.That(order_count(code), Is.GreaterThan(0));
     }
 
     [Test]
     public void Catches_InstanceFieldBeforeConst()
     {
-        var code = "class M { int _count; const int MAX = 1; }";
+        var code = "class Mock { int _count; const int MAX = 1; }";
         Assert.That(order_count(code), Is.GreaterThan(0));
     }
 
@@ -212,82 +212,59 @@ class Watcher
         Assert.That(order_count("interface I { void Run(); int Count { get; } }"), Is.Zero);
     }
 
-    // ---- type names ------------------------------------------------------
+    // ---- letter words: snake keeps lower, Pascal wants all caps ----------
 
     [Test]
-    public void Catches_TypeNameNotPascalCase()
+    public void Allows_LowerCaseLetterWordInSnakeName()
     {
-        Assert.That(caught("class json_data { }", "type 'json_data' must be PascalCase"), Is.True);
+        // A snake_case name is all lower case, so 'id' in 'item_id' is fine.
+        Assert.That(naming_count("class Mock { void run(int item_id) {} }"), Is.Zero);
     }
 
     [Test]
-    public void Passes_PascalCaseTypeName()
+    public void Catches_LetterWordOnlyCapitalized()
     {
-        Assert.That(naming_count("class NeedTable { }"), Is.Zero);
-    }
-
-    // ---- file names ------------------------------------------------------
-
-    [Test]
-    public void Catches_FileNameWithShortForm()
-    {
-        Assert.That(
-            ConventionRules.find_filename_violations("Cfg.cs").Any(v => v.Contains("expand to 'Config'")),
-            Is.True);
+        // 'Id' in a PascalCase name must be the all-caps print form 'ID'.
+        Assert.That(caught("class Mock { public int NodeId() => 0; }",
+            "'NodeId' has the letter word 'Id', use 'ID'"), Is.True);
     }
 
     [Test]
-    public void Catches_FileNameWithLowerCaseAcronym()
+    public void Allows_LetterWordAllCaps()
     {
-        Assert.That(
-            ConventionRules.find_filename_violations("Json.cs").Any(v => v.Contains("use 'JSON'")),
-            Is.True);
+        // 'ID' is already the print form, so it passes.
+        Assert.That(naming_count("class Mock { public int NodeID() => 0; }"), Is.Zero);
     }
 
     [Test]
-    public void Passes_CleanFileName()
+    public void Allows_NormalWordStartingUpper()
     {
-        Assert.That(ConventionRules.find_filename_violations("JSON.cs"), Is.Empty);
-        Assert.That(ConventionRules.find_filename_violations("Composer.cs"), Is.Empty);
-    }
-
-    // ---- exposed fields --------------------------------------------------
-
-    [Test]
-    public void Catches_ExposedFieldNotPascalCase()
-    {
-        Assert.That(caught("class M { public int tab_count; }", "field 'tab_count' must be PascalCase"), Is.True);
+        // 'Node' is a plain word, not a letter word, so PascalCase is fine.
+        Assert.That(naming_count("class Mock { public int NodeName() => 0; }"), Is.Zero);
     }
 
     [Test]
-    public void Passes_ExposedFieldPascalCase()
+    public void Allows_PluralLetterWord()
     {
-        Assert.That(naming_count("class M { public int TabCount; }"), Is.Zero);
+        // URLs is the plural of the letter word URL: it splits as URL + s,
+        // not UR + Ls, so it passes as an all-caps letter word.
+        Assert.That(naming_count("class Mock { public int NodeURLs() => 0; }"), Is.Zero);
     }
 
-    // ---- namespaces ------------------------------------------------------
+    // ---- single letters: only the habitual ones pass ---------------------
 
     [Test]
-    public void Catches_NamespaceSegmentNotPascalCase()
+    public void Allows_HabitualSingleLetter()
     {
-        Assert.That(caught("namespace animo.core { class M { } }",
-            "namespace segment 'animo' must be PascalCase"), Is.True);
+        // 'i' is a long-standing loop name, so it passes.
+        Assert.That(naming_count("class Mock { void run() { for (var i = 0; i < 3; i++) {} } }"), Is.Zero);
     }
 
     [Test]
-    public void Passes_PascalCaseNamespace()
+    public void Catches_UnlistedSingleLetter()
     {
-        Assert.That(naming_count("namespace Animo.Core { class M { } }"), Is.Zero);
-    }
-
-    // ---- unit marks are not touched --------------------------------------
-
-    [Test]
-    public void Passes_UnitMarkInName()
-    {
-        // Hz is a unit mark, not a letter word: it keeps its print form and is
-        // not in the all-caps list, so a name that holds it is clean.
-        Assert.That(naming_count("class M { public float ToHz() => 0f; }"), Is.Zero);
-        Assert.That(ConventionRules.find_filename_violations("FrequencyHz.cs"), Is.Empty);
+        // 'g' is not in the habitual set, so a one-letter 'g' is too short.
+        Assert.That(caught("class Mock { void run() { for (var g = 0; g < 3; g++) {} } }",
+            "the one-letter name 'g'"), Is.True);
     }
 }

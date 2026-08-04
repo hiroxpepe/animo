@@ -1,6 +1,7 @@
 // Copyright (c) STUDIO MeowToon. All rights reserved.
 // Licensed under the MIT License.
 #nullable enable
+using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -38,24 +39,82 @@ static class ConventionRules
     static readonly Regex PASCAL = new(@"^[A-Z][A-Za-z0-9]*$", RegexOptions.Compiled);
     static readonly Regex CAMEL = new(@"^[a-z][A-Za-z0-9]*$", RegexOptions.Compiled);
 
-    // RULE 7a: abbreviation -> full word.
-    internal static readonly Dictionary<string, string> EXPAND = new() {
-        ["Msg"] = "Message",
-        ["Btn"] = "Button",
-        ["Cfg"] = "Config",
-        ["Idx"] = "Index",
-        ["Param"] = "Parameter",
-        ["Init"] = "Initialize",
-        ["Calc"] = "Calculate",
-    };
+    // A name is spelled from known words. The word lists hold the words this
+    // project accepts. PORTING: only the word lists are repo specific.
+    //   plain_words   — Basic English plus the plain code words of this repo
+    //   project_words — the made-up names of this repo (webio, crown, ...)
+    //   unit_marks    — unit marks kept in print form (hz, db, ms, ...)
+    static readonly HashSet<string> PLAIN_WORDS = load_words("plain_words.md");
+    static readonly HashSet<string> PROJECT_WORDS = load_words("project_words.md");
+    static readonly HashSet<string> UNIT_MARKS = load_words("unit_marks.md");
+    static readonly HashSet<string> LETTER_WORDS = load_words("letter_words.md");
+    static readonly HashSet<string> SINGLE_LETTERS = load_words("single_letters.md");
+    static readonly HashSet<string> TECH_TERMS = load_tech_terms();
 
-    // RULE 7b: true acronym -> ALL-CAPS.
-    internal static readonly Dictionary<string, string> UPPER = new() {
-        ["Id"] = "ID", ["Io"] = "IO", ["Ui"] = "UI", ["Db"] = "DB",
-        ["Api"] = "API", ["Url"] = "URL", ["Json"] = "JSON", ["Csv"] = "CSV",
-        ["Http"] = "HTTP", ["Html"] = "HTML", ["Css"] = "CSS", ["Dom"] = "DOM",
-        ["Cpu"] = "CPU", ["Gpu"] = "GPU", ["Gc"] = "GC", ["Cli"] = "CLI",
-    };
+    // The tech-terms list is the same one the documents use. Each entry is a
+    // line "**term** — sense", so the term is the text in the first bold span.
+    static HashSet<string> load_tech_terms()
+    {
+        var here = Path.GetDirectoryName(typeof(ConventionRules).Assembly.Location) ?? ".";
+        for (var dir = here; dir != null; dir = Path.GetDirectoryName(dir)) {
+            var path = Path.Combine(dir, "docs", "standard", "tech_terms.md");
+            if (File.Exists(path)) {
+                var set = new HashSet<string>();
+                foreach (var line in File.ReadAllLines(path)) {
+                    var m = Regex.Match(line, @"^\*\*([A-Za-z][A-Za-z0-9 ]*)\*\*");
+                    if (m.Success)
+                        foreach (var w in m.Groups[1].Value.Split(' '))
+                            if (w.Length > 0) set.Add(w.ToLowerInvariant());
+                }
+                return set;
+            }
+        }
+        return new HashSet<string>();
+    }
+
+    static HashSet<string> load_words(string file_name)
+    {
+        var here = Path.GetDirectoryName(typeof(ConventionRules).Assembly.Location) ?? ".";
+        // Walk up to the test project folder, where the vocabulary folder sits.
+        for (var dir = here; dir != null; dir = Path.GetDirectoryName(dir)) {
+            var path = Path.Combine(dir, "vocabulary", file_name);
+            if (File.Exists(path))
+                return new HashSet<string>(
+                    File.ReadAllLines(path)
+                        .Where(line => line.StartsWith("+ "))
+                        .Select(line => line.Substring(2).Trim().ToLowerInvariant())
+                        .Where(w => w.Length > 0));
+        }
+        return new HashSet<string>();
+    }
+
+    // Split a name into its word parts, keeping the original case of each part:
+    // "buildTabCount" -> build, Tab, Count; "NodeID" -> Node, ID;
+    // "CrownGoURLs" -> Crown, Go, URL, s; "read_answer" -> read, answer.
+    static IEnumerable<string> word_parts(string identifier)
+    {
+        var trimmed = identifier.Trim('_');
+        // A run of caps that ends in a lone lower 's' is a plural letter word
+        // (URLs -> URL + s), so the caps run stops before that 's'.
+        foreach (Match m in Regex.Matches(trimmed,
+                @"[A-Z]+(?=s(?![a-z]))|[A-Z]+(?![a-z])|[A-Z][a-z]*|[a-z]+|[0-9]+"))
+            yield return m.Value;
+    }
+
+    static bool known_word(string part)
+    {
+        var lower = part.ToLowerInvariant();
+        return PLAIN_WORDS.Contains(lower) || PROJECT_WORDS.Contains(lower)
+            || UNIT_MARKS.Contains(lower) || TECH_TERMS.Contains(lower)
+            || (part.Length > 0 && char.IsDigit(part[0]));
+    }
+
+    // An all-caps letter word (ID, API, JSON): two or more letters, all upper
+    // case, in the raw name. This is the print form of a letter word, so it is
+    // accepted as is. A part like "Id" is not all caps, so it is not accepted
+    // here — it must be spelled "ID" or be a known plain word.
+    static bool is_all_caps_letter_word(string part) =>
+        part.Length >= 2 && part.All(char.IsUpper);
 
     // ---- naming ----------------------------------------------------------
 
@@ -74,11 +133,12 @@ static class ConventionRules
                         found.Add($"{label}:{line(variable)}: const '{id}' must be UPPER_SNAKE");
                 } else if (exposed(field.Modifiers)) {
                     // An exposed mutable field on a [Serializable] type is a
-                    // JSON-mapping field: snake_case is its external key.
-                    // Anywhere else an exposed field is PascalCase.
-                    if (in_serializable_type(variable)) {
+                    // JSON-mapping field, and one on a [StructLayout] type is a
+                    // mirror of an outside (native) structure: snake_case is its
+                    // external form. Anywhere else an exposed field is PascalCase.
+                    if (in_serializable_type(variable) || in_interop_struct(variable)) {
                         if (!PASCAL.IsMatch(id) && !SNAKE.IsMatch(id))
-                            found.Add($"{label}:{line(variable)}: json field '{id}' must be snake_case or PascalCase");
+                            found.Add($"{label}:{line(variable)}: outside-shape field '{id}' must be snake_case or PascalCase");
                     } else if (!PASCAL.IsMatch(id)) {
                         found.Add($"{label}:{line(variable)}: field '{id}' must be PascalCase");
                     }
@@ -176,13 +236,36 @@ static class ConventionRules
         // Spelling applies only to names WE declare. Names that come from outside
         // (platform and SDK members) are not ours to rename, so call sites and
         // member accesses are not scanned.
+        //
+        // A name is spelled from known words: each word part is a plain word, a
+        // project word, or a unit mark; or it is an all-caps letter word. A part
+        // that is none of these is a short form or a hard word, and is flagged.
         foreach (var (id, at) in declared_names(root)) {
-            foreach (var pair in EXPAND)
-                if (is_hump(id, pair.Key))
-                    found.Add($"{label}:{at}: '{id}' uses '{pair.Key}', expand to '{pair.Value}'");
-            foreach (var pair in UPPER)
-                if (is_hump(id, pair.Key))
-                    found.Add($"{label}:{at}: '{id}' uses '{pair.Key}', use '{pair.Value}'");
+            var parts = word_parts(id).ToList();
+            for (var pi = 0; pi < parts.Count; pi++) {
+                var part = parts[pi];
+                // A lone 's' right after a letter word is the plural marker
+                // (URLs -> URL, s), so it is not a one-letter name.
+                if (part == "s" && pi > 0 && parts[pi - 1].All(char.IsUpper)) continue;
+                if (part.Length == 1) {
+                    if (char.IsDigit(part[0])) continue;
+                    if (!SINGLE_LETTERS.Contains(part.ToLowerInvariant()))
+                        found.Add($"{label}:{at}: '{id}' has the one-letter name '{part}', use a full word");
+                    continue;
+                }
+                // A letter word must be in its all-caps print form. 'Id' (only
+                // capitalized) must be 'ID'. A lower-case 'id' inside a
+                // snake_case name is fine, so only a capitalized-not-all-caps
+                // part is held here.
+                var lower = part.ToLowerInvariant();
+                if (LETTER_WORDS.Contains(lower) && !part.All(char.IsUpper) && char.IsUpper(part[0])) {
+                    found.Add($"{label}:{at}: '{id}' has the letter word '{part}', use '{lower.ToUpperInvariant()}'");
+                    continue;
+                }
+                if (known_word(part)) continue;
+                if (is_all_caps_letter_word(part)) continue;
+                found.Add($"{label}:{at}: '{id}' has the unknown word part '{part}', use a full plain word");
+            }
         }
 
         found.Sort(StringComparer.Ordinal);
@@ -246,12 +329,16 @@ static class ConventionRules
     {
         var found = new List<string>();
         var stem = file_name.EndsWith(".cs") ? file_name.Substring(0, file_name.Length - 3) : file_name;
-        foreach (var pair in EXPAND)
-            if (is_hump(stem, pair.Key))
-                found.Add($"{file_name}: file name uses '{pair.Key}', expand to '{pair.Value}'");
-        foreach (var pair in UPPER)
-            if (is_hump(stem, pair.Key))
-                found.Add($"{file_name}: file name uses '{pair.Key}', use '{pair.Value}'");
+        foreach (var part in word_parts(stem)) {
+            if (part.Length == 1) {
+                if (!SINGLE_LETTERS.Contains(part.ToLowerInvariant()))
+                    found.Add($"{file_name}: file name has the one-letter name '{part}', use a full word");
+                continue;
+            }
+            if (known_word(part)) continue;
+            if (is_all_caps_letter_word(part)) continue;
+            found.Add($"{file_name}: file name has the unknown word part '{part}', use a full plain word");
+        }
         return found;
     }
 
@@ -367,6 +454,25 @@ static class ConventionRules
                     foreach (var attr in list.Attributes) {
                         var name = attr.Name.ToString();
                         if (name == "Serializable" || name == "System.Serializable")
+                            return true;
+                    }
+            }
+        }
+        return false;
+    }
+
+    // True when the node sits inside a type marked [StructLayout]. Such a type
+    // is a mirror of an outside (Win32 / native) data structure, so its field
+    // names carry that structure's shape and are allowed to stay snake_case,
+    // the same way a JSON DTO's keys are.
+    static bool in_interop_struct(SyntaxNode node)
+    {
+        for (var current = node.Parent; current != null; current = current.Parent) {
+            if (current is TypeDeclarationSyntax type) {
+                foreach (var list in type.AttributeLists)
+                    foreach (var attr in list.Attributes) {
+                        var name = attr.Name.ToString();
+                        if (name == "StructLayout" || name == "System.Runtime.InteropServices.StructLayout")
                             return true;
                     }
             }
