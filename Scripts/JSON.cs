@@ -35,6 +35,18 @@ namespace Animo {
             return root;
         }
 
+        /// <summary>
+        /// Write a value out to JSON text. This is the mirror of Parse: the
+        /// monitor uses it to turn an EngineSnapshot into the message it sends to
+        /// the dashboard each frame. The value's own field names are kept as the
+        /// keys, so a snake_case snapshot writes snake_case keys.
+        /// </summary>
+        public static string Serialize(object value) {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+            return JsonConvert.SerializeObject(value, SETTINGS);
+        }
+
         // ── Custom converters ──────────────────────────────────────────────
 
         /// <summary>

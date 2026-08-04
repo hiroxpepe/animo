@@ -172,6 +172,8 @@ namespace Animo.Core {
         ///////////////////////////////////////////////////////////////////////
         // Public properties
 
+        public string AgentID => _persona.agent_id ?? "";
+
         public string Behavior   => _current_behavior;
         public bool   IsLocked   => _lock_remaining > 0f;  // Q-S126: computed property
         public string LockedBehavior =>
@@ -299,6 +301,31 @@ namespace Animo.Core {
                 AnimoLog.Warning($"Engine.GetBaseNeed: '{need}' unknown."); return 0f;
             }
             return _needs[idx];
+        }
+
+        /// <summary>
+        /// The whole visible state of the engine at this moment, in one object.
+        /// This is the call the live monitor reads each frame: the chosen
+        /// behavior, the lock state, every need as a base and an effective
+        /// value, and the action scores. It reads, it does not change anything.
+        /// </summary>
+        public EngineSnapshot Snapshot() {
+            var base_needs = new Dictionary<string, float>();
+            var effective_needs = new Dictionary<string, float>();
+            foreach (var name in GetAllNeedNames()) {
+                base_needs[name] = GetBaseNeed(name);
+                effective_needs[name] = GetNeed(name);
+            }
+            var action_scores = new Dictionary<string, float>();
+            foreach (var id in GetAllActionIds())
+                action_scores[id] = GetActionScore(id);
+            return new EngineSnapshot(
+                behavior: Behavior,
+                is_locked: IsLocked,
+                locked_behavior: LockedBehavior,
+                base_needs: base_needs,
+                effective_needs: effective_needs,
+                action_scores: action_scores);
         }
 
         internal float GetEffectiveNeed(string need) =>
@@ -471,4 +498,34 @@ namespace Animo.Core {
         }
 
     }
+
+    /// <summary>
+    /// A read-only picture of the engine at one moment, made by Engine.Snapshot.
+    /// The live monitor sends one of these to the dashboard each frame.
+    /// </summary>
+    [System.Serializable]
+    public sealed class EngineSnapshot {
+        public EngineSnapshot(
+            string behavior,
+            bool is_locked,
+            string locked_behavior,
+            IReadOnlyDictionary<string, float> base_needs,
+            IReadOnlyDictionary<string, float> effective_needs,
+            IReadOnlyDictionary<string, float> action_scores) {
+            this.behavior = behavior;
+            this.is_locked = is_locked;
+            this.locked_behavior = locked_behavior;
+            this.base_needs = base_needs;
+            this.effective_needs = effective_needs;
+            this.action_scores = action_scores;
+        }
+
+        public string behavior { get; }
+        public bool is_locked { get; }
+        public string locked_behavior { get; }
+        public IReadOnlyDictionary<string, float> base_needs { get; }
+        public IReadOnlyDictionary<string, float> effective_needs { get; }
+        public IReadOnlyDictionary<string, float> action_scores { get; }
+    }
+
 }

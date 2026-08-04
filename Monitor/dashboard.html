@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animo Live Monitor</title>
+<style>
+  :root {
+    --window: #c2c2c2; --panel: #cbcbcb; --field: #d6d6d6; --header: #bcbcbc;
+    --line: #939393; --line-soft: #b0b0b0; --text: #1a1a1a; --dim: #5b5b5b;
+    --accent: #3a72b0; --accent-soft: #5a8fc7;
+    --ui: -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--window); color: var(--text); font-family: var(--ui); font-size: 12px; line-height: 1.35; }
+  header { display: flex; align-items: center; justify-content: space-between; height: 26px; padding: 0 8px; background: var(--header); border-bottom: 1px solid var(--line); }
+  header .title { font-weight: 600; }
+  header .right { display: flex; align-items: center; gap: 10px; }
+  header .status { font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 5px; }
+  header .status .dot { width: 7px; height: 7px; border-radius: 50%; background: #8a8a8a; border: 1px solid #6f6f6f; }
+  header .status.on .dot { background: #5fbf5f; border-color: #3f9f3f; }
+  .flags { display: flex; gap: 4px; }
+  .flags button { padding: 1px; border: 1px solid var(--line); background: var(--field); cursor: pointer; line-height: 0; }
+  .flags button.on { border-color: var(--accent); outline: 1px solid var(--accent); }
+  .flags svg { display: block; }
+  .panel { border-bottom: 1px solid var(--line); }
+  .panel > .head { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px; background: var(--panel); border-bottom: 1px solid var(--line-soft); font-weight: 600; font-size: 11px; }
+  .panel > .head::before { content: ""; width: 0; height: 0; border-left: 4px solid var(--dim); border-top: 3px solid transparent; border-bottom: 3px solid transparent; transform: rotate(90deg); margin-right: 2px; }
+  .panel > .body { padding: 6px 8px; background: var(--window); }
+  .prop { display: grid; grid-template-columns: 110px 1fr; align-items: center; min-height: 20px; gap: 8px; padding: 1px 0; }
+  .prop > .name { font-size: 12px; }
+  .prop > .field { display: flex; align-items: center; gap: 8px; }
+  .behavior-value { font-size: 15px; font-weight: 600; }
+  .behavior-value .lock { font-size: 11px; color: #a05a2c; margin-left: 8px; font-weight: 400; }
+  .bar { flex: 1; height: 14px; background: var(--field); border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+  .bar.eff > span { background: var(--accent-soft); }
+  .bar.score > span { background: #7a9a3a; }
+  .bar > .num { position: absolute; right: 4px; top: 0; height: 100%; display: flex; align-items: center; font-size: 10px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .controls button { height: 20px; padding: 0 10px; border: 1px solid var(--line); background: linear-gradient(#e0e0e0, #cfcfcf); color: var(--text); font-family: var(--ui); font-size: 12px; cursor: pointer; }
+  .controls button:hover { background: linear-gradient(#eaeaea, #dcdcdc); }
+  .controls button:active, .controls button.on { background: #b8cbe0; }
+  .controls select, .controls input { height: 20px; background: var(--field); color: var(--text); border: 1px solid var(--line); font-family: var(--ui); font-size: 12px; padding: 0 4px; }
+  .controls .sep { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
+  .scrub { flex: 1; min-width: 120px; }
+  .picker { display: flex; gap: 4px; flex-wrap: wrap; }
+  .picker button { height: 22px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="title" data-i18n="title">Animo Live Monitor</span>
+  <div class="right">
+    <span class="status" id="status"><span class="dot"></span><span data-i18n="waiting">waiting for engine</span></span>
+    <div class="flags">
+      <button id="flag-en" class="on" title="English"><svg width="20" height="13" viewBox="0 0 60 40"><clipPath id="a"><path d="M0 0v40h60V0z"/></clipPath><clipPath id="b"><path d="M30 20h30v20zv20H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#a)"><path d="M0 0v40h60V0z" fill="#012169"/><path d="M0 0l60 40m0-40L0 40" stroke="#fff" stroke-width="6"/><path d="M0 0l60 40m0-40L0 40" clip-path="url(#b)" stroke="#C8102E" stroke-width="4"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="10"/><path d="M30 0v40M0 20h60" stroke="#C8102E" stroke-width="6"/></g></svg></button>
+      <button id="flag-jp" title="日本語"><svg width="20" height="13" viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><circle cx="30" cy="20" r="12" fill="#BC002D"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="panel">
+  <div class="head" data-i18n="agents">Agents</div>
+  <div class="body"><div class="picker" id="picker"></div></div>
+</div>
+
+<div class="panel">
+  <div class="head" data-i18n="behavior">Chosen Behavior</div>
+  <div class="body"><div class="prop"><span class="name" data-i18n="behavior_now">Behavior</span><span class="field"><span class="behavior-value"><span id="behavior">—</span><span class="lock" id="lock"></span></span></span></div></div>
+</div>
+
+<div class="panel">
+  <div class="head" data-i18n="playback">Record / Play</div>
+  <div class="body">
+    <div class="controls">
+      <button id="mode-live" class="on" data-i18n="live_btn">Live</button>
+      <button id="mode-play" data-i18n="play_btn">Play</button>
+      <span class="sep"></span>
+      <input class="scrub" id="scrub" type="range" min="0" max="0" value="0" disabled>
+      <span id="frame-label" style="min-width:70px;text-align:right">0 / 0</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="head" data-i18n="step_in">Step In</div>
+  <div class="body">
+    <div class="controls">
+      <button id="pause" data-i18n="pause">Pause</button>
+      <button id="resume" data-i18n="resume">Resume</button>
+      <button id="step" data-i18n="step">Step</button>
+      <span class="sep"></span>
+      <select id="poke-need"></select>
+      <input id="poke-delta" type="number" value="40" step="10" style="width:60px">
+      <button id="poke" data-i18n="affect">Affect</button>
+      <span class="sep"></span>
+      <button id="lock" data-i18n="lock">Lock</button>
+      <select id="lock-mode"><option value="hard">hard</option><option value="soft">soft</option></select>
+      <input id="lock-dur" type="number" value="3" step="1" style="width:50px">
+      <button id="unlock" data-i18n="unlock">Unlock</button>
+      <span class="sep"></span>
+      <span data-i18n="speed">dt</span>
+      <input id="dt" type="number" value="0.5" step="0.1" min="0.1" style="width:56px">
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="head" data-i18n="needs">Needs — Base / Effective</div>
+  <div class="body" id="needs"></div>
+</div>
+
+<div class="panel">
+  <div class="head" data-i18n="scores">Action Scores</div>
+  <div class="body" id="scores"></div>
+</div>
+
+<script>
+  const I18N = {
+    en: { title: "Animo Live Monitor", waiting: "waiting for engine", live: "live",
+      agents: "Agents", behavior: "Chosen Behavior", behavior_now: "Behavior",
+      playback: "Record / Play", live_btn: "Live", play_btn: "Play",
+      step_in: "Step In", pause: "Pause", resume: "Resume", step: "Step",
+      affect: "Affect", lock: "Lock", unlock: "Unlock", speed: "dt",
+      needs: "Needs — Base / Effective", scores: "Action Scores", locked: "locked" },
+    jp: { title: "アニモ ライブモニター", waiting: "エンジンを待っています", live: "接続中",
+      agents: "エージェント", behavior: "選択された行動", behavior_now: "行動",
+      playback: "録画 / 再生", live_btn: "ライブ", play_btn: "再生",
+      step_in: "介入", pause: "一時停止", resume: "再開", step: "1フレーム",
+      affect: "動かす", lock: "固定", unlock: "解除", speed: "速度",
+      needs: "需要 — 生値 / 実効", scores: "行動スコア", locked: "固定中" },
+  };
+  let lang = "en";
+  function applyLang() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const k = el.getAttribute("data-i18n"); if (I18N[lang][k]) el.textContent = I18N[lang][k];
+    });
+    document.getElementById("flag-en").classList.toggle("on", lang === "en");
+    document.getElementById("flag-jp").classList.toggle("on", lang === "jp");
+  }
+  document.getElementById("flag-en").onclick = () => { lang = "en"; applyLang(); };
+  document.getElementById("flag-jp").onclick = () => { lang = "jp"; applyLang(); };
+
+  // ---- state ----
+  let watched = "";
+  let ids = [];
+  let recordings = {};  // agent id -> saved snapshots (kept separate per agent)
+  let mode = "live";    // live | play
+  let need_select_filled = false;
+
+  function bar(value, cls, num) {
+    const w = Math.max(0, Math.min(100, value));
+    return `<div class="bar ${cls || ""}"><span style="width:${w}%"></span>` +
+      (num !== undefined ? `<span class="num">${num}</span>` : "") + `</div>`;
+  }
+  function drawSnapshot(snap) {
+    document.getElementById("behavior").textContent = snap.behavior || "—";
+    document.getElementById("lock").textContent =
+      snap.is_locked ? "· " + I18N[lang].locked + " (" + snap.locked_behavior + ")" : "";
+    document.getElementById("needs").innerHTML = Object.keys(snap.base_needs).map(name => {
+      const b = snap.base_needs[name], e = snap.effective_needs[name];
+      return `<div class="prop"><span class="name">${name}</span><span class="field">` +
+        bar(b, "", b.toFixed(0)) + bar(e, "eff", e.toFixed(0)) + `</span></div>`;
+    }).join("");
+    const vals = Object.values(snap.action_scores), max = Math.max(1, ...vals);
+    document.getElementById("scores").innerHTML = Object.keys(snap.action_scores).map(name => {
+      const s = snap.action_scores[name];
+      return `<div class="prop"><span class="name">${name}</span><span class="field">` +
+        bar((s / max) * 100, "score", s.toFixed(2)) + `</span></div>`;
+    }).join("");
+    if (!need_select_filled) {
+      document.getElementById("poke-need").innerHTML = Object.keys(snap.base_needs)
+        .map(n => `<option value="${n}">${n}</option>`).join("");
+      need_select_filled = true;
+    }
+  }
+  function drawPicker() {
+    document.getElementById("picker").innerHTML = ids.map(id =>
+      `<button class="pick ${id === watched ? "on" : ""}" data-id="${id}">${id}</button>`).join("");
+    document.querySelectorAll(".pick").forEach(b =>
+      b.onclick = () => send({ kind: "watch", agent: b.getAttribute("data-id") }));
+  }
+
+  // ---- live link ----
+  const port = location.port || 8181;
+  const socket = new WebSocket(`ws://localhost:${port}/`);
+  const status = document.getElementById("status");
+  socket.onopen = () => { status.classList.add("on"); status.lastElementChild.textContent = I18N[lang].live; };
+  socket.onclose = () => { status.classList.remove("on"); status.lastElementChild.textContent = I18N[lang].waiting; };
+  socket.onmessage = (e) => {
+    let msg; try { msg = JSON.parse(e.data); } catch (_) { return; }
+    const prev_watched = watched;
+    watched = msg.watched; ids = msg.ids || [];
+    drawPicker();
+    if (mode === "play" && watched !== prev_watched) {
+      // Watched changed during play-back: point the scrub at the new agent's run.
+      const rec = recordings[watched] || [];
+      const scrub = document.getElementById("scrub");
+      scrub.max = Math.max(0, rec.length - 1);
+      scrub.value = scrub.max;
+      if (rec.length) { drawSnapshot(rec[rec.length - 1]); updateFrameLabel(); }
+    }
+    // Record every agent's frame into its own list, so switching the watched
+    // agent never mixes two runs together.
+    for (const id of ids) {
+      const s = msg.agents[id];
+      if (!s) continue;
+      (recordings[id] = recordings[id] || []).push(s);
+    }
+    const snap = msg.agents[watched];
+    if (!snap) return;
+    const rec = recordings[watched] || [];
+    const scrub = document.getElementById("scrub");
+    scrub.max = Math.max(0, rec.length - 1);
+    if (mode === "live") { scrub.value = scrub.max; drawSnapshot(snap); updateFrameLabel(); }
+  };
+
+  function send(obj) { if (socket.readyState === 1) socket.send(JSON.stringify(obj)); }
+  function updateFrameLabel() {
+    const s = document.getElementById("scrub");
+    const rec = recordings[watched] || [];
+    document.getElementById("frame-label").textContent = `${(+s.value) + 1} / ${rec.length}`;
+  }
+
+  // ---- record / play ----
+  document.getElementById("mode-live").onclick = () => {
+    mode = "live"; document.getElementById("scrub").disabled = true;
+    document.getElementById("mode-live").classList.add("on");
+    document.getElementById("mode-play").classList.remove("on");
+  };
+  document.getElementById("mode-play").onclick = () => {
+    mode = "play"; document.getElementById("scrub").disabled = false;
+    document.getElementById("mode-play").classList.add("on");
+    document.getElementById("mode-live").classList.remove("on");
+  };
+  document.getElementById("scrub").oninput = (e) => {
+    if (mode !== "play") return;
+    const rec = recordings[watched] || [];
+    const i = Math.max(0, Math.min(rec.length - 1, +e.target.value));
+    if (rec[i]) { drawSnapshot(rec[i]); updateFrameLabel(); }
+  };
+
+  // ---- step-in ----
+  document.getElementById("pause").onclick = () => send({ kind: "pause" });
+  document.getElementById("resume").onclick = () => send({ kind: "resume" });
+  document.getElementById("step").onclick = () => send({ kind: "step" });
+  document.getElementById("poke").onclick = () => send({ kind: "affect",
+    need: document.getElementById("poke-need").value,
+    delta: parseFloat(document.getElementById("poke-delta").value) });
+  document.getElementById("lock").onclick = () => send({ kind: "lock",
+    duration: parseFloat(document.getElementById("lock-dur").value),
+    mode: document.getElementById("lock-mode").value });
+  document.getElementById("unlock").onclick = () => send({ kind: "unlock" });
+  document.getElementById("dt").onchange = () => send({ kind: "dt", dt: parseFloat(document.getElementById("dt").value) });
+
+  applyLang();
+</script>
+</body>
+</html>
