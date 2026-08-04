@@ -156,6 +156,15 @@ class Watcher
     }
 
     [Test]
+    public void Ignores_ExternMemberParameters()
+    {
+        // An extern signature mirrors a platform function, so its parameter names
+        // come from outside (wparam, lparam) and are not ours to rename or spell.
+        var code = "class Mock { static extern int SendMessage(int window, int wparam, int lparam); }";
+        Assert.That(naming_count(code), Is.Zero);
+    }
+
+    [Test]
     public void Catches_AbbreviationInDeclaredTypeName()
     {
         Assert.That(caught("class MsgBox { }", "unknown word part 'Msg'"), Is.True);
@@ -246,9 +255,9 @@ class Watcher
     [Test]
     public void Allows_PluralLetterWord()
     {
-        // URLs is the plural of the letter word URL: it splits as URL + s,
+        // 'URLs' is the plural of the letter word URL: it splits as URL + s,
         // not UR + Ls, so it passes as an all-caps letter word.
-        Assert.That(naming_count("class Mock { public int NodeURLs() => 0; }"), Is.Zero);
+        Assert.That(naming_count("class Mock { public int CrownGoURLs() => 0; }"), Is.Zero);
     }
 
     // ---- single letters: only the habitual ones pass ---------------------
