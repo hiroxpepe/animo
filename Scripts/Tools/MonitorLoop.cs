@@ -12,7 +12,7 @@ namespace Animo.Tools {
     /// <summary>
     /// Drives a live <see cref="Engine"/> for the monitor. Each tick it applies
     /// any step-ins queued from the dashboard at the head, advances the engine by
-    /// one dt (unless paused), and returns a snapshot to send out. It holds no
+    /// one delta_time (unless paused), and returns a snapshot to send out. It holds no
     /// socket of its own, so the loop can be read and tested on its own; the
     /// server layer calls Tick and ships the snapshot.
     ///
@@ -30,12 +30,12 @@ namespace Animo.Tools {
 
         readonly Engine _engine;
         readonly Queue<Action<Engine>> _pending_steps = new();
-        float _dt;
+        float _delta_time;
         bool _paused;
 
-        public MonitorLoop(Engine engine, float dt) {
+        public MonitorLoop(Engine engine, float delta_time) {
             _engine = engine;
-            _dt = clampDt(dt);
+            _delta_time = clampDeltaTime(delta_time);
         }
 
         /// <summary>The engine being driven, so a caller can read its state.</summary>
@@ -49,9 +49,9 @@ namespace Animo.Tools {
         /// is clamped to a sane range, so a wild number cannot run the engine off
         /// a cliff or freeze it at zero.
         /// </summary>
-        public float Dt {
-            get => _dt;
-            set => _dt = clampDt(value);
+        public float DeltaTime {
+            get => _delta_time;
+            set => _delta_time = clampDeltaTime(value);
         }
 
         /// <summary>
@@ -79,13 +79,13 @@ namespace Animo.Tools {
         public void Resume() => _paused = false;
 
         /// <summary>
-        /// One tick: apply queued step-ins at the head, advance one dt unless
+        /// One tick: apply queued step-ins at the head, advance one delta_time unless
         /// paused, then return the snapshot to send to the dashboard.
         /// </summary>
         public EngineSnapshot Tick() {
             applyPending();
             if (!_paused)
-                _engine.Live(_dt);
+                _engine.Live(_delta_time);
             return _engine.Snapshot();
         }
 
@@ -96,14 +96,14 @@ namespace Animo.Tools {
         /// </summary>
         public EngineSnapshot Step() {
             applyPending();
-            _engine.Live(_dt);
+            _engine.Live(_delta_time);
             return _engine.Snapshot();
         }
 
-        static float clampDt(float dt) {
-            if (dt < DT_MIN) return DT_MIN;
-            if (dt > DT_MAX) return DT_MAX;
-            return dt;
+        static float clampDeltaTime(float delta_time) {
+            if (delta_time < DT_MIN) return DT_MIN;
+            if (delta_time > DT_MAX) return DT_MAX;
+            return delta_time;
         }
 
         void applyPending() {

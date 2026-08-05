@@ -31,7 +31,7 @@ namespace Animo.Tests.EditMode.Tools {
                     ActionOf("Flee", "fear", 1, 1.0f),
                 },
             };
-            return new MonitorLoop(new Animo.Core.Engine(persona), dt: 0.5f);
+            return new MonitorLoop(new Animo.Core.Engine(persona), delta_time: 0.5f);
         }
 
         [Test]

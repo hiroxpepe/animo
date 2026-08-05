@@ -31,7 +31,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 suppression = new Suppression { tier5 = 0.9f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float idle_score  = e.GetActionScore("Idle");
             float unsuppressed = 50f;
             float expected    = unsuppressed * (1f - 0.9f * 0.8f);  // 14.0
@@ -48,7 +48,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 suppression = new Suppression { tier5 = 0.9f, tier2 = 0.7f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float eat_score   = e.GetActionScore("Eat");
             float expected    = 50f;  // tier1: no lower tiers → not suppressed
             Assert.That(eat_score, Is.EqualTo(expected).Within(0.1f),
@@ -64,7 +64,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 suppression = new Suppression { tier5 = 0f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetActionScore("Idle"), Is.EqualTo(50f).Within(0.1f),
                 "Step 4: suppression_factor=0 must produce no suppression effect.");
         }
@@ -86,7 +86,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 suppression = new Suppression { tier2=0f, tier3=tier3_factor, tier4=0f, tier5=0f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float max_lower   = 0.6f;  // fear=60
             float expected    = 50f * (1f - tier3_factor * max_lower);  // 50*(1-0.3)=35
             Assert.That(e.GetActionScore("Socialize"), Is.EqualTo(expected).Within(0.1f),
@@ -112,7 +112,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                     tier2 = 0f, tier3 = tier3_factor, tier4 = tier4_factor, tier5 = 0f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float max_lower  = 0.8f;  // max(hunger=80,fear=60)/100
             float expected   = 50f * (1f - tier4_factor * max_lower);  // 50*(1-0.48)=26
             float wrong      = 50f * (1f - tier3_factor * max_lower);  // 50*(1-0.72)=14 ← bug value

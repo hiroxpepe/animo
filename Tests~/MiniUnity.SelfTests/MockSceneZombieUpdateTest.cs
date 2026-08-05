@@ -67,7 +67,7 @@ namespace Animo.Tests.MiniUnity.SelfTests {
             // CounterComp.OnDestroy runs (sets destroyed=true). Q-S21
             // requires the inner loop to break here, so CounterComp.Update
             // must NOT be called.
-            scene.Tick(dt: 0.016f);
+            scene.Tick(delta_time: 0.016f);
 
             Assert.That(destroyer.update_count, Is.EqualTo(expected: 1),
                 "DestroyerComp must have received exactly one Update");

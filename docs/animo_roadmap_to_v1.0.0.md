@@ -84,7 +84,7 @@ flowchart LR
 | ----- | --------------- | ---------------------------------------- | ----------- | -------------------------------------------------------------------- |
 | **1** | `v0.1.4-design` | Spec FIX and operational pattern         | ✅ Complete | EN/JP spec + 59 mermaid diagrams build-checked                       |
 | **2** | `v0.2.0-test`   | Schema definition + pure C# test harness | 🔥 Next     | All test cases Red. Schema validates 3 sample JSONs.                 |
-| **3** | `v0.3.0`        | Core impl + zero-GC proof                |             | All tests Green. `GC.Alloc == 0` in `Live(dt)` over 100K calls.      |
+| **3** | `v0.3.0`        | Core impl + zero-GC proof                |             | All tests Green. `GC.Alloc == 0` in `Live(delta_time)` over 100K calls.      |
 | **4** | `v0.4.0`        | Unity integration + CLI tool             |             | `animo-runner` CLI runs from terminal. `Animo.Agent` works in Unity. |
 | **5** | `v0.5.0-beta`   | Scale and stress test                    |             | 100 agents × 60 fps stable in empty scene. 1-hour soak: no leak.     |
 | **6** | `v0.6.0-beta`   | G+B+A integration + 3 demos              |             | Three genre demos run with `Lock` and `frustration` working.         |
@@ -269,12 +269,12 @@ namespace Animo.Tests.MiniUnity {
 
     public static class MockTime {
         public static float deltaTime { get; set; }
-        public static void Step(float dt); // advances all registered MonoBehaviours
+        public static void Step(float delta_time); // advances all registered MonoBehaviours
     }
 
     public class MockScene {
         public void Add(MockGameObject obj);
-        public void Tick(float dt); // calls Update on every active object
+        public void Tick(float delta_time); // calls Update on every active object
     }
 }
 ```
@@ -286,7 +286,7 @@ namespace Animo.Tests.MiniUnity {
 + [ ] **2-2-c** Implement `MockMonoBehaviour` with virtual `Awake` / `Update` / `OnDestroy`.
 + [ ] **2-2-d** Implement `MockBus` with `Publish` recording and `Reset`.
 + [ ] **2-2-e** Implement `MockTime` with controllable `deltaTime`.
-+ [ ] **2-2-f** Implement `MockScene` with `Tick(dt)` that advances all objects.
++ [ ] **2-2-f** Implement `MockScene` with `Tick(delta_time)` that advances all objects.
 + [ ] **2-2-g** Write 3 self-tests for MiniUnity (otherwise the harness is unverified):
   + lifecycle order: `Awake → Update × N → OnDestroy`
   + `MockBus.published_signals` records in order
@@ -390,7 +390,7 @@ public class A025_CycleDetectionTests {
 | **Bounds**     | range min, range min - epsilon, range max, range max + epsilon                 |
 | **Volume**     | 0 elements, 1 element, 1000 elements, 10000 elements                           |
 | **Duplicates** | same `id` twice in array, same `kind_id` twice in `kind_ids`                   |
-| **Time**       | `dt = 0`, `dt < 0`, `dt = NaN`, `dt = very large`                              |
+| **Time**       | `delta_time = 0`, `delta_time < 0`, `delta_time = NaN`, `delta_time = very large`                              |
 | **Encoding**   | Unicode in `agent_id` (must fail snake_case)                                   |
 | **Order**      | reversed `influences` order (must produce same EffectiveNeeds after topo sort) |
 
@@ -449,9 +449,9 @@ These have no answer in v0.1.4. They must be resolved here.
 | Q8  | negative `commitment.bonus`                          | A012-style range Error          | TBD      |
 | Q9  | `Lock(duration: 0)`                                  | immediate Unlock                | TBD      |
 | Q10 | `Lock(duration: -1.0)`                               | throw `ArgumentException`       | TBD      |
-| Q11 | `Live(dt: 0)`                                        | no-op, return                   | TBD      |
-| Q12 | `Live(dt: -0.5)`                                     | clamp to 0 with Warning         | TBD      |
-| Q13 | `Live(dt: float.NaN)`                                | throw `ArgumentException`       | TBD      |
+| Q11 | `Live(delta_time: 0)`                                        | no-op, return                   | TBD      |
+| Q12 | `Live(delta_time: -0.5)`                                     | clamp to 0 with Warning         | TBD      |
+| Q13 | `Live(delta_time: float.NaN)`                                | throw `ArgumentException`       | TBD      |
 | Q14 | `Lock` called while already locked                   | extend duration vs replace      | TBD      |
 | Q15 | `Unlock` called while not locked                     | no-op                           | TBD      |
 | Q16 | `force_reset` called while `is_locked = true` (Hard) | ignored, but Need still updates | TBD      |
@@ -550,7 +550,7 @@ All three must succeed. Then Phase 3 starts.
 
 ### 5.1 Goal
 
-Turn every Red test into Green by implementing the core. **Then prove that `Live(dt)` allocates zero bytes per call**. This is the moment the Pre-cache Principle (§16.3 of spec) gets verified, not just claimed.
+Turn every Red test into Green by implementing the core. **Then prove that `Live(delta_time)` allocates zero bytes per call**. This is the moment the Pre-cache Principle (§16.3 of spec) gets verified, not just claimed.
 
 ### 5.2 Why Zero-GC Proof Matters Here
 
@@ -700,7 +700,7 @@ foreach (var action in _actions) {
 #### 5.7.1 Sub-tasks
 
 + [ ] **3-4-a** Implement `ScenarioRunner(Root root)` constructor.
-+ [ ] **3-4-b** Implement `Run(agent_id, duration, dt, events)` returning `TraceResult`.
++ [ ] **3-4-b** Implement `Run(agent_id, duration, delta_time, events)` returning `TraceResult`.
 + [ ] **3-4-c** Implement timed `AffectEvent` injection.
 + [ ] **3-4-d** Implement `TraceResult.ToCsv()`.
 + [ ] **3-4-e** Implement `TraceResult.ToJson()`.
@@ -717,7 +717,7 @@ public void Goblin_StartsHungry_SwitchesToSearchFood_Within3Seconds() {
     var events = new Dictionary<float, AffectEvent> {
         [1.0f] = new AffectEvent("hunger", +60f)
     };
-    var result = runner.Run("goblin_scout_01", duration: 5.0f, dt: 0.1f, events);
+    var result = runner.Run("goblin_scout_01", duration: 5.0f, delta_time: 0.1f, events);
 
     var late = result.frames.Where(f => f.time > 3.0f).Select(f => f.behavior);
     Assert.Contains("SearchFood", late.ToList());
@@ -734,7 +734,7 @@ public void Goblin_StartsHungry_SwitchesToSearchFood_Within3Seconds() {
 
 ### 5.8 Task 3-5 — Micro-Benchmark and Zero-GC Proof
 
-**Goal**: Mathematically prove that `Live(dt)` allocates zero bytes after warm-up.
+**Goal**: Mathematically prove that `Live(delta_time)` allocates zero bytes after warm-up.
 
 #### 5.8.1 The Test
 
@@ -745,12 +745,12 @@ public void Engine_Live_HotPath_IsZeroAllocation_Over_100K_Calls() {
     var engine = new Engine(persona: Composer.Compose(root.personas[0], root));
 
     // Warm up: JIT and any one-time allocations
-    for (int i = 0; i < 1000; i++) engine.Live(dt: 0.016f);
+    for (int i = 0; i < 1000; i++) engine.Live(delta_time: 0.016f);
 
     // Measure
     long before = GC.GetTotalMemory(forceFullCollection: true);
     long alloc_before = GC.GetAllocatedBytesForCurrentThread();
-    for (int i = 0; i < 100000; i++) engine.Live(dt: 0.016f);
+    for (int i = 0; i < 100000; i++) engine.Live(delta_time: 0.016f);
     long alloc_after = GC.GetAllocatedBytesForCurrentThread();
     long after = GC.GetTotalMemory(forceFullCollection: false);
 
@@ -917,7 +917,7 @@ flowchart TB
 
 + [ ] **4-4-a** Create `animo-runner~/animo-runner.csproj` (.NET 8 console).
 + [ ] **4-4-b** Reference `Animo.Core` and `Animo.Model` (without Unity).
-+ [ ] **4-4-c** Argument parsing: `--persona`, `--duration`, `--dt`, `--output`, `--events`.
++ [ ] **4-4-c** Argument parsing: `--persona`, `--duration`, `--delta_time`, `--output`, `--events`.
 + [ ] **4-4-d** Load JSON, run `ScenarioRunner`, write CSV or JSON.
 + [ ] **4-4-e** Support `--format csv|json`.
 + [ ] **4-4-f** Support `--events events.json` (load timed events from file).
@@ -932,7 +932,7 @@ animo-runner \
   --persona examples/goblin_scout.json \
   --agent-id goblin_scout_01 \
   --duration 60 \
-  --dt 0.1 \
+  --delta_time 0.1 \
   --events scenario_events.json \
   --output trace.csv \
   --format csv

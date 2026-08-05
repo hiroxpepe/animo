@@ -16,7 +16,7 @@ namespace Animo.Tools {
     /// half-formed message from the browser cannot stop the monitor.
     ///
     /// Message shape: {"kind":"affect","need":"fear","delta":50}
-    ///   kind = affect | pause | resume | dt
+    ///   kind = affect | pause | resume | delta_time
     /// </summary>
     public static class StepInReader {
 
@@ -69,10 +69,10 @@ namespace Animo.Tools {
                 case "resume":
                     loop.Resume();
                     break;
-                case "dt":
-                    var dt = (float?)message["dt"];
-                    if (dt.HasValue)
-                        loop.Dt = dt.Value; // MonitorLoop.Dt clamps to a sane range
+                case "delta_time":
+                    var delta_time = (float?)message["delta_time"];
+                    if (delta_time.HasValue)
+                        loop.DeltaTime = delta_time.Value; // MonitorLoop.DeltaTime clamps to a sane range
                     break;
                 case "lock":
                     var duration = (float?)message["duration"];

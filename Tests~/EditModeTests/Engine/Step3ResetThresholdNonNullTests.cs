@@ -56,12 +56,12 @@ namespace Animo.Tests.EditMode.EngineTests {
             var e = new Engine(p);
             e.OnSignal += s => { if (s == "alert") fired++; };
             e.Affect("fear", +35f);  // 85 → crosses 80
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(1), "Q-S86: threshold must fire.");
             e.Affect("fear", -20f);  // 65 → drops below reset 70
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             e.Affect("fear", +20f);  // 85 → crosses again
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(2), "Q-S86: threshold must refire after reset.");
         }
     }

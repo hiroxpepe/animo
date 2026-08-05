@@ -40,8 +40,8 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
             //   per_frame    = (alloc_long - alloc_short) / (N_long - N_short)
 
             // Warm up: JIT + ensure both runs are post-JIT
-            new ScenarioRunner(MakeRoot()).Run("bench", duration: 0.1f, dt: 0.1f);
-            new ScenarioRunner(MakeRoot()).Run("bench", duration: 1.0f, dt: 0.1f);
+            new ScenarioRunner(MakeRoot()).Run("bench", duration: 0.1f, delta_time: 0.1f);
+            new ScenarioRunner(MakeRoot()).Run("bench", duration: 1.0f, delta_time: 0.1f);
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -49,13 +49,13 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
 
             // Short run: 10 frames
             long before_short = GC.GetAllocatedBytesForCurrentThread();
-            new ScenarioRunner(MakeRoot()).Run("bench", duration: 1.0f, dt: 0.1f);
+            new ScenarioRunner(MakeRoot()).Run("bench", duration: 1.0f, delta_time: 0.1f);
             long after_short  = GC.GetAllocatedBytesForCurrentThread();
             long alloc_short  = after_short - before_short;
 
             // Long run: 1000 frames (much larger so per-frame term dominates)
             long before_long = GC.GetAllocatedBytesForCurrentThread();
-            new ScenarioRunner(MakeRoot()).Run("bench", duration: 100.0f, dt: 0.1f);
+            new ScenarioRunner(MakeRoot()).Run("bench", duration: 100.0f, delta_time: 0.1f);
             long after_long  = GC.GetAllocatedBytesForCurrentThread();
             long alloc_long  = after_long - before_long;
 

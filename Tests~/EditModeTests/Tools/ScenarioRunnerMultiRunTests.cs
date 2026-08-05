@@ -15,8 +15,8 @@ namespace Animo.Tests.EditMode.ToolsTests {
         [Test] public void Case01_TwoRunsFromSameTemplate_DoNotCollideOnStoreRegister() {
             // Q-S42: ScenarioRunner auto-generates distinct agent_ids: goblin_run_0, goblin_run_1.
             var runner = new ScenarioRunner(MakeRoot());
-            var r1 = runner.Run("goblin", duration: 1.0f, dt: 0.1f);
-            var r2 = runner.Run("goblin", duration: 1.0f, dt: 0.1f);
+            var r1 = runner.Run("goblin", duration: 1.0f, delta_time: 0.1f);
+            var r2 = runner.Run("goblin", duration: 1.0f, delta_time: 0.1f);
             // Both must succeed without Store registration (Q-S50)
             Assert.That(r1.frames.Count, Is.GreaterThan(0));
             Assert.That(r2.frames.Count, Is.GreaterThan(0));

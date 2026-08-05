@@ -33,7 +33,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 "timer phase + §24 Lock mechanism implementation.");
             Assert.That(lockRemaining!.FieldType, Is.EqualTo(typeof(float)),
                 "Q-S70: _lock_remaining must be a float (matches §9.2 mermaid " +
-                "pseudocode: `_lock_remaining -= dt; if (_lock_remaining ≤ 0) Unlock()`).");
+                "pseudocode: `_lock_remaining -= delta_time; if (_lock_remaining ≤ 0) Unlock()`).");
         }
     }
 }

@@ -33,8 +33,8 @@ namespace Animo.Tests.EditMode.IntegrationTests {
                 commitment  = new Commitment  { bonus = 50f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // seed _current_behavior so commitment bonus engages
-            e.Live(dt: 0.016f);  // second frame: bonus applied to Step 4
+            e.Live(delta_time: 0.016f);  // seed _current_behavior so commitment bonus engages
+            e.Live(delta_time: 0.016f);  // second frame: bonus applied to Step 4
             return e;
         }
 
@@ -76,11 +76,11 @@ namespace Animo.Tests.EditMode.IntegrationTests {
                 commitment  = new Commitment  { bonus = 50f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // Daydream wins (peaceful)
-            e.Live(dt: 0.016f);  // bonus now on Daydream
+            e.Live(delta_time: 0.016f);  // Daydream wins (peaceful)
+            e.Live(delta_time: 0.016f);  // bonus now on Daydream
             Assume.That(e.Behavior, Is.EqualTo("Daydream"), "pre: Daydream is current");
             e.Affect("hunger", +50f);  // hunger 20 → 70
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             // Now Daydream's score (with bonus): (70+50)*0.37 = 44.4
             Assert.That(e.GetActionScore("Daydream"), Is.EqualTo(44.4f).Within(0.01f),
                 "§9.3.5 row 3: Daydream(current) score = (70+50)*0.37 = 44.4");
@@ -99,10 +99,10 @@ namespace Animo.Tests.EditMode.IntegrationTests {
                 commitment  = new Commitment  { bonus = 50f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f); e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f); e.Live(delta_time: 0.016f);
             Assume.That(e.Behavior, Is.EqualTo("Daydream"));
             e.Affect("hunger", +80f);  // hunger → 100
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             // Daydream(current) = (70+50)*(1-0.9*1.0) = 120*0.10 = 12.0
             Assert.That(e.GetActionScore("Daydream"), Is.EqualTo(12.0f).Within(0.01f),
                 "§9.3.5 row 4: Daydream(current) = (70+50)*0.10 = 12.0");

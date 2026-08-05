@@ -14,7 +14,7 @@ namespace Animo.Tests.EditMode.Tools {
 
     /// <summary>
     /// MonitorLoop drives a live engine for the monitor: each tick it advances
-    /// the engine by dt and hands out a snapshot, and a step-in queued from the
+    /// the engine by delta_time and hands out a snapshot, and a step-in queued from the
     /// dashboard lands at the head of the next tick, never in the middle of one.
     /// It knows nothing of sockets, so the loop can be tested on its own.
     /// </summary>
@@ -37,7 +37,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void Tick_AdvancesTheEngineAndReturnsASnapshot() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             var before = loop.Engine.GetBaseNeed("hunger");
             var snap = loop.Tick();
             Assert.That(snap, Is.Not.Null);
@@ -47,7 +47,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void StepIn_LandsAtTheHeadOfTheNextTick() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Tick();
             var fear_before = loop.Engine.GetBaseNeed("fear");
             // Queue a step-in; it must NOT change the engine until the next tick.
@@ -61,19 +61,19 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void StepIn_AppliesInOrderAtTheNextTick() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Tick();
             var fear_before = loop.Engine.GetBaseNeed("fear");
             loop.QueueAffect("fear", 10f);
             loop.QueueAffect("fear", 20f);
             loop.Tick();
-            // Both step-ins landed this tick: +30 total, before the decay of one dt.
+            // Both step-ins landed this tick: +30 total, before the decay of one delta_time.
             Assert.That(loop.Engine.GetBaseNeed("fear"), Is.GreaterThanOrEqualTo(fear_before + 30f - 1f));
         }
 
         [Test]
         public void Pause_HoldsTheEngineStill() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Tick();
             loop.Pause();
             var hunger_before = loop.Engine.GetBaseNeed("hunger");
@@ -85,7 +85,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void Resume_LetsTheEngineAdvanceAgain() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Pause();
             loop.Tick();
             loop.Resume();
@@ -96,7 +96,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void QueueLock_LocksAtTheNextTick() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Tick();
             loop.QueueLock(2f, Animo.Core.LockMode.Hard);
             // Queued, not yet applied.
@@ -108,7 +108,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void QueueUnlock_UnlocksAtTheNextTick() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Tick();
             loop.QueueLock(5f, Animo.Core.LockMode.Hard);
             loop.Tick();
@@ -120,7 +120,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void Step_AdvancesOneFrameWhilePaused() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Pause();
             var hunger_before = loop.Engine.GetBaseNeed("hunger");
             var snap = loop.Step();
@@ -133,7 +133,7 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void Step_AppliesQueuedStepInsAtItsHead() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             loop.Pause();
             loop.Tick();
             var fear_before = loop.Engine.GetBaseNeed("fear");
@@ -144,23 +144,23 @@ namespace Animo.Tests.EditMode.Tools {
 
         [Test]
         public void Dt_ClampsToASaneRange() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             // A wild value from the dashboard must not run the engine off a cliff.
-            loop.Dt = 9999f;
-            Assert.That(loop.Dt, Is.LessThanOrEqualTo(MonitorLoop.DT_MAX));
-            loop.Dt = -3f;
-            Assert.That(loop.Dt, Is.GreaterThanOrEqualTo(MonitorLoop.DT_MIN));
-            loop.Dt = 0f;
-            Assert.That(loop.Dt, Is.GreaterThanOrEqualTo(MonitorLoop.DT_MIN));
+            loop.DeltaTime = 9999f;
+            Assert.That(loop.DeltaTime, Is.LessThanOrEqualTo(MonitorLoop.DT_MAX));
+            loop.DeltaTime = -3f;
+            Assert.That(loop.DeltaTime, Is.GreaterThanOrEqualTo(MonitorLoop.DT_MIN));
+            loop.DeltaTime = 0f;
+            Assert.That(loop.DeltaTime, Is.GreaterThanOrEqualTo(MonitorLoop.DT_MIN));
         }
 
         [Test]
         public void Step_MovesExactlyOneFrameWhenNotPaused() {
-            var loop = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var loop = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             // Step is an explicit one-frame move; running it while not paused
             // advances one frame, the same as a tick, not two.
-            var by_step = new MonitorLoop(MakeEngine(), dt: 0.5f);
-            var by_tick = new MonitorLoop(MakeEngine(), dt: 0.5f);
+            var by_step = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
+            var by_tick = new MonitorLoop(MakeEngine(), delta_time: 0.5f);
             by_step.Step();
             by_tick.Tick();
             Assert.That(by_step.Engine.GetBaseNeed("hunger"),

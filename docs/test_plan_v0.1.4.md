@@ -386,4 +386,4 @@ empty agent_id / empty actions / empty kind_ids / null needs / null binding / em
 
 ### TimeEdgeTests (5 cases)
 
-dt=0 / dt<0 / dt=NaN / dt=1e6 / many small ticks
+delta_time=0 / delta_time<0 / delta_time=NaN / delta_time=1e6 / many small ticks

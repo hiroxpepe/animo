@@ -27,7 +27,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
                 new TimedAffectEvent(0.5f, new AffectEvent("fear", +30f))
             };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f, events: events);
             // After t=0.5 both events applied: fear should be ~70
             float fear_late = result.frames.Find(f => f.time >= 0.6f)
                               .effective_needs.GetValueOrDefault("fear", 0f);
@@ -42,7 +42,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
                 new TimedAffectEvent(0.3f, new AffectEvent("fear", +20f))
             };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f, events: events);
             float fear_after = result.frames.Find(f => f.time >= 0.4f)
                                .effective_needs.GetValueOrDefault("fear", 0f);
             Assert.That(fear_after, Is.GreaterThan(40f),
@@ -55,7 +55,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
                 new TimedAffectEvent(-0.001f, new AffectEvent("fear", +60f))
             };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f, events: events);
             float fear_at_spawn = result.frames[0].effective_needs.GetValueOrDefault("fear", 0f);
             Assert.That(fear_at_spawn, Is.GreaterThan(50f),
                 "Q-S55: negative-time event must be consumed in t=0 sweep (visible at frames[0]).");
@@ -67,7 +67,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
             for (int i = 1; i <= 10; i++)
                 events.Add(new TimedAffectEvent(i * 0.1f, new AffectEvent("fear", +5f)));
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.1f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.1f, delta_time: 0.1f, events: events);
             // All 10 × +5 = +50 applied to fear=10 → ~60 at end
             float fear_end = result.frames[result.frames.Count-1]
                              .effective_needs.GetValueOrDefault("fear", 0f);

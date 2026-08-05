@@ -23,7 +23,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                     ActionOf("Flee","fear",2,2.5f), ActionOf("Idle","idle",5,1.0f) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetActionScore("Flee"), Is.EqualTo(0f).Within(0.001f),
                 "Step 4: need=0 → score=0.");
         }
@@ -35,7 +35,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Animo.Model.Action>{ ActionOf("Flee","fear",2,1.0f) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetActionScore("Flee"), Is.EqualTo(60f).Within(0.1f),
                 "Step 4: exp=1.0 → score == need value.");
         }
@@ -47,7 +47,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Animo.Model.Action>{ ActionOf("Flee","fear",2,2.5f) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float expected = (float)(Math.Pow(0.3, 2.5) * 100.0);
             Assert.That(e.GetActionScore("Flee"), Is.EqualTo(expected).Within(0.1f),
                 $"Step 4: exp=2.5, need=30 → score≈{expected:F2}.");
@@ -61,7 +61,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                     ActionOf("Flee","fear",2,1.0f), ActionOf("Idle","idle",5,1.0f) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetActionScore("Flee"), Is.GreaterThan(e.GetActionScore("Idle")),
                 "Step 4: higher need value must produce higher score.");
             Assert.That(e.Behavior, Is.EqualTo("Flee"),
@@ -76,7 +76,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Animo.Model.Action>{ ActionOf("Flee","fear",2,2.0f) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float expected = (float)(Math.Pow(0.7, 2.0) * 100.0);
             Assert.That(e.GetActionScore("Flee"), Is.EqualTo(expected).Within(0.01f),
                 $"Step 4 spec §9.4: Pow(0.7,2.0)*100 = {expected:F2}.");

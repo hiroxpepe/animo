@@ -55,19 +55,19 @@ namespace Animo {
         /// properties to Needs class members (finds none), leaving values empty.
         /// </summary>
         sealed class NeedsConverter : JsonConverter<Needs> {
-            public override Needs? ReadJson(JsonReader reader, Type t, Needs? existing,
+            public override Needs? ReadJson(JsonReader reader, Type type, Needs? existing,
                                             bool hasExisting, JsonSerializer s) {
                 if (reader.TokenType == JsonToken.Null) return null;
-                var obj = JObject.Load(reader);
+                var object_value = JObject.Load(reader);
                 var needs = new Needs();
-                foreach (var prop in obj.Properties())
-                    needs.values[prop.Name] = prop.Value.Value<float>();
+                foreach (var property in object_value.Properties())
+                    needs.values[property.Name] = property.Value.Value<float>();
                 return needs;
             }
             public override void WriteJson(JsonWriter w, Needs? v, JsonSerializer s) {
                 w.WriteStartObject();
-                if (v != null) foreach (var kv in v.values) {
-                    w.WritePropertyName(kv.Key); w.WriteValue(kv.Value);
+                if (v != null) foreach (var entry in v.values) {
+                    w.WritePropertyName(entry.Key); w.WriteValue(entry.Value);
                 }
                 w.WriteEndObject();
             }
@@ -75,19 +75,19 @@ namespace Animo {
 
         /// <summary>(Q-S151) Same flat-object converter for Rates.</summary>
         sealed class RatesConverter : JsonConverter<Rates> {
-            public override Rates? ReadJson(JsonReader reader, Type t, Rates? existing,
+            public override Rates? ReadJson(JsonReader reader, Type type, Rates? existing,
                                             bool hasExisting, JsonSerializer s) {
                 if (reader.TokenType == JsonToken.Null) return null;
-                var obj = JObject.Load(reader);
+                var object_value = JObject.Load(reader);
                 var rates = new Rates();
-                foreach (var prop in obj.Properties())
-                    rates.values[prop.Name] = prop.Value.Value<float>();
+                foreach (var property in object_value.Properties())
+                    rates.values[property.Name] = property.Value.Value<float>();
                 return rates;
             }
             public override void WriteJson(JsonWriter w, Rates? v, JsonSerializer s) {
                 w.WriteStartObject();
-                if (v != null) foreach (var kv in v.values) {
-                    w.WritePropertyName(kv.Key); w.WriteValue(kv.Value);
+                if (v != null) foreach (var entry in v.values) {
+                    w.WritePropertyName(entry.Key); w.WriteValue(entry.Value);
                 }
                 w.WriteEndObject();
             }

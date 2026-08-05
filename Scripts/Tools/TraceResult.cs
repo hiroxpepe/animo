@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 
 namespace Animo.Tools {
     /// <summary>
-    /// Single simulation frame. Recorded once per Live(dt) call.
+    /// Single simulation frame. Recorded once per Live(delta_time) call.
     /// (Q-S132) Phase 3 lightweight snapshot: stores float[] values as
     /// Dictionary for API clarity; Phase 4 optimization may switch to
     /// shared key arrays + parallel float[] per Q-S132 contract.
@@ -37,7 +37,7 @@ namespace Animo.Tools {
     public sealed class TraceResult {
         public string agent_id = "";
         public float  duration;
-        public float  dt;
+        public float  delta_time;
         public List<TraceFrame> frames = new();
 
         // (Q-S93) Populated by ScenarioRunner.Run in a single post-run pass.
@@ -52,40 +52,40 @@ namespace Animo.Tools {
         public string ToCSV() {
             if (frames.Count == 0) return "";
             var need_keys   = sortedKeys(frames[0].needs);
-            var eff_keys    = sortedKeys(frames[0].effective_needs);
+            var effective_keys    = sortedKeys(frames[0].effective_needs);
             var score_keys  = sortedKeys(frames[0].action_scores);
 
-            var ic = CultureInfo.InvariantCulture;
-            var sb = new StringBuilder();
+            var invariant_culture = CultureInfo.InvariantCulture;
+            var builder = new StringBuilder();
             // Header
-            sb.Append("time,behavior,is_locked,locked_behavior");
-            foreach (var k in need_keys)  sb.Append($",needs.{k}");
-            foreach (var k in eff_keys)   sb.Append($",eff.{k}");
-            foreach (var k in score_keys) sb.Append($",score.{k}");
-            sb.AppendLine(",signals_fired");
+            builder.Append("time,behavior,is_locked,locked_behavior");
+            foreach (var k in need_keys)  builder.Append($",needs.{k}");
+            foreach (var k in effective_keys)   builder.Append($",effective_needs.{k}");
+            foreach (var k in score_keys) builder.Append($",score.{k}");
+            builder.AppendLine(",signals_fired");
 
             // Rows
-            foreach (var f in frames) {
-                sb.Append($"{f.time.ToString("F4", ic)},{csv(f.behavior)},{f.is_locked},{csv(f.locked_behavior)}");
-                foreach (var k in need_keys)  sb.Append($",{f.needs.GetValueOrDefault(k).ToString("F4", ic)}");
-                foreach (var k in eff_keys)   sb.Append($",{f.effective_needs.GetValueOrDefault(k).ToString("F4", ic)}");
-                foreach (var k in score_keys) sb.Append($",{f.action_scores.GetValueOrDefault(k).ToString("F4", ic)}");
-                sb.AppendLine($",\"{string.Join(";", f.signals_fired)}\"");
+            foreach (var frame in frames) {
+                builder.Append($"{frame.time.ToString("F4", invariant_culture)},{csv(frame.behavior)},{frame.is_locked},{csv(frame.locked_behavior)}");
+                foreach (var k in need_keys)  builder.Append($",{frame.needs.GetValueOrDefault(k).ToString("F4", invariant_culture)}");
+                foreach (var k in effective_keys)   builder.Append($",{frame.effective_needs.GetValueOrDefault(k).ToString("F4", invariant_culture)}");
+                foreach (var k in score_keys) builder.Append($",{frame.action_scores.GetValueOrDefault(k).ToString("F4", invariant_culture)}");
+                builder.AppendLine($",\"{string.Join(";", frame.signals_fired)}\"");
             }
-            return sb.ToString();
+            return builder.ToString();
         }
 
         /// <summary>(Q-S93) Serialize to JSON.</summary>
         public string ToJSON() {
-            var obj = new {
+            var object_value = new {
                 agent_id,
                 duration,
-                dt,
+                delta_time,
                 behavior_count,
                 behavior_total_time,
                 frames
             };
-            return JsonConvert.SerializeObject(obj, Formatting.Indented);
+            return JsonConvert.SerializeObject(object_value, Formatting.Indented);
         }
 
         /// <summary>
@@ -95,29 +95,29 @@ namespace Animo.Tools {
         internal void BuildAnalysis() {
             behavior_count.Clear();
             behavior_total_time.Clear();
-            // (#6/#7/#9) Use frame time deltas; skip zero-time frames (spawn t=0 and
+            // (#6/#7/#9) Use frame time deltas; skip zero-time frames (spawn threshold=0 and
             // boundary Live(0.0f) frames) for both count and total_time so analysis
             // reflects real simulated time, not number of recorded snapshots.
             for (int i = 0; i < frames.Count; i++) {
                 if (string.IsNullOrEmpty(frames[i].behavior)) continue;
-                float prev  = i > 0 ? frames[i - 1].time : 0f;
-                float delta = System.Math.Max(0f, frames[i].time - prev);
+                float previous  = i > 0 ? frames[i - 1].time : 0f;
+                float delta = System.Math.Max(0f, frames[i].time - previous);
                 if (delta <= 0f) continue;  // skip zero-time frames (no real time advanced)
                 behavior_count.TryGetValue(frames[i].behavior, out var c);
                 behavior_count[frames[i].behavior] = c + 1;
-                behavior_total_time.TryGetValue(frames[i].behavior, out var t);
-                behavior_total_time[frames[i].behavior] = t + delta;
+                behavior_total_time.TryGetValue(frames[i].behavior, out var threshold);
+                behavior_total_time[frames[i].behavior] = threshold + delta;
             }
         }
 
 
 
-        static List<string> sortedKeys(Dictionary<string, float> d) {
-            var keys = new List<string>(d.Keys);
+        static List<string> sortedKeys(Dictionary<string, float> dictionary) {
+            var keys = new List<string>(dictionary.Keys);
             keys.Sort(System.StringComparer.Ordinal);
             return keys;
         }
-        static string csv(string s) =>
-            s.Contains(',') || s.Contains('"') ? $"\"{s.Replace("\"", "\"\"")}\"" : s;
+        static string csv(string value) =>
+            value.Contains(',') || value.Contains('"') ? $"\"{value.Replace("\"", "\"\"")}\"" : value;
     }
 }

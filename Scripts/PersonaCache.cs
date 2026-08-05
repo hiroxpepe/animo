@@ -77,8 +77,8 @@ namespace Animo {
             if (CACHE.TryGetValue(template_id, out var cached)) return cached;
 
             Persona? raw = null;
-            foreach (var p in _root.personas)
-                if (p.agent_id == template_id) { raw = p; break; }
+            foreach (var persona in _root.personas)
+                if (persona.agent_id == template_id) { raw = persona; break; }
             if (raw == null)
                 throw new PersonaTemplateRejectedException(
                     $"PersonaCache.GetComposed: template_id '{template_id}' not found in Root.");
@@ -87,10 +87,10 @@ namespace Animo {
             var stage2   = Validator.ValidateStage2(composed);
 
             if (stage2.has_errors) {
-                var msgs = string.Join("; ",
+                var messages = string.Join("; ",
                     System.Linq.Enumerable.Select(stage2.errors, e => $"{e.rule_id}: {e.message}"));
                 throw new PersonaTemplateRejectedException(
-                    $"PersonaCache.GetComposed: template_id '{template_id}' failed stage-2: {msgs}");
+                    $"PersonaCache.GetComposed: template_id '{template_id}' failed stage-2: {messages}");
             }
 
             if (_validation != null) _validation.Merge(stage2);

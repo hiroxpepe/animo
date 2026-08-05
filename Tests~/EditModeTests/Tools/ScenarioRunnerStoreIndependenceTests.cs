@@ -16,7 +16,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
 
         [Test] public void Case01_RunnerDoesNotCallStoreRegister() {
             var runner = new ScenarioRunner(MakeRoot());
-            runner.Run("a", duration: 1.0f, dt: 0.1f);
+            runner.Run("a", duration: 1.0f, delta_time: 0.1f);
             Assert.That(Animo.Store.Instance.IsRegistered("a"),       Is.False,
                 "Q-S50: ScenarioRunner.Run must NOT register engine in Store.");
             Assert.That(Animo.Store.Instance.IsRegistered("a_run_0"), Is.False,

@@ -101,7 +101,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             // in the SAME frame call:
             //   1) Affect(fear, +50, force_reset: true)   ← latch the emergency
             //   2) Affect(hunger, +5)                      ← default false
-            //   3) Live(dt)                                ← Step 4 must skip
+            //   3) Live(delta_time)                                ← Step 4 must skip
             //                                                 commitment_bonus
             //
             // A buggy "= force_reset" assignment impl would let call #2 clobber
@@ -109,14 +109,14 @@ namespace Animo.Tests.EditMode.EngineTests {
             // should produce a switch to a fear-driven action, not stick with
             // the previously-committed action.
             Engine e = MakeEngine();
-            e.Live(dt: 0.016f);
-            e.Live(dt: 0.016f);    // let commitment build up on current behavior
+            e.Live(delta_time: 0.016f);
+            e.Live(delta_time: 0.016f);    // let commitment build up on current behavior
             string before = e.Behavior;
 
             // Within-frame multi-call:
             e.Affect(need: "fear",   delta: +50f, force_reset: true);
             e.Affect(need: "hunger", delta:  +5f);  // default force_reset: false
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
 
             // The fact that the engine processed force_reset is hard to assert
             // directly from the public API, but we can pin the necessary
@@ -129,7 +129,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             // accessor, filed as a Phase 3 follow-up. This test pins the
             // observable contract: the call sequence above must not throw and
             // the engine must process the OR-latched flag.
-            Assert.DoesNotThrow(code: () => e.Live(dt: 0.016f));
+            Assert.DoesNotThrow(code: () => e.Live(delta_time: 0.016f));
         }
     }
 }

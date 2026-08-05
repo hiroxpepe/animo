@@ -29,7 +29,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 50f, trigger: 80f, reset: 70f);
             e.OnSignal += s => { if (s == "fear_alert") fired++; };
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(0),
                 "Step 3: below trigger must NOT fire OnSignal.");
         }
@@ -39,7 +39,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
             e.OnSignal += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);  // → 81, crosses 80
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(1),
                 "Step 3: crossing trigger must fire OnSignal exactly once.");
         }
@@ -49,8 +49,8 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
             e.OnSignal += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);
-            e.Live(dt: 0.016f);   // fires once
-            e.Live(dt: 0.016f);   // stays above reset → must NOT refire
+            e.Live(delta_time: 0.016f);   // fires once
+            e.Live(delta_time: 0.016f);   // stays above reset → must NOT refire
             Assert.That(fired, Is.EqualTo(1),
                 "Step 3: staying above reset threshold must NOT refire.");
         }
@@ -60,11 +60,11 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
             e.OnSignal += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);
-            e.Live(dt: 0.016f);   // fires #1
+            e.Live(delta_time: 0.016f);   // fires #1
             e.Affect("fear", -20f); // → ~61, drops below reset 70
-            e.Live(dt: 0.016f);   // rearmed
+            e.Live(delta_time: 0.016f);   // rearmed
             e.Affect("fear", +25f); // → ~86, crosses 80 again
-            e.Live(dt: 0.016f);   // fires #2
+            e.Live(delta_time: 0.016f);   // fires #2
             Assert.That(fired, Is.EqualTo(2),
                 "Step 3: dropping below reset must rearm and allow second firing.");
         }
@@ -74,7 +74,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 90f, trigger: 80f, reset: 70f);
             e.OnSignal += s => { if (s == "fear_alert") fired++; };
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(0),
                 "Step 3 Q-S8: spawning above trigger must NOT fire (already above at construction).");
         }

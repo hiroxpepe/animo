@@ -54,11 +54,11 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 30f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // Flee(70) > Idle(35+bonus=65) → Flee wins
+            e.Live(delta_time: 0.016f);  // Flee(70) > Idle(35+bonus=65) → Flee wins
             Assert.That(e.Behavior, Is.EqualTo("Flee"), "pre: Flee wins");
             // force_reset + raise Idle above Flee: Flee without bonus=70, Idle=75 → Idle wins
             e.Affect("idle", +40f, force_reset: true);  // idle=75
-            e.Live(dt: 0.016f);  // Flee has no bonus: 70 vs Idle: 75 → Idle wins
+            e.Live(delta_time: 0.016f);  // Flee has no bonus: 70 vs Idle: 75 → Idle wins
             Assert.That(e.Behavior, Is.EqualTo("Idle"),
                 "Q-S5: force_reset must strip commitment bonus; Idle(75) beats Flee(70) without bonus.");
         }
@@ -72,13 +72,13 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 30f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // Idle wins
+            e.Live(delta_time: 0.016f);  // Idle wins
             Assert.That(e.Behavior, Is.EqualTo("Idle"), "pre");
             e.Lock(2.0f, LockMode.Hard);
             e.Affect("fear", +60f, force_reset: true);  // fear=90, latch set
-            e.Live(dt: 0.016f);  // Hard lock: behavior frozen
+            e.Live(delta_time: 0.016f);  // Hard lock: behavior frozen
             Assert.That(e.Behavior, Is.EqualTo("Idle"), "Hard lock: behavior frozen");
-            e.Live(dt: 2.1f);  // unlock
+            e.Live(delta_time: 2.1f);  // unlock
             Assert.That(e.IsLocked, Is.False, "unlocked");
             // Post-unlock: force_reset survived → Idle has no bonus: 80 vs Flee: 90 → Flee wins
             Assert.That(e.Behavior, Is.EqualTo("Flee"),

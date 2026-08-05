@@ -21,7 +21,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
             var events = new List<TimedAffectEvent>{
                 new TimedAffectEvent(0f, new AffectEvent("fear", +2f)) };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("goblin", duration: 0.1f, dt: 0.1f, events: events,
+            var result = runner.Run("goblin", duration: 0.1f, delta_time: 0.1f, events: events,
                 agent_id_override: "goblin_run_0");
             // Result has frames; we can check action scores fired correctly
             Assert.That(result.frames.Count, Is.GreaterThan(0),

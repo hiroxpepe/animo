@@ -29,7 +29,7 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
 
         [Test] public void Engine_Lock_Unlock_IsZeroAllocation_Over_10K_Calls() {
             var engine = MakeEngine();
-            engine.Live(dt: 0.016f);  // seed behavior
+            engine.Live(delta_time: 0.016f);  // seed behavior
 
             // Warm up
             for (int i = 0; i < 1000; i++) { engine.Lock(0.5f); engine.Unlock(); }
@@ -51,10 +51,10 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
         [Test] public void Engine_Lock_LiveDuringLock_IsZeroAllocation() {
             // Lock once, then 100K Live calls inside lock — still zero-alloc
             var engine = MakeEngine();
-            engine.Live(dt: 0.016f);
+            engine.Live(delta_time: 0.016f);
 
             // Warm up
-            for (int i = 0; i < 1000; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < 1000; i++) engine.Live(delta_time: 0.016f);
             engine.Lock(duration: 1e6f);  // effectively perma-lock (capped at MAX, but no unlock)
 
             GC.Collect();
@@ -62,7 +62,7 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
             GC.Collect();
 
             long alloc_before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < 100000; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < 100000; i++) engine.Live(delta_time: 0.016f);
             long alloc_after = GC.GetAllocatedBytesForCurrentThread();
 
             long allocated = alloc_after - alloc_before;

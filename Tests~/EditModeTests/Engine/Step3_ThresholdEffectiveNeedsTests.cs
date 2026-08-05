@@ -24,7 +24,7 @@ namespace Animo.Tests.EditMode.EngineTests {
     /// preconditions the Engine implementation must satisfy:
     ///   - Engine constructs without throwing on a fixture with both
     ///     an Influence and a Threshold targeting the same Need
-    ///   - Affect(frustration, +X) followed by Live(dt) does NOT throw
+    ///   - Affect(frustration, +X) followed by Live(delta_time) does NOT throw
     ///   - GetNeed("anger") reads back the BASE Need (= 0), confirming
     ///     that the Influence does NOT mutate the base — only the
     ///     effective array, which Q-S23 makes Threshold observe.
@@ -60,11 +60,11 @@ namespace Animo.Tests.EditMode.EngineTests {
                 "precondition: base anger starts at 0");
 
             // Frame 0: noop frame — must not fire spuriously (Q-S8 seed).
-            Assert.DoesNotThrow(code: () => engine.Live(dt: 0.016f));
+            Assert.DoesNotThrow(code: () => engine.Live(delta_time: 0.016f));
 
             // Frame 1: pump frustration so cascade should lift eff_anger > 70.
             engine.Affect(need: "frustration", delta: +80f);
-            Assert.DoesNotThrow(code: () => engine.Live(dt: 0.016f),
+            Assert.DoesNotThrow(code: () => engine.Live(delta_time: 0.016f),
                 "Q-S23: Engine must construct + run with both Influence and Threshold " +
                 "targeting the same Need without throwing — base for the Phase 3 MockBus " +
                 "assertion that 'animo_a_anger_burst' is actually published.");

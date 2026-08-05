@@ -13,7 +13,7 @@ using static Animo.Tests.EditMode.Helpers.Fixture;
 namespace Animo.Tests.EditMode.BenchmarkTests {
     /// <summary>
     /// Task 3-5-a (roadmap §5.8) Zero-GC proof for Engine.Live hot path.
-    /// Engine.Live(dt) must allocate zero bytes after warm-up.
+    /// Engine.Live(delta_time) must allocate zero bytes after warm-up.
     /// </summary>
     [TestFixture]
     public class EngineLiveAllocationTests {
@@ -47,7 +47,7 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
             var engine = MakeRealisticEngine();
 
             // Warm up: JIT + any one-time allocations
-            for (int i = 0; i < 1000; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < 1000; i++) engine.Live(delta_time: 0.016f);
 
             // Force GC to baseline
             GC.Collect();
@@ -56,7 +56,7 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
 
             // Measure
             long alloc_before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < 100000; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < 100000; i++) engine.Live(delta_time: 0.016f);
             long alloc_after = GC.GetAllocatedBytesForCurrentThread();
 
             long allocated = alloc_after - alloc_before;
@@ -69,12 +69,12 @@ namespace Animo.Tests.EditMode.BenchmarkTests {
             var engine = MakeRealisticEngine();
 
             // Warm up
-            for (int i = 0; i < 1000; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < 1000; i++) engine.Live(delta_time: 0.016f);
 
             // Measure
             const int iterations = 100000;
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < iterations; i++) engine.Live(dt: 0.016f);
+            for (int i = 0; i < iterations; i++) engine.Live(delta_time: 0.016f);
             sw.Stop();
 
             double per_call_us = (sw.Elapsed.TotalMilliseconds * 1000.0) / iterations;

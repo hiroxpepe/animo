@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Animo.Tests.EditMode.ToolsTests {
     /// <summary>
     /// Spec-content test for Q-S123 (v0.1.5): §26.3.1 does NOT
-    /// declare `float current_time = total_steps * dt;` as a live
+    /// declare `float current_time = total_steps * delta_time;` as a live
     /// code-block statement because no downstream code reads it
     /// (CS0219 "variable assigned but never used").
     /// 
@@ -38,16 +38,16 @@ namespace Animo.Tests.EditMode.ToolsTests {
             // `csharp fence. We scan for lines that START with "float
             // current_time" (no leading "//" comment, no backtick prose
             // quoting). The pre-Q-S123 dead line was exactly:
-            //   float current_time = total_steps * dt;   // for the post-loop sweep boundary check below
+            //   float current_time = total_steps * delta_time;   // for the post-loop sweep boundary check below
             // Post-Q-S123 there should be ZERO such lines.
             int violation_count = 0;
             foreach (var line in lines) {
                 var trimmed = line.TrimStart();
                 // Skip backtick-quoted prose references (e.g. "...declared
-                // `float current_time = total_steps * dt;` here...")
+                // `float current_time = total_steps * delta_time;` here...")
                 if (trimmed.Contains("`float current_time = total_steps")) continue;
                 // Skip comment-only lines (e.g. "// `float current_time...
-                // = total_steps * dt;` here — but no")
+                // = total_steps * delta_time;` here — but no")
                 if (trimmed.StartsWith("//")) continue;
                 // Real code-block declaration: line begins with the type
                 if (trimmed.StartsWith("float current_time = total_steps")) {
@@ -55,7 +55,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
                 }
             }
             Assert.That(violation_count, Is.EqualTo(expected: 0),
-                "Q-S123: spec EN must NOT carry a live `float current_time = total_steps * dt;` " +
+                "Q-S123: spec EN must NOT carry a live `float current_time = total_steps * delta_time;` " +
                 $"declaration in code blocks; found {violation_count} live declarations.");
         }
     }

@@ -14,9 +14,9 @@ namespace Animo.Tests.EditMode.ToolsTests {
 
         [Test] public void Case01_FirstFrameTimeIsZero_NotDt() {
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f);
             Assert.That(result.frames[0].time, Is.EqualTo(0.0f).Within(1e-5f),
-                "Q-S51: frames[0] is spawn frame at time=0, not first dt.");
+                "Q-S51: frames[0] is spawn frame at time=0, not first delta_time.");
         }
     }
 }
