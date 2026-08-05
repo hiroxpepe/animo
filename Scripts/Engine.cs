@@ -488,7 +488,7 @@ namespace Animo.Core {
         }
 
 
-        private void applyNonTierMetadata(int need_index, NeedMeta meta) {
+        void applyNonTierMetadata(int need_index, NeedMeta meta) {
             // (Q-S45 + Q-S48) Apply non-tier NeedMeta fields.
             // decay_multiplier: scales the rates[] value for this Need.
             // 1.0 = no change (default). Applied to _decay_rates[] cache;

@@ -4,9 +4,9 @@
 #nullable enable
 
 using System;
-using Animo.Model;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Animo.Model;
 
 [assembly: InternalsVisibleTo("Animo.Tests.EditMode")]
 
