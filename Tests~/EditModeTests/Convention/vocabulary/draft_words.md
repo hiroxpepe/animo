@@ -37,8 +37,6 @@ abbreviation — an abbreviation is fixed in the code, not kept here.
 + frustration frustrations
 + graph graphs graphed graphing
 + incoming
-+ info infos
-+ index indices
 + influence influences influenced influencing
 + intensity intensities
 + invariant invariants
@@ -49,7 +47,6 @@ abbreviation — an abbreviation is fixed in the code, not kept here.
 + meta
 + metadata
 + miss misses missed missing
-+ model models modeled modeling
 + multiplier multipliers
 + neighbor neighbors
 + non
@@ -77,7 +74,6 @@ abbreviation — an abbreviation is fixed in the code, not kept here.
 + stack stacks stacked stacking
 + stage2
 + standard standards
-+ step steps stepped stepping
 + step2
 + step3
 + step4
