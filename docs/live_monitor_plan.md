@@ -131,3 +131,17 @@ These are settled before build, not now:
 + **The move to Unity later.** The console engine and the Unity engine are the
   same code, so the monitor should join to a Unity run too; the plan keeps that
   door open but does not build it yet.
++ **Localized need and action labels.** The dashboard chrome — the headings and
+  the buttons — already switches language from a small dictionary. The data
+  labels do not: need names like `hunger` and action names like `SearchFood`
+  come straight from the persona file, so they stay in English even in Japanese
+  mode, and a reader who is still learning the parameters can not follow them.
+  The plan is to carry the labels on the persona file itself, not to hard-code a
+  table in the dashboard, since each persona has its own set — a goblin needs
+  hunger and fatigue, while a character persona needs longing and jealousy. Each
+  persona file would hold a display name per need and per action, in each
+  language it supports; the monitor reads those and shows them when that
+  language is picked, and falls back to the raw English key when a label is
+  missing, so a new persona still works without a dashboard change. This needs a
+  schema addition on the persona file and a read path in the monitor, so it is
+  settled before build.
