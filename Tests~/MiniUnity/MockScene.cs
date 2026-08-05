@@ -51,7 +51,7 @@ namespace Animo.Tests.MiniUnity {
         /// (v0.1.5, Q-S137) Phase 3 ITimeProvider DI pattern for Agent tests:
         /// Q-S115 declared that Agent.Update should read from an `ITimeProvider`
         /// rather than `UnityEngine.Time.deltaTime` directly. In EditMode tests,
-        /// MockScene.Tick already calls `MockTime.Step(dt)` before dispatching
+        /// MockScene.Tick already calls `MockTime.Step(delta_time)` before dispatching
         /// Update; Phase 3 must ensure each Agent receives a MockTime-backed
         /// ITimeProvider. Recommended pattern for test fixtures:
         ///
@@ -75,7 +75,7 @@ namespace Animo.Tests.MiniUnity {
 
         /// <summary>
         /// Advance one simulated frame: set <see cref="MockTime.deltaTime"/> to
-        /// <paramref name="dt"/>, then call <c>Update</c> on every component of
+        /// <paramref name="delta_time"/>, then call <c>Update</c> on every component of
         /// every active object, in registration order.
         ///
         /// Destroyed objects are pruned from the internal list before iteration
@@ -83,9 +83,9 @@ namespace Animo.Tests.MiniUnity {
         /// snapshotted per object so that an <c>Update</c> implementation may
         /// safely add or remove components without affecting iteration.
         /// </summary>
-        /// <param name="dt">Frame delta in seconds.</param>
-        public void Tick(float dt) {
-            MockTime.Step(dt: dt);
+        /// <param name="delta_time">Frame delta in seconds.</param>
+        public void Tick(float delta_time) {
+            MockTime.Step(delta_time: delta_time);
 
             // Drop already-destroyed objects so a long-running test cannot
             // accumulate dead references across many ticks.

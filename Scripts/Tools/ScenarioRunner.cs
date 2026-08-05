@@ -32,17 +32,17 @@ namespace Animo.Tools {
     /// <summary>(v0.1.5, Q-S4) Timed Affect injection for ScenarioRunner.</summary>
     [Serializable]
     public readonly struct TimedAffectEvent {
-        public TimedAffectEvent(float time, AffectEvent ev) {
+        public TimedAffectEvent(float time, AffectEvent event_value) {
             this.time = time;
-            this.ev   = ev;
+            this.event_value   = event_value;
         }
         public float       time { get; }
-        public AffectEvent ev   { get; }
+        public AffectEvent event_value   { get; }
     }
 
     /// <summary>
     /// (v0.1.5, Q-S82) Headless simulator for `Animo.Core.Engine`. Drives
-    /// `Live(dt)` over a fixed duration, optionally injecting timed
+    /// `Live(delta_time)` over a fixed duration, optionally injecting timed
     /// `Affect` events, and records every frame's state into a
     /// `TraceResult`. Runs without Unity — pure C# tests / .NET CLI.
     ///
@@ -53,14 +53,14 @@ namespace Animo.Tools {
     ///
     /// (v0.1.5, Q-S84 + Q-S98 + Q-S117) The internal `Run` loop uses
     /// an Integer step counter
-    /// (`int total_steps = (int)System.Math.Round((double)duration / (double)dt);`)
-    /// to guarantee the Q-S35 contract of "exactly floor(duration / dt)
+    /// (`int total_steps = (int)System.Math.Round((double)duration / (double)delta_time);`)
+    /// to guarantee the Q-S35 contract of "exactly floor(duration / delta_time)
     /// Live calls" without IEEE-754 float-accumulation drift. Q-S84
-    /// originally wrote `Math.Floor(duration / dt)` but float32
+    /// originally wrote `Math.Floor(duration / delta_time)` but float32
     /// `(10.0f / 0.1f) = 99.9999985...` floors to 99 (under-shoot by
     /// one step) — Q-S98 promotes to double and uses Round to handle
-    /// the sub-LSB drift symmetrically. Q-S117 adds the `dt &lt;= 0`
-    /// guard at Run entry — pre-Q-S117 a `dt = 0.0f` call produced
+    /// the sub-LSB drift symmetrically. Q-S117 adds the `delta_time &lt;= 0`
+    /// guard at Run entry — pre-Q-S117 a `delta_time = 0.0f` call produced
     /// `duration / 0 = +Infinity`, then `(int)Infinity = int.MinValue`
     /// per CLI ECMA-335 unchecked-conv, then the main loop never
     /// entered (predicate `0 &lt; -2147483648 = false`), and Run
@@ -96,7 +96,7 @@ namespace Animo.Tools {
         // (v0.1.5, Q-S42 + Q-S99) Run-counter for default agent_id_override
         // generation. Q-S42 declared the spec contract:
         //   "When `agent_id_override` is null, the runner generates
-        //    `${template_id}_run_${_seq++}`."
+        //    `${template_id}_run_${_sequence++}`."
         // so two `Run()` calls from the same template carry distinct
         // ids in trace output. Q-S99 materializes the field declaration
         // — Q-S82's file creation overlooked it (same pattern as Q-S92's
@@ -109,7 +109,7 @@ namespace Animo.Tools {
         // CS0414 suppressed for v0.1.5 stub (initialized but Phase 3
         // adds the read+post-increment in Run()).
         #pragma warning disable CS0414
-        int _seq = 0;
+        int _sequence = 0;
         #pragma warning restore CS0414
 
         public ScenarioRunner(Root root) {
@@ -121,7 +121,7 @@ namespace Animo.Tools {
         }
 
         /// <summary>
-        /// Drive Engine.Live for `duration` seconds with frame size `dt`.
+        /// Drive Engine.Live for `duration` seconds with frame size `delta_time`.
         /// Returns a `TraceResult` with one `TraceFrame` per recorded
         /// boundary (spawn + after each Live + optional final
         /// boundary-event frame per Q-S40).
@@ -138,19 +138,19 @@ namespace Animo.Tools {
         ///       throw new ArgumentException(
         ///           "agent_id_override must be null or non-empty snake_case string.",
         ///           nameof(agent_id_override));
-        /// null is valid (triggers auto-generation: $"{agent_id}_run_{_seq++}").
+        /// null is valid (triggers auto-generation: $"{agent_id}_run_{_sequence++}").
         /// </summary>
         public TraceResult Run(
             string                            agent_id,
             float                             duration,
-            float                             dt = 0.1f,
+            float                             delta_time = 0.1f,
             IReadOnlyList<TimedAffectEvent>?  events = null,
             string?                           agent_id_override = null
         ) {
-            // (Q-S117) dt <= 0 fail-loud
-            if (dt <= 0f)
+            // (Q-S117) delta_time <= 0 fail-loud
+            if (delta_time <= 0f)
                 throw new System.ArgumentException(
-                    $"dt must be > 0. Got {dt}.", nameof(dt));
+                    $"delta_time must be > 0. Got {delta_time}.", nameof(delta_time));
 
             // (Q-S145) empty agent_id_override is fail-loud
             if (agent_id_override is string ov && ov.Length == 0)
@@ -159,8 +159,8 @@ namespace Animo.Tools {
 
             // Build composed Persona (deep copy for isolation)
             Persona? raw = null;
-            foreach (var p in _root.personas)
-                if (p.agent_id == agent_id) { raw = p; break; }
+            foreach (var persona in _root.personas)
+                if (persona.agent_id == agent_id) { raw = persona; break; }
             if (raw == null)
                 throw new System.ArgumentException(
                     $"agent_id '{agent_id}' not found in Root.", nameof(agent_id));
@@ -172,7 +172,7 @@ namespace Animo.Tools {
             // GetComposed returns a shared composed template; DeepCopy so per-run mutation
             // (agent_id override) doesn't corrupt the cache for concurrent runs.
             var composed = Animo.PersonaCache.GetComposed(agent_id).DeepCopy();
-            string effective_id = agent_id_override ?? $"{agent_id}_run_{_seq++}";
+            string effective_id = agent_id_override ?? $"{agent_id}_run_{_sequence++}";
             composed.agent_id   = effective_id;
 
             _engine = new Engine(composed);
@@ -187,7 +187,7 @@ namespace Animo.Tools {
 
             // (#2 Q-S26) Subscribe to Engine.OnSignal so signals_fired is populated per frame.
             var pending_signals = new System.Collections.Generic.List<string>();
-            _engine.OnSignal += s => pending_signals.Add(s);
+            _engine.OnSignal += signal => pending_signals.Add(signal);
             var result = new TraceResult();
 
             // (#5 + Q-S35) Normalize and sort events by time. spec §26.3.1 requires
@@ -197,18 +197,18 @@ namespace Animo.Tools {
             // (#3) Use stable OrderBy (LINQ) to preserve original insertion order for
             // same-time events — Array.Sort is unstable per .NET spec and would break
             // the Q-S35 "forward-pointer preserves authored order" contract.
-            TimedAffectEvent[] ev_list;
+            TimedAffectEvent[] event_list;
             if (events == null) {
-                ev_list = System.Array.Empty<TimedAffectEvent>();
+                event_list = System.Array.Empty<TimedAffectEvent>();
             } else {
-                ev_list = events.OrderBy(e => e.time).ToArray();
+                event_list = events.OrderBy(e => e.time).ToArray();
             }
             int next = 0;
 
             // (Q-S55) Sweep events[next].time <= 0.0f BEFORE spawn Live(0.0f).
             // Includes negative-time events (hand-built tests, pre-t0 priming).
-            while (next < ev_list.Length && ev_list[next].time <= 0.0f) {
-                _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+            while (next < event_list.Length && event_list[next].time <= 0.0f) {
+                _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
                 next++;
             }
 
@@ -217,26 +217,25 @@ namespace Animo.Tools {
             recordFrame(result, 0f, _engine, pending_signals, need_names_cache, action_ids_cache);
 
             // (Q-S84 + Q-S98) Integer step counter with double-precision Math.Round.
-            int   total_steps = (int)System.Math.Round((double)duration / (double)dt);
-            bool  boundary_consumed = false;
+            int   total_steps = (int)System.Math.Round((double)duration / (double)delta_time);
 
             for (int step = 0; step < total_steps; step++) {
-                float frame_end = (step + 1) * dt;
+                float frame_end = (step + 1) * delta_time;
 
                 // (Q-S35) Consume events within the upcoming frame window (next pointer, O(1) per frame).
-                while (next < ev_list.Length && ev_list[next].time < frame_end) {
-                    _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+                while (next < event_list.Length && event_list[next].time < frame_end) {
+                    _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
                     next++;
                 }
 
-                _engine.Live(dt);
+                _engine.Live(delta_time);
                 recordFrame(result, frame_end, _engine, pending_signals, need_names_cache, action_ids_cache);
             }
 
             // (Q-S40) Post-loop sweep: events at time == duration (or missed by loop).
             bool sweep_any = false;
-            while (next < ev_list.Length && ev_list[next].time <= duration) {
-                _engine.Affect(ev_list[next].ev.need, ev_list[next].ev.delta, ev_list[next].ev.force_reset);
+            while (next < event_list.Length && event_list[next].time <= duration) {
+                _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
                 next++;
                 sweep_any = true;
             }
@@ -248,7 +247,7 @@ namespace Animo.Tools {
             // (Q-S93) Populate analysis counters in a single post-run pass.
             result.agent_id  = effective_id;
             result.duration  = duration;
-            result.dt        = dt;
+            result.delta_time        = delta_time;
             result.BuildAnalysis();
             return result;
         }

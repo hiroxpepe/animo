@@ -27,17 +27,17 @@ namespace Animo.Tests.MiniUnity {
         // public Methods [verb]
 
         /// <summary>
-        /// Advance virtual time by <paramref name="dt"/>. Sets <see cref="deltaTime"/>
-        /// to <paramref name="dt"/> for the upcoming <c>Update</c> calls and
+        /// Advance virtual time by <paramref name="delta_time"/>. Sets <see cref="deltaTime"/>
+        /// to <paramref name="delta_time"/> for the upcoming <c>Update</c> calls and
         /// accumulates <see cref="elapsed_seconds"/>.
         ///
         /// Note: This advances the clock only. To actually fire <c>Update</c> on
         /// every component, call <see cref="MockScene.Tick(float)"/>.
         /// </summary>
-        /// <param name="dt">Seconds to advance.</param>
-        public static void Step(float dt) {
-            deltaTime = dt;
-            elapsed_seconds += dt;
+        /// <param name="delta_time">Seconds to advance.</param>
+        public static void Step(float delta_time) {
+            deltaTime = delta_time;
+            elapsed_seconds += delta_time;
         }
 
         /// <summary>

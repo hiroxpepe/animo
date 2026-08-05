@@ -16,7 +16,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
             var events = new List<TimedAffectEvent>{
                 new TimedAffectEvent(1.0f, new AffectEvent("fear", +60f)) };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f, events: events);
             Assert.That(result.frames.Count, Is.GreaterThan(1),
                 "Q-S40: boundary event at t=duration must produce at least spawn + regular frames.");
         }

@@ -23,7 +23,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
     /// formerly passed both A011a and A011b at stage 1, then reached the
     /// Engine with `actions = []`, where Q-S9's tie-break
     /// (`actions.First(...)`) would throw `InvalidOperationException` on
-    /// the first `Live(dt)`. A036 closes this architectural gap.
+    /// the first `Live(delta_time)`. A036 closes this architectural gap.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]

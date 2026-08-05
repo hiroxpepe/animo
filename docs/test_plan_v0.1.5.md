@@ -399,7 +399,7 @@ empty agent_id / empty actions / empty kind_ids / null needs / null binding / em
 
 ### TimeEdgeTests (5 cases)
 
-dt=0 / dt<0 / dt=NaN / dt=1e6 / many small ticks
+delta_time=0 / delta_time<0 / delta_time=NaN / delta_time=1e6 / many small ticks
 
 ---
 
@@ -461,9 +461,9 @@ null throws; empty throws.
 
 | #   | Input    | Expected (v0.1.5 confirmed) |
 | --- | -------- | --------------------------- |
-| 01  | dt = 0   | no-op                       |
-| 02  | dt = -1  | throw `ArgumentException`   |
-| 03  | dt = NaN | throw `ArgumentException`   |
+| 01  | delta_time = 0   | no-op                       |
+| 02  | delta_time = -1  | throw `ArgumentException`   |
+| 03  | delta_time = NaN | throw `ArgumentException`   |
 
 ### ForceReset Case05 — confirmed semantics (Q16)
 
@@ -489,7 +489,7 @@ spec §24.3.1 / §24.4.1 / §9.2 (T0 phase) for the reasons.
 | 08  | Q-S1         | `Case08_SoftLock_CommitmentBonusFollowsLockedBehavior` | locked_behavior is preserved during Soft lock even when fear is pushed to drive an internal switch — proves bonus rides locked_behavior, not internal leader |
 | 09  | Q-S2         | `Case09_HardLock_NeedsContinueToUpdate`                | GetNeed reflects post-Affect change while is_locked == true (Hard) — Steps 1-2 still run during lock                                                         |
 | 10  | Q-S2         | `Case10_SoftLock_NeedsContinueToUpdate`                | same contract, Soft mode                                                                                                                                     |
-| 11  | Q-S3         | `Case11_LockExpiresMidFrame_SwitchHappensSameFrame`    | After Live(dt) where dt covers remaining duration, is_locked == false in the same call — proves T0 decrement happens at frame head, not frame tail           |
+| 11  | Q-S3         | `Case11_LockExpiresMidFrame_SwitchHappensSameFrame`    | After Live(delta_time) where delta_time covers remaining duration, is_locked == false in the same call — proves T0 decrement happens at frame head, not frame tail           |
 
 ### Bus injection (deferred to Phase 3)
 

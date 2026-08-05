@@ -33,7 +33,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
 
             var root   = JSON.Parse(text);
             var runner = new ScenarioRunner(root);
-            var result = runner.Run(agent_id: "goblin_scout_01", duration: 10.0f, dt: 1.0f / 60.0f);
+            var result = runner.Run(agent_id: "goblin_scout_01", duration: 10.0f, delta_time: 1.0f / 60.0f);
 
             Assert.That(result.frames.Count, Is.GreaterThan(500),
                 "Phase 3 Exit Gate: 10-second run at 60Hz must record 500+ frames.");
@@ -48,7 +48,7 @@ namespace Animo.Tests.EditMode.IntegrationTests {
             Assume.That(File.Exists(path));
             var root   = JSON.Parse(File.ReadAllText(path));
             var runner = new ScenarioRunner(root);
-            var result = runner.Run(agent_id: "goblin_scout_01", duration: 1.0f, dt: 0.1f);
+            var result = runner.Run(agent_id: "goblin_scout_01", duration: 1.0f, delta_time: 0.1f);
 
             string csv = result.ToCSV();
             Assert.That(csv, Is.Not.Empty, "Phase 3 Exit Gate: CSV must not be empty.");

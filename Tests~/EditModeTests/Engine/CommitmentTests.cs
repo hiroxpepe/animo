@@ -24,9 +24,9 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 20f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);   // Flee wins tie by declaration order
+            e.Live(delta_time: 0.016f);   // Flee wins tie by declaration order
             string first = e.Behavior;
-            e.Live(dt: 0.016f);   // bonus=20 on Flee: 70 vs 50 → Flee stays
+            e.Live(delta_time: 0.016f);   // bonus=20 on Flee: 70 vs 50 → Flee stays
             Assert.That(e.Behavior, Is.EqualTo(first),
                 "Commitment: bonus must hold the current action against a tie.");
         }
@@ -42,9 +42,9 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 20f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // seeds behavior="Flee"
+            e.Live(delta_time: 0.016f);  // seeds behavior="Flee"
             Assert.That(e.Behavior, Is.EqualTo("Flee"), "pre: Flee wins");
-            e.Live(dt: 0.016f);  // now _current="Flee" → Step4 adds bonus
+            e.Live(delta_time: 0.016f);  // now _current="Flee" → Step4 adds bonus
             float flee_score = e.GetActionScore("Flee");
             Assert.That(flee_score, Is.EqualTo(80f).Within(0.1f),
                 "Commitment: on 2nd frame, score of current action must include bonus (60+20=80).");
@@ -59,11 +59,11 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 20f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // Idle wins (65 vs 60)
+            e.Live(delta_time: 0.016f);  // Idle wins (65 vs 60)
             Assert.That(e.Behavior, Is.EqualTo("Idle"), "pre");
             // force_reset: Idle bonus removed → Idle=65, Flee=60 → still Idle unless bonus pushed it
             e.Affect("fear", +10f, force_reset: true);  // fear=70, Idle has no bonus → Flee(70)>Idle(65)
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.Behavior, Is.EqualTo("Flee"),
                 "Q-S5: force_reset must remove commitment bonus, allowing switch.");
         }
@@ -78,10 +78,10 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 20f }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);  // seeds behavior
-            e.Live(dt: 0.016f);  // bonus now applied
+            e.Live(delta_time: 0.016f);  // seeds behavior
+            e.Live(delta_time: 0.016f);  // bonus now applied
             float score_first = e.GetActionScore("Flee");  // 80
-            for (int i = 0; i < 100; i++) e.Live(dt: 0.016f);
+            for (int i = 0; i < 100; i++) e.Live(delta_time: 0.016f);
             float score_after = e.GetActionScore("Flee");
             Assert.That(score_after, Is.EqualTo(score_first).Within(0.01f),
                 "Commitment: bonus must not decay over time (stable at 80).");

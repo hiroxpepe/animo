@@ -51,7 +51,7 @@ namespace Animo.Model {
 
         /// <summary>
         /// (§16.3.4 Pre-cache Principle) Topo-sorted edge order produced by
-        /// Composer.topoSortInfluences (cold path, once per composed Persona).
+        /// Composer.topologicalSortInfluences (cold path, once per composed Persona).
         /// Engine Step 2 iterates this int[] with zero allocation per frame.
         /// null = not yet composed (direct construction); Engine falls back to
         /// declaration order (safe, possibly non-topo for cyclic graphs).
@@ -95,13 +95,13 @@ namespace Animo.Model {
             // Needs: copy the values dictionary
             if (this.needs != null) {
                 copy.needs = new Needs();
-                foreach (var kv in this.needs.values) copy.needs.values[kv.Key] = kv.Value;
+                foreach (var entry in this.needs.values) copy.needs.values[entry.Key] = entry.Value;
             }
 
             // Rates: copy the values dictionary
             if (this.rates != null) {
                 copy.rates = new Rates();
-                foreach (var kv in this.rates.values) copy.rates.values[kv.Key] = kv.Value;
+                foreach (var entry in this.rates.values) copy.rates.values[entry.Key] = entry.Value;
             }
 
             // Suppression: struct-like, just field-copy
@@ -117,7 +117,7 @@ namespace Animo.Model {
             // Influences: deep copy each element (Q-S141)
             if (this.influences != null) {
                 copy.influences = new List<Influence>(capacity: this.influences.Count);
-                foreach (var inf in this.influences) copy.influences.Add(inf.DeepCopy());
+                foreach (var influence in this.influences) copy.influences.Add(influence.DeepCopy());
             }
 
             // Actions: deep copy each element (Q-S141)
@@ -132,13 +132,13 @@ namespace Animo.Model {
             // Binding: copy on_action_change + deep copy each Threshold (Q-S141)
             if (this.binding != null) {
                 copy.binding = new Binding { on_action_change = this.binding.on_action_change };
-                foreach (var t in this.binding.thresholds) copy.binding.thresholds.Add(t.DeepCopy());
+                foreach (var threshold in this.binding.thresholds) copy.binding.thresholds.Add(threshold.DeepCopy());
             }
 
             // needs_meta: deep copy each NeedMeta entry (Q-S134 + Q-S141)
             if (this.needs_meta != null) {
                 copy.needs_meta = new Dictionary<string, NeedMeta>(capacity: this.needs_meta.Count);
-                foreach (var kv in this.needs_meta) copy.needs_meta[kv.Key] = kv.Value.DeepCopy();
+                foreach (var entry in this.needs_meta) copy.needs_meta[entry.Key] = entry.Value.DeepCopy();
             }
             // (§16.3.4) Copy pre-sorted order array (int[] is immutable after Compose; safe to share).
             copy.sorted_influence_order = this.sorted_influence_order;
@@ -186,8 +186,8 @@ namespace Animo.Model {
             // a Validator-prevented contradiction; sentinel 0 is
             // safe-by-construction.
             int tier = 0;
-            if (Animo.Const.NEED_TIER_BY_NAME.TryGetValue(need_name, out var t)) {
-                tier = t;
+            if (Animo.Const.NEED_TIER_BY_NAME.TryGetValue(need_name, out var threshold)) {
+                tier = threshold;
             }
             return new NeedMeta { tier = tier };
         }
@@ -230,7 +230,7 @@ namespace Animo.Model {
     ///     - Add private `Dictionary&lt;string, JToken&gt; _raw` annotated
     ///       with <c>[JsonExtensionData]</c>; Newtonsoft routes all
     ///       unmapped top-level properties into it.
-    ///     - `values` becomes a read-only projection: foreach kv in _raw,
+    ///     - `values` becomes a read-only projection: foreach entry in _raw,
     ///       parse as float, populate Dictionary&lt;string, float&gt;.
     ///     - Existing call sites (`_persona.needs?.values`) continue to work.
     ///   Option B (deeper change — defer to v0.2 if Option A blocks):
@@ -366,7 +366,7 @@ namespace Animo.Model {
         /// </summary>
         public Binding DeepCopy() {
             var copy = new Binding { on_action_change = this.on_action_change };
-            foreach (var t in thresholds) copy.thresholds.Add(item: t.DeepCopy());
+            foreach (var threshold in thresholds) copy.thresholds.Add(item: threshold.DeepCopy());
             return copy;
         }
     }
@@ -376,7 +376,7 @@ namespace Animo.Model {
     public class Threshold {
         internal int need_index;
         // v0.1.5 (Q-S14): per-Threshold pre-expanded trigger string.
-        // Replaces the old `_cached_threshold_triggers[t.need]` dictionary
+        // Replaces the old `_cached_threshold_triggers[threshold.need]` dictionary
         // which collapsed multiple thresholds on the same Need (e.g.
         // fear=50 → "alerted", fear=80 → "panic") into a single overwriting
         // entry. With this field, each Threshold carries its own resolved
@@ -391,7 +391,7 @@ namespace Animo.Model {
         // ctor seeds this from the spawn-time `_effective_needs` (Q-S8
         // + Q-S23 + Q-S25): Persona spawned with the Need already above
         // `trigger_threshold` starts in `Above` and does NOT fire on
-        // first Live(dt). Step 3 fire branch transitions Below → Above;
+        // first Live(delta_time). Step 3 fire branch transitions Below → Above;
         // Step 3 reset branch transitions Above → Below.
         internal bool is_above;
         public string need { get; set; } = "";

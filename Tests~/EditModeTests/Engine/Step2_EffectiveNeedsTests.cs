@@ -20,7 +20,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Action> { ActionOf("Idle","idle",5) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetNeed("fear"), Is.EqualTo(40f).Within(0.001f),
                 "Step 2: without influences, effective must equal base.");
         }
@@ -34,7 +34,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Action>{ ActionOf("Idle","idle",5) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float eff = e.GetNeed("confidence");
             Assert.That(eff, Is.GreaterThan(20f),
                 "Step 2: positive coefficient must raise target above base.");
@@ -49,7 +49,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Action>{ ActionOf("Idle","idle",5) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float eff = e.GetNeed("confidence");
             Assert.That(eff, Is.LessThan(60f),
                 "Step 2: negative coefficient must lower target below base.");
@@ -67,7 +67,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Action>{ ActionOf("Idle","idle",5) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             float c_eff = e.GetNeed("c_need");
             Assert.That(c_eff, Is.GreaterThan(10f),
                 "Step 2: chain A→B→C must cascade (C must be raised).");
@@ -84,7 +84,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 actions = new List<Action>{ ActionOf("Idle","idle",5) }
             };
             var e = new Engine(p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.GetNeed("confidence"), Is.LessThanOrEqualTo(100f),
                 "Step 2: clamp after each edge must keep values ≤ 100.");
             Assert.That(e.GetNeed("confidence"), Is.GreaterThanOrEqualTo(0f),

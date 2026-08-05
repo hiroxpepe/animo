@@ -27,11 +27,11 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
     ///   HALLUC #22: typeof(Agent) compile error — all references are in
     ///               string literals / comments, not C# code; 0-error build.
     ///   HALLUC #23: Banker's Rounding — float32→double never lands on X.5
-    ///               in practical (duration,dt) space; exhaustive search confirms.
+    ///               in practical (duration,delta_time) space; exhaustive search confirms.
     ///   HALLUC #24: GetInstanceID negative — spec §11.4.1 line 3291-3299
     ///               explicitly says A002 applies only at JSON authoring time;
     ///               runtime IDs are opaque keys; host adapter chooses strategy.
-    ///   HALLUC #25: _seq instance reset — Q-S99 spec: instance field by
+    ///   HALLUC #25: _sequence instance reset — Q-S99 spec: instance field by
     ///               design; each test's _run_0 is in an independent TraceResult.
     ///   HALLUC #26: ApplyNonTierMetadata private — spec Q-S48 explicitly chose
     ///               private; v0.2/v0.3 extends Engine.cs directly, not via inheritance.

@@ -28,25 +28,25 @@ namespace Animo.Tests.EditMode.EngineTests {
             return new Engine(persona: p);
         }
         [Test] public void Case01_SwitchToBestScoredAction() {
-            Engine e = MakeEngine(); e.Affect(need: "fear", delta: +60f); e.Live(dt: 0.016f); Assert.That(e.Behavior, Is.Not.Null);
+            Engine e = MakeEngine(); e.Affect(need: "fear", delta: +60f); e.Live(delta_time: 0.016f); Assert.That(e.Behavior, Is.Not.Null);
         }
         [Test] public void Case02_TieGoesToCurrentDueToCommitment() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Live(dt: 0.016f); Assert.That(e.Behavior, Is.Not.Null);
+            Engine e = MakeEngine(); e.Live(delta_time: 0.016f); e.Live(delta_time: 0.016f); Assert.That(e.Behavior, Is.Not.Null);
         }
         [Test] public void Case03_WhenLockedHard_SkipStep5() {
-            Engine e = MakeEngine(); e.Live(dt: 0.016f); e.Lock(duration: 5f, mode: LockMode.Hard); Assert.That(e.IsLocked, Is.True);
+            Engine e = MakeEngine(); e.Live(delta_time: 0.016f); e.Lock(duration: 5f, mode: LockMode.Hard); Assert.That(e.IsLocked, Is.True);
         }
         [Test] public void Case04_WhenLockedSoft_StepsRunButBehaviorFrozen() {
             // (Q-S2, spec §24 line 5525, DECISION LOG Q-S2)
             // Soft Lock: Steps 1-4 run, Step 5 SKIPPED → behavior must NOT change.
             Engine e = MakeEngine();
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             string before = e.Behavior;
             e.Lock(duration: 5f, mode: LockMode.Soft);
             Assert.That(e.IsLocked, Is.True);
             // Drive fear high so Flee would win if Step 5 ran.
             e.Affect(need: "fear", delta: +99f);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.Behavior, Is.EqualTo(expected: before),
                 "Q-S2 + spec §24: Soft Lock must freeze behavior (Step 5 skipped). " +
                 "behavior must not change even when Flee score dominates.");
@@ -72,7 +72,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 }
             };
             Engine e = new Engine(persona: p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.Behavior, Is.EqualTo(expected: "Flee"),
                 "All-zero scores → tie → first declared action wins (spec §9.2 Step 5, Q-S9)");
         }
@@ -91,7 +91,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 }
             };
             Engine e = new Engine(persona: p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             Assert.That(e.Behavior, Is.EqualTo(expected: "Idle"),
                 "Tie-break is by actions[] declaration order, not by tier or exponent");
         }
@@ -111,7 +111,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                 commitment = new Commitment { bonus = 25f }
             };
             Engine e = new Engine(persona: p);
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             // No commitment bonus on any action this frame; pure intensity
             // competition. Hunger 90 with exp 1.5 dominates idle 0.
             Assert.That(e.Behavior, Is.EqualTo(expected: "Eat"));

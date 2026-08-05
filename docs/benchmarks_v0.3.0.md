@@ -9,8 +9,8 @@
 
 | Operation                              | Allocation       | Per-call (Release) | Contract |
 | -------------------------------------- | ---------------- | ------------------ | -------- |
-| `Engine.Live(dt)` — hot path           | 0 B / 100K calls | < 1 µs             | §16.1    |
-| `Engine.Live(dt)` during Lock          | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Live(delta_time)` — hot path           | 0 B / 100K calls | < 1 µs             | §16.1    |
+| `Engine.Live(delta_time)` during Lock          | 0 B / 100K calls | < 1 µs             | §16.1    |
 | `Engine.Affect(need, delta)`           | 0 B / 100K calls | < 1 µs             | §16.1    |
 | `Engine.Affect(..., force_reset:true)` | 0 B / 100K calls | < 1 µs             | §16.1    |
 | `Engine.Lock + Unlock` cycle           | 0 B / 10K cycles | < 1 µs             | §16.1    |
@@ -20,12 +20,12 @@
 
 ```csharp
 // Warm up: JIT + one-time allocations
-for (int i = 0; i < 1000; i++) engine.Live(dt: 0.016f);
+for (int i = 0; i < 1000; i++) engine.Live(delta_time: 0.016f);
 
 GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
 
 long alloc_before = GC.GetAllocatedBytesForCurrentThread();
-for (int i = 0; i < 100000; i++) engine.Live(dt: 0.016f);
+for (int i = 0; i < 100000; i++) engine.Live(delta_time: 0.016f);
 long alloc_after  = GC.GetAllocatedBytesForCurrentThread();
 
 Assert.That(alloc_after - alloc_before, Is.EqualTo(0));
@@ -42,7 +42,7 @@ Benchmarks use a representative Persona profile:
 + **suppression**: tier2=0.5, tier3=0.4, tier4=0.3, tier5=0.2
 + **commitment**: bonus=5.0
 
-This profile exercises every Step (1–5) of `Live(dt)` including Maslow dynamic
+This profile exercises every Step (1–5) of `Live(delta_time)` including Maslow dynamic
 suppression, Influence cascade with topological order, commitment bonus,
 threshold hysteresis with OnSignal, and tie-break logic.
 
@@ -69,7 +69,7 @@ The zero-allocation contract is achieved through these architectural decisions
 
 Measured on a developer-grade machine; representative not authoritative.
 
-+ `Live(dt)` ≈ **0.86 µs** per call (86ms / 100,000 calls)
++ `Live(delta_time)` ≈ **0.86 µs** per call (86ms / 100,000 calls)
 + Per-Live aim: < 10 µs ✅ (10x room)
 + 100 agents @ 60 fps frame time: 16.67 ms — Animo consumes ~86 µs (0.5%)
 + 1000 agents @ 60 fps: ~860 µs (5% of frame time)
@@ -87,4 +87,4 @@ The underlying engine loop remains zero-alloc; allocation is linear in frame
 count (verified by `ScenarioRunnerAllocationTests`).
 
 For production runtime (no trace observation), `Agent.Update` calls
-`_engine.Live(dt)` directly and stays in the zero-alloc path.
+`_engine.Live(delta_time)` directly and stays in the zero-alloc path.

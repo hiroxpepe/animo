@@ -16,7 +16,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
             var events = new List<TimedAffectEvent>{
                 new TimedAffectEvent(10.0f, new AffectEvent("fear", +50f)) };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 10.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 10.0f, delta_time: 0.1f, events: events);
             Assert.That(result.frames.Count, Is.GreaterThanOrEqualTo(101),
                 "Q-S40: boundary event frame must be appended (total >= 101).");
         }

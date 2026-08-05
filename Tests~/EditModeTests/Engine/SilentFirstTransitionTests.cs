@@ -49,7 +49,7 @@ namespace Animo.Tests.EditMode.EngineTests {
 
             // Frame 1: behavior transitions from "" to "Idle" (Q-S9 tie-break).
             // Q-S31: OnSignal must NOT be raised for this transition.
-            Assert.DoesNotThrow(code: () => engine.Live(dt: 0.016f));
+            Assert.DoesNotThrow(code: () => engine.Live(delta_time: 0.016f));
 
             Assert.That(signal_count, Is.EqualTo(expected: 0),
                 "Q-S31: OnSignal must NOT raise on the very first behavior assignment " +

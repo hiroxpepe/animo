@@ -100,7 +100,7 @@ namespace Animo {
                 _engine.OnSignal += OnSignalHandler;
 
                 // Step 7 (Q-S80): Seed first behavior (silent per Q-S31).
-                _engine.Live(dt: 0.0f);
+                _engine.Live(delta_time: 0.0f);
 
                 // Step 8 (Q-S75): Sync Animator to initial behavior.
                 _animator?.Play(stateName: _engine.Behavior);
@@ -146,12 +146,12 @@ namespace Animo {
             //
             // (v0.1.5, Q-S115) Phase 3 receives an `ITimeProvider`
             // (constructor-injected or SerializeField) so this line
-            // becomes `_engine.Live(dt: _time_provider.deltaTime);`,
+            // becomes `_engine.Live(delta_time: _time_provider.deltaTime);`,
             // letting `Animo.Tests.MiniUnity.MockTime` drive the
             // simulator under EditMode. Pre-Q-S115 a hardcoded
-            // `Time.deltaTime` here meant `MockScene.Tick(dt)` could
+            // `Time.deltaTime` here meant `MockScene.Tick(delta_time)` could
             // not advance the Agent's simulated time even though
-            // `MockTime.Step(dt)` was correctly updating
+            // `MockTime.Step(delta_time)` was correctly updating
             // `MockTime.deltaTime`. The v0.1.5 stub keeps the direct
             // reference because the Phase 3 implementation contract
             // hasn't been written yet, but the Phase 3 contract is
@@ -170,8 +170,8 @@ namespace Animo {
             // once on a frame where `_engine` was never assigned.
             if (_engine == null) return;
             // (Q-S115) Use injected ITimeProvider if available, else Unity Time.deltaTime.
-            float dt = _time_provider != null ? _time_provider.deltaTime : Time.deltaTime;
-            _engine.Live(dt: dt);
+            float delta_time = _time_provider != null ? _time_provider.deltaTime : Time.deltaTime;
+            _engine.Live(delta_time: delta_time);
         }
 
         void OnDestroy() {
@@ -194,8 +194,8 @@ namespace Animo {
             // (#3 Phase_3_5_2) NOTE: An earlier comment claimed "Unlock may publish
             // an OnSignal event (behavior-change upon release), so Store.Unregister
             // must come after." That was a fact error — Engine.Unlock() only resets
-            // two fields; OnSignal is raised by Step 5 inside Live(dt), not by Unlock
-            // itself. Since OnDestroy is the agent's last frame, no Live(dt) will run
+            // two fields; OnSignal is raised by Step 5 inside Live(delta_time), not by Unlock
+            // itself. Since OnDestroy is the agent's last frame, no Live(delta_time) will run
             // again. The Unlock/Unregister order is therefore semantically free; we
             // keep Unlock first as defensive ordering for future code changes.
             _engine?.Unlock();

@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 + **`Validator`**: full A000-A040 rule coverage (Stage 1 + Stage 2). Includes
   A031 runtime warning on `Engine.Lock(duration > 30s)`, A039 sibling threshold
   proximity in both raw and composed forms, NaN/Infinity guards on rates.
-+ **`Engine`**: 5-step `Live(dt)` lifecycle (decay → EffectiveNeeds → Threshold
++ **`Engine`**: 5-step `Live(delta_time)` lifecycle (decay → EffectiveNeeds → Threshold
   → Score → Switch) with §16.3.4 Pre-cache Principle (`_rates_flat` flat array,
   pre-sorted influence order, baked `need_index`). `Affect`, `Lock` (with NaN
   guard + `LOCK_DURATION_MAX` hard cap), `Unlock`. `OnSignal` event for both
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Performance
 
-+ `Engine.Live(dt)` per-call: **≈ 0.86 µs** (Release, .NET 8) — well under
++ `Engine.Live(delta_time)` per-call: **≈ 0.86 µs** (Release, .NET 8) — well under
   the 10 µs target.
 + `Engine.Live` over 100,000 calls: **0 bytes** allocated.
 + `Engine.Affect`, `Engine.Lock` / `Unlock`: **0 bytes** allocated.

@@ -52,7 +52,7 @@ We are at the line between Phase 3 (done) and Phase 4 (next).
 
 | Operation                       | Result                          |
 | ------------------------------- | ------------------------------- |
-| `Engine.Live(dt)` per call      | **≈ 0.86 µs** (Release, .NET 8) |
+| `Engine.Live(delta_time)` per call      | **≈ 0.86 µs** (Release, .NET 8) |
 | `Engine.Live` over 100K calls   | **0 bytes** allocated           |
 | `Engine.Affect` over 100K calls | **0 bytes** allocated           |
 | `Engine.Lock + Unlock`          | **0 bytes** allocated           |
@@ -63,7 +63,7 @@ We are at the line between Phase 3 (done) and Phase 4 (next).
 ```mermaid
 flowchart TB
   subgraph Core["Animo.Core (UnityEngine ZERO)"]
-    Engine["Engine<br/>Live(dt) 5-step pipeline"]
+    Engine["Engine<br/>Live(delta_time) 5-step pipeline"]
     Composer["Composer<br/>Kind cascade + topo sort"]
     Validator["Validator<br/>A000-A040 rules"]
     PersonaCache["PersonaCache<br/>Flyweight + Stage 2"]
@@ -220,7 +220,7 @@ flowchart LR
 
 + **Status**: not started; spec exists in roadmap §6
 + **What**: A `dotnet`-based command-line wrapper around `ScenarioRunner`.
-  `animo-runner persona.json --duration 10 --dt 0.1 --out trace.csv`.
+  `animo-runner persona.json --duration 10 --delta_time 0.1 --out trace.csv`.
 + **Why medium**: closes the designer feedback loop without launching Unity.
   Powerful for tuning; less critical for first-time adoption.
 + **Effort**: small (Core is Unity-free; CLI is a thin wrapper).
@@ -236,7 +236,7 @@ flowchart LR
 
 + **Status**: deferred from Phase 3 (Gemini round 4, #6)
 + **What**: Spec how `_effective_needs` should behave between an `Affect`
-  call and the next `Live(dt)`. Current implementation overwrites with the
+  call and the next `Live(delta_time)`. Current implementation overwrites with the
   new base value, which erases mid-frame Influence cascade.
 + **Why low**: no observable bug today (tests cover this without cascades);
   matters for future tools that query needs between frames.

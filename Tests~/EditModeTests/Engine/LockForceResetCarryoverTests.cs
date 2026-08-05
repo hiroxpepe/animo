@@ -52,16 +52,16 @@ namespace Animo.Tests.EditMode.EngineTests {
             // Live, even though commitment.bonus = 30 would normally keep
             // "Talk" winning.
             Engine e = MakeEngine();
-            e.Live(dt: 0.016f);                // settle initial state
+            e.Live(delta_time: 0.016f);                // settle initial state
             e.Lock(duration: 1.0f, mode: LockMode.Hard);
             Assert.That(e.IsLocked, Is.True, "precondition: hard locked");
 
             // Mid-lock emergency stimulus
             e.Affect(need: "fear", delta: +20f, force_reset: true);
-            e.Live(dt: 0.5f);                  // Step 4 runs in lock; latch must stay set
+            e.Live(delta_time: 0.5f);                  // Step 4 runs in lock; latch must stay set
             Assert.That(e.IsLocked, Is.True, "still locked half-way through");
 
-            e.Live(dt: 0.6f);                  // lock timer expires inside this Live
+            e.Live(delta_time: 0.6f);                  // lock timer expires inside this Live
             // Post-unlock first Step 5: latch consumed → no commitment.bonus
             // on previous behavior → fear's score wins → behavior == "Flee".
             Assert.That(e.IsLocked, Is.False, "lock should have expired");
@@ -73,15 +73,15 @@ namespace Animo.Tests.EditMode.EngineTests {
             // Same shape as Case01 but with Soft Lock. The latch lifecycle
             // contract is identical (§24.4 table: latch behavior column).
             Engine e = MakeEngine();
-            e.Live(dt: 0.016f);
+            e.Live(delta_time: 0.016f);
             e.Lock(duration: 1.0f, mode: LockMode.Soft);
             Assert.That(e.IsLocked, Is.True, "precondition: soft locked");
 
             e.Affect(need: "fear", delta: +20f, force_reset: true);
-            e.Live(dt: 0.5f);
+            e.Live(delta_time: 0.5f);
             Assert.That(e.IsLocked, Is.True);
 
-            e.Live(dt: 0.6f);
+            e.Live(delta_time: 0.6f);
             Assert.That(e.IsLocked, Is.False);
             Assert.That(e.Behavior, Is.EqualTo(expected: "Flee"),
                 "Q-S10: force_reset latch must survive Soft Lock and be honored on first post-unlock Step 5");

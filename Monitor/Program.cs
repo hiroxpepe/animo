@@ -40,7 +40,7 @@ namespace Animo.Monitor {
             var root = JSON.Parse(File.ReadAllText(persona_path));
             PersonaCache.Initialize(root);
 
-            var set = new MonitorSet(dt: 0.5f);
+            var set = new MonitorSet(delta_time: 0.5f);
             foreach (var raw_id in agent_ids) {
                 var agent_id = raw_id.Trim();
                 var composed = PersonaCache.GetComposed(agent_id).DeepCopy();

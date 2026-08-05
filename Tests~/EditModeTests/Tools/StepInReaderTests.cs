@@ -31,7 +31,7 @@ namespace Animo.Tests.EditMode.Tools {
                     ActionOf("Flee", "fear", 1, 1.0f),
                 },
             };
-            return new MonitorLoop(new Animo.Core.Engine(persona), dt: 0.5f);
+            return new MonitorLoop(new Animo.Core.Engine(persona), delta_time: 0.5f);
         }
 
         [Test]
@@ -64,8 +64,8 @@ namespace Animo.Tests.EditMode.Tools {
         [Test]
         public void Read_ChangeDtSetsTheStep() {
             var loop = MakeLoop();
-            StepInReader.Read(loop, "{\"kind\":\"dt\",\"dt\":0.1}");
-            Assert.That(loop.Dt, Is.EqualTo(0.1f).Within(0.0001f));
+            StepInReader.Read(loop, "{\"kind\":\"delta_time\",\"delta_time\":0.1}");
+            Assert.That(loop.DeltaTime, Is.EqualTo(0.1f).Within(0.0001f));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace Animo.Tests.EditMode.Tools {
         // ── MonitorSet (Stage 3, many agents) ──────────────────────────────
 
         static MonitorSet MakeSet() {
-            var set = new MonitorSet(dt: 0.5f);
+            var set = new MonitorSet(delta_time: 0.5f);
             foreach (var id in new[] { "scout_1", "scout_2" }) {
                 var persona = new Persona {
                     agent_id = id,

@@ -67,7 +67,7 @@ namespace Animo.Tools {
         }
 
         static MonitorSet setOfOne(MonitorLoop loop) {
-            var set = new MonitorSet(loop.Dt);
+            var set = new MonitorSet(loop.DeltaTime);
             set.Add(loop.Engine.AgentID, loop.Engine);
             return set;
         }

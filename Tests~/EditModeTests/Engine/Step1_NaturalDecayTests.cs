@@ -25,50 +25,50 @@ namespace Animo.Tests.EditMode.EngineTests {
         }
 
         [Test] public void Case01_PositiveRateRaisesNeed() {
-            // hunger_init=50, rate=+10, dt=1.0 → expected=60
+            // hunger_init=50, rate=+10, delta_time=1.0 → expected=60
             Engine e = MakeEngine(hunger_init: 50f, hunger_rate: +10f);
-            e.Live(dt: 1.0f);
+            e.Live(delta_time: 1.0f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(60f).Within(0.01f),
-                "Step 1: positive rate must raise need by rate*dt per frame.");
+                "Step 1: positive rate must raise need by rate*delta_time per frame.");
         }
 
         [Test] public void Case02_NegativeRateLowersNeed() {
-            // hunger_init=50, rate=-10, dt=1.0 → expected=40
+            // hunger_init=50, rate=-10, delta_time=1.0 → expected=40
             Engine e = MakeEngine(hunger_init: 50f, hunger_rate: -10f);
-            e.Live(dt: 1.0f);
+            e.Live(delta_time: 1.0f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(40f).Within(0.01f),
-                "Step 1: negative rate must lower need by |rate|*dt per frame.");
+                "Step 1: negative rate must lower need by |rate|*delta_time per frame.");
         }
 
         [Test] public void Case03_RateZero_NoChange() {
             Engine e = MakeEngine(hunger_init: 50f, hunger_rate: 0f);
-            e.Live(dt: 1.0f);
+            e.Live(delta_time: 1.0f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(50f).Within(0.001f),
                 "Step 1: zero rate must not change need.");
         }
 
         [Test] public void Case04_ClampUpperBoundAt100() {
-            // hunger_init=99, rate=+100, dt=1.0 → would be 199, clamps to 100
+            // hunger_init=99, rate=+100, delta_time=1.0 → would be 199, clamps to 100
             Engine e = MakeEngine(hunger_init: 99f, hunger_rate: +100f);
-            e.Live(dt: 1.0f);
+            e.Live(delta_time: 1.0f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(100f).Within(0.001f),
                 "Step 1: need must clamp to 100.");
         }
 
         [Test] public void Case05_ClampLowerBoundAtZero() {
-            // hunger_init=1, rate=-100, dt=1.0 → would be -99, clamps to 0
+            // hunger_init=1, rate=-100, delta_time=1.0 → would be -99, clamps to 0
             Engine e = MakeEngine(hunger_init: 1f, hunger_rate: -100f);
-            e.Live(dt: 1.0f);
+            e.Live(delta_time: 1.0f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(0f).Within(0.001f),
                 "Step 1: need must clamp to 0.");
         }
 
         [Test] public void Case06_DtScalesDecay() {
-            // hunger_init=50, rate=+10, dt=0.5 → expected=55
+            // hunger_init=50, rate=+10, delta_time=0.5 → expected=55
             Engine e = MakeEngine(hunger_init: 50f, hunger_rate: +10f);
-            e.Live(dt: 0.5f);
+            e.Live(delta_time: 0.5f);
             Assert.That(e.GetBaseNeed("hunger"), Is.EqualTo(55f).Within(0.01f),
-                "Step 1: decay must scale by dt (rate*dt applied per frame).");
+                "Step 1: decay must scale by delta_time (rate*delta_time applied per frame).");
         }
     }
 }

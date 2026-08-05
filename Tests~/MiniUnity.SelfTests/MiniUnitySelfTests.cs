@@ -48,9 +48,9 @@ namespace Animo.Tests.MiniUnity.SelfTests {
             LifecycleProbe probe = obj.AddComponent<LifecycleProbe>();
 
             // act
-            scene.Tick(dt: 0.016f);
-            scene.Tick(dt: 0.016f);
-            scene.Tick(dt: 0.016f);
+            scene.Tick(delta_time: 0.016f);
+            scene.Tick(delta_time: 0.016f);
+            scene.Tick(delta_time: 0.016f);
             obj.Destroy();
 
             // assert
@@ -104,12 +104,12 @@ namespace Animo.Tests.MiniUnity.SelfTests {
             DeltaRecorder rec_b = obj_b.AddComponent<DeltaRecorder>();
             DeltaRecorder rec_c = obj_c.AddComponent<DeltaRecorder>();
 
-            // act — three ticks at distinct dt
-            scene.Tick(dt: 0.10f);
-            scene.Tick(dt: 0.25f);
-            scene.Tick(dt: 0.50f);
+            // act — three ticks at distinct delta_time
+            scene.Tick(delta_time: 0.10f);
+            scene.Tick(delta_time: 0.25f);
+            scene.Tick(delta_time: 0.50f);
 
-            // assert — every recorder saw the same dt sequence …
+            // assert — every recorder saw the same delta_time sequence …
             float[] expected = new[] { 0.10f, 0.25f, 0.50f };
             Assert.That(rec_a.observed_dts, Is.EqualTo(expected: expected).Within(amount: 1e-6f));
             Assert.That(rec_b.observed_dts, Is.EqualTo(expected: expected).Within(amount: 1e-6f));
@@ -138,7 +138,7 @@ namespace Animo.Tests.MiniUnity.SelfTests {
             // act — destroy two objects, then tick
             obj_a.Destroy();
             obj_c.Destroy();
-            scene.Tick(dt: 0.016f);
+            scene.Tick(delta_time: 0.016f);
 
             // assert — internal list is pruned to only the live object
             Assert.That(scene.objects.Count, Is.EqualTo(expected: 1));

@@ -7,7 +7,6 @@ using System;
 using Animo.Model;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Animo.Model;
 
 [assembly: InternalsVisibleTo("Animo.Tests.EditMode")]
 
@@ -34,8 +33,8 @@ namespace Animo.Core {
             };
 
             // §10 steps 2-3: merge Kinds in cascade order.
-            foreach (var kid in resolveKindIds(persona, root)) {
-                var kind = findKind(root, kid);
+            foreach (var kind_id in resolveKindIds(persona, root)) {
+                var kind = findKind(root, kind_id);
                 if (kind != null) mergeKind(composed, kind);
             }
 
@@ -57,7 +56,7 @@ namespace Animo.Core {
 
             // (§16.3.4 Pre-cache Principle) Topo-sort influences[] once at compose time
             // so Engine Step 2 can iterate a pre-ordered int[] with zero allocation.
-            topoSortInfluences(composed);
+            topologicalSortInfluences(composed);
 
             return composed;
         }
@@ -66,21 +65,21 @@ namespace Animo.Core {
         // Kind-id resolution
 
         // (Q-S47) Compound-key match with EPSILON on trigger_threshold.
-        internal static bool ThresholdsMatch(Threshold a, Threshold b) =>
-            a.need == b.need &&
-            Math.Abs(a.trigger_threshold - b.trigger_threshold) < THRESHOLD_KEY_EPSILON;
+        internal static bool ThresholdsMatch(Threshold first, Threshold second) =>
+            first.need == second.need &&
+            Math.Abs(first.trigger_threshold - second.trigger_threshold) < THRESHOLD_KEY_EPSILON;
 
         static IEnumerable<string> resolveKindIds(Persona persona, Root root) {
             if (persona.kind_ids == null || persona.kind_ids.Count == 0)
                 yield break;
             // (Q-S33) Deduplicate kind_ids: last-wins — keep last occurrence.
             var seen  = new HashSet<string>();
-            var dedup = new List<string>();
+            var deduplicated = new List<string>();
             for (int i = persona.kind_ids.Count - 1; i >= 0; i--) {
-                if (seen.Add(persona.kind_ids[i])) dedup.Add(persona.kind_ids[i]);
+                if (seen.Add(persona.kind_ids[i])) deduplicated.Add(persona.kind_ids[i]);
             }
-            dedup.Reverse();
-            foreach (var k in dedup) yield return k;
+            deduplicated.Reverse();
+            foreach (var k in deduplicated) yield return k;
         }
 
         static Kind? findKind(Root root, string kind_id) {
@@ -91,141 +90,141 @@ namespace Animo.Core {
         ///////////////////////////////////////////////////////////////////////
         // Kind merge (builds up the base; persona overrides come after)
 
-        static void mergeKind(Persona c, Kind kind) {
-            if (kind.rates       != null) mergeRates(c, kind.rates);
-            if (kind.suppression != null) mergeSuppression(c, kind.suppression);
-            if (kind.influences  != null) mergeInfluences(c, kind.influences);
-            if (kind.actions     != null) mergeActions(c, kind.actions);
-            if (kind.commitment  != null) mergeCommitment(c, kind.commitment);
-            if (kind.binding     != null) mergeBinding(c, kind.binding);
-            if (kind.needs_meta  != null) mergeNeedsMeta(c, kind.needs_meta);
+        static void mergeKind(Persona composed, Kind kind) {
+            if (kind.rates       != null) mergeRates(composed, kind.rates);
+            if (kind.suppression != null) mergeSuppression(composed, kind.suppression);
+            if (kind.influences  != null) mergeInfluences(composed, kind.influences);
+            if (kind.actions     != null) mergeActions(composed, kind.actions);
+            if (kind.commitment  != null) mergeCommitment(composed, kind.commitment);
+            if (kind.binding     != null) mergeBinding(composed, kind.binding);
+            if (kind.needs_meta  != null) mergeNeedsMeta(composed, kind.needs_meta);
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Persona own-field merge (persona wins)
 
-        static void mergePersonaOwn(Persona c, Persona p) {
-            if (p.needs      != null) mergeNeeds(c, p.needs);
-            if (p.rates      != null) mergeRates(c, p.rates);
-            if (p.suppression!= null) mergeSuppression(c, p.suppression);
+        static void mergePersonaOwn(Persona composed, Persona source) {
+            if (source.needs      != null) mergeNeeds(composed, source.needs);
+            if (source.rates      != null) mergeRates(composed, source.rates);
+            if (source.suppression!= null) mergeSuppression(composed, source.suppression);
 
             // (Q-S19/Q-S20) Persona-first ordering: persona entries lead,
             // then Kind entries not already present by key.
-            if (p.influences != null) mergeInfluencesPersonaFirst(c, p.influences);
-            if (p.actions    != null) mergeActionsPersonaFirst(c, p.actions);
+            if (source.influences != null) mergeInfluencesPersonaFirst(composed, source.influences);
+            if (source.actions    != null) mergeActionsPersonaFirst(composed, source.actions);
 
-            if (p.commitment != null) mergeCommitment(c, p.commitment);
-            if (p.binding    != null) mergeBinding(c, p.binding);
-            if (p.needs_meta != null) mergeNeedsMeta(c, p.needs_meta);
+            if (source.commitment != null) mergeCommitment(composed, source.commitment);
+            if (source.binding    != null) mergeBinding(composed, source.binding);
+            if (source.needs_meta != null) mergeNeedsMeta(composed, source.needs_meta);
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Field-level merges
 
-        static void mergeNeeds(Persona c, Needs src) {
-            if (c.needs == null) c.needs = new Needs();
-            foreach (var kv in src.values) c.needs.values[kv.Key] = kv.Value;
+        static void mergeNeeds(Persona composed, Needs source) {
+            if (composed.needs == null) composed.needs = new Needs();
+            foreach (var entry in source.values) composed.needs.values[entry.Key] = entry.Value;
         }
 
-        static void mergeRates(Persona c, Rates src) {
-            if (c.rates == null) c.rates = new Rates();
-            foreach (var kv in src.values) c.rates.values[kv.Key] = kv.Value;
+        static void mergeRates(Persona composed, Rates source) {
+            if (composed.rates == null) composed.rates = new Rates();
+            foreach (var entry in source.values) composed.rates.values[entry.Key] = entry.Value;
         }
 
-        static void mergeSuppression(Persona c, Suppression src) {
-            if (c.suppression == null) c.suppression = new Suppression();
+        static void mergeSuppression(Persona composed, Suppression source) {
+            if (composed.suppression == null) composed.suppression = new Suppression();
             // §8.3 deep-merge per field (last-wins per field, not whole-object replace).
-            if (src.tier2 != 0f) c.suppression.tier2 = src.tier2;
-            if (src.tier3 != 0f) c.suppression.tier3 = src.tier3;
-            if (src.tier4 != 0f) c.suppression.tier4 = src.tier4;
-            if (src.tier5 != 0f) c.suppression.tier5 = src.tier5;
+            if (source.tier2 != 0f) composed.suppression.tier2 = source.tier2;
+            if (source.tier3 != 0f) composed.suppression.tier3 = source.tier3;
+            if (source.tier4 != 0f) composed.suppression.tier4 = source.tier4;
+            if (source.tier5 != 0f) composed.suppression.tier5 = source.tier5;
         }
 
         // Kind-cascade: simple last-wins by (source, target) key.
-        static void mergeInfluences(Persona c, List<Influence> src) {
-            if (c.influences == null) c.influences = new List<Influence>();
-            foreach (var inf in src) {
+        static void mergeInfluences(Persona composed, List<Influence> source) {
+            if (composed.influences == null) composed.influences = new List<Influence>();
+            foreach (var influence in source) {
                 bool found = false;
-                for (int i = 0; i < c.influences.Count; i++) {
-                    if (c.influences[i].source == inf.source &&
-                        c.influences[i].target == inf.target) {
-                        c.influences[i] = inf.DeepCopy(); found = true; break;
+                for (int i = 0; i < composed.influences.Count; i++) {
+                    if (composed.influences[i].source == influence.source &&
+                        composed.influences[i].target == influence.target) {
+                        composed.influences[i] = influence.DeepCopy(); found = true; break;
                     }
                 }
-                if (!found) c.influences.Add(inf.DeepCopy());
+                if (!found) composed.influences.Add(influence.DeepCopy());
             }
         }
 
         // (Q-S20) Persona-first: persona entries first, then unmatched Kind entries.
-        static void mergeInfluencesPersonaFirst(Persona c, List<Influence> persona_infs) {
-            var kind_infs = c.influences ?? new List<Influence>();
+        static void mergeInfluencesPersonaFirst(Persona composed, List<Influence> persona_influences) {
+            var kind_influences = composed.influences ?? new List<Influence>();
             var result    = new List<Influence>();
-            foreach (var p in persona_infs) result.Add(p.DeepCopy());
-            foreach (var k in kind_infs) {
-                bool dup = false;
-                foreach (var r in result) {
-                    if (r.source == k.source && r.target == k.target) { dup = true; break; }
+            foreach (var influence in persona_influences) result.Add(influence.DeepCopy());
+            foreach (var k in kind_influences) {
+                bool is_duplicate = false;
+                foreach (var existing in result) {
+                    if (existing.source == k.source && existing.target == k.target) { is_duplicate = true; break; }
                 }
-                if (!dup) result.Add(k.DeepCopy());
+                if (!is_duplicate) result.Add(k.DeepCopy());
             }
-            c.influences = result;
+            composed.influences = result;
         }
 
         // Kind-cascade: simple last-wins by id key.
-        static void mergeActions(Persona c, List<Animo.Model.Action> src) {
-            if (c.actions == null) c.actions = new List<Animo.Model.Action>();
-            foreach (var act in src) {
+        static void mergeActions(Persona composed, List<Animo.Model.Action> source) {
+            if (composed.actions == null) composed.actions = new List<Animo.Model.Action>();
+            foreach (var act in source) {
                 bool found = false;
-                for (int i = 0; i < c.actions.Count; i++) {
-                    if (c.actions[i].id == act.id) {
-                        c.actions[i] = act.DeepCopy(); found = true; break;
+                for (int i = 0; i < composed.actions.Count; i++) {
+                    if (composed.actions[i].id == act.id) {
+                        composed.actions[i] = act.DeepCopy(); found = true; break;
                     }
                 }
-                if (!found) c.actions.Add(act.DeepCopy());
+                if (!found) composed.actions.Add(act.DeepCopy());
             }
         }
 
         // (Q-S19) Persona-first + (Q-S61) additive-only (never removes Kind actions).
-        static void mergeActionsPersonaFirst(Persona c, List<Animo.Model.Action> persona_acts) {
-            var kind_acts = c.actions ?? new List<Animo.Model.Action>();
+        static void mergeActionsPersonaFirst(Persona composed, List<Animo.Model.Action> persona_acts) {
+            var kind_acts = composed.actions ?? new List<Animo.Model.Action>();
             var result    = new List<Animo.Model.Action>();
-            foreach (var p in persona_acts) result.Add(p.DeepCopy());
+            foreach (var action in persona_acts) result.Add(action.DeepCopy());
             foreach (var k in kind_acts) {
-                bool dup = false;
-                foreach (var r in result) { if (r.id == k.id) { dup = true; break; } }
-                if (!dup) result.Add(k.DeepCopy());
+                bool is_duplicate = false;
+                foreach (var existing in result) { if (existing.id == k.id) { is_duplicate = true; break; } }
+                if (!is_duplicate) result.Add(k.DeepCopy());
             }
-            c.actions = result;
+            composed.actions = result;
         }
 
-        static void mergeCommitment(Persona c, Commitment src) {
-            if (c.commitment == null) c.commitment = new Commitment();
+        static void mergeCommitment(Persona composed, Commitment source) {
+            if (composed.commitment == null) composed.commitment = new Commitment();
             // last-wins per field
-            if (src.bonus != 0f) c.commitment.bonus = src.bonus;
+            if (source.bonus != 0f) composed.commitment.bonus = source.bonus;
         }
 
-        static void mergeBinding(Persona c, Binding src) {
-            if (c.binding == null) c.binding = new Binding();
-            if (src.on_action_change != null)
-                c.binding.on_action_change = src.on_action_change;
-            mergeThresholds(c.binding.thresholds, src.thresholds);
+        static void mergeBinding(Persona composed, Binding source) {
+            if (composed.binding == null) composed.binding = new Binding();
+            if (source.on_action_change != null)
+                composed.binding.on_action_change = source.on_action_change;
+            mergeThresholds(composed.binding.thresholds, source.thresholds);
         }
 
         // (Q-S14 + Q-S43 + Q-S47 + Q-S85) first-occurrence-wins, EPSILON compound key.
         static void mergeThresholds(List<Threshold> merged, List<Threshold> incoming) {
-            foreach (var t in incoming) {
+            foreach (var threshold in incoming) {
                 int found = -1;
                 for (int i = 0; i < merged.Count; i++) {
-                    if (ThresholdsMatch(merged[i], t)) { found = i; break; }
+                    if (ThresholdsMatch(merged[i], threshold)) { found = i; break; }
                 }
-                if (found >= 0) merged[found] = t.DeepCopy();
-                else            merged.Add(t.DeepCopy());
+                if (found >= 0) merged[found] = threshold.DeepCopy();
+                else            merged.Add(threshold.DeepCopy());
             }
         }
 
-        static void mergeNeedsMeta(Persona c, Dictionary<string, NeedMeta> src) {
-            if (c.needs_meta == null) c.needs_meta = new Dictionary<string, NeedMeta>();
-            foreach (var kv in src) c.needs_meta[kv.Key] = kv.Value.DeepCopy();
+        static void mergeNeedsMeta(Persona composed, Dictionary<string, NeedMeta> source) {
+            if (composed.needs_meta == null) composed.needs_meta = new Dictionary<string, NeedMeta>();
+            foreach (var entry in source) composed.needs_meta[entry.Key] = entry.Value.DeepCopy();
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -240,66 +239,66 @@ namespace Animo.Core {
         /// If a cycle is detected (A025), order is left unsorted (Engine Step 2
         /// skips the cyclic portion; A025 reports the Error at validate time).
         /// </summary>
-        static void topoSortInfluences(Persona c) {
-            var infs = c.influences;
-            if (infs == null || infs.Count == 0) {
-                c.sorted_influence_order = System.Array.Empty<int>();
+        static void topologicalSortInfluences(Persona composed) {
+            var influences = composed.influences;
+            if (influences == null || influences.Count == 0) {
+                composed.sorted_influence_order = System.Array.Empty<int>();
                 return;
             }
-            int n = infs.Count;
-            var in_deg = new int[n];
-            var adj    = new System.Collections.Generic.List<int>[n];
-            for (int i = 0; i < n; i++) adj[i] = new System.Collections.Generic.List<int>();
+            int n = influences.Count;
+            var in_degree = new int[n];
+            var adjacency    = new System.Collections.Generic.List<int>[n];
+            for (int i = 0; i < n; i++) adjacency[i] = new System.Collections.Generic.List<int>();
 
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
-                    if (i != j && infs[i].target == infs[j].source) {
-                        adj[i].Add(j); in_deg[j]++;
+                    if (i != j && influences[i].target == influences[j].source) {
+                        adjacency[i].Add(j); in_degree[j]++;
                     }
 
             var queue  = new System.Collections.Generic.List<int>();
-            for (int i = 0; i < n; i++) if (in_deg[i] == 0) queue.Add(i);
+            for (int i = 0; i < n; i++) if (in_degree[i] == 0) queue.Add(i);
             var sorted = new int[n];
-            int idx    = 0;
+            int index    = 0;
             while (queue.Count > 0) {
-                int vi = 0;
-                for (int k = 1; k < queue.Count; k++) if (queue[k] < queue[vi]) vi = k;
-                int v = queue[vi]; queue.RemoveAt(vi); sorted[idx++] = v;
-                foreach (var w in adj[v]) if (--in_deg[w] == 0) queue.Add(w);
+                int min_index = 0;
+                for (int k = 1; k < queue.Count; k++) if (queue[k] < queue[min_index]) min_index = k;
+                int vertex = queue[min_index]; queue.RemoveAt(min_index); sorted[index++] = vertex;
+                foreach (var neighbor in adjacency[vertex]) if (--in_degree[neighbor] == 0) queue.Add(neighbor);
             }
-            // (§8: cycle safety) If idx < n, a cycle exists (A025 catches at validate time).
-            // Resize to idx entries so Engine never iterates 0-filled trailing slots.
-            if (idx < n) {
-                var trimmed = new int[idx];
-                System.Array.Copy(sorted, trimmed, idx);
-                c.sorted_influence_order = trimmed;
+            // (§8: cycle safety) If index < n, a cycle exists (A025 catches at validate time).
+            // Resize to index entries so Engine never iterates 0-filled trailing slots.
+            if (index < n) {
+                var trimmed = new int[index];
+                System.Array.Copy(sorted, trimmed, index);
+                composed.sorted_influence_order = trimmed;
             } else {
-                c.sorted_influence_order = sorted;
+                composed.sorted_influence_order = sorted;
             }
         }
 
-        static void fillResetThresholds(Persona c) {
-            if (c.binding == null) return;
-            foreach (var t in c.binding.thresholds)
-                if (t.reset_threshold == null)
-                    t.reset_threshold = Math.Max(0f, t.trigger_threshold - 5f);
+        static void fillResetThresholds(Persona composed) {
+            if (composed.binding == null) return;
+            foreach (var threshold in composed.binding.thresholds)
+                if (threshold.reset_threshold == null)
+                    threshold.reset_threshold = Math.Max(0f, threshold.trigger_threshold - 5f);
         }
 
         // (Q-S7) Fill 0.0f for every Need key referenced but not yet in needs.values.
-        static void fillMissingNeeds(Persona c) {
-            if (c.needs == null) c.needs = new Needs();
+        static void fillMissingNeeds(Persona composed) {
+            if (composed.needs == null) composed.needs = new Needs();
             var referenced = new HashSet<string>();
-            if (c.actions    != null) foreach (var a   in c.actions)     referenced.Add(a.need);
-            if (c.rates      != null) foreach (var kv  in c.rates.values) referenced.Add(kv.Key);
-            if (c.influences != null) foreach (var inf in c.influences) {
-                referenced.Add(inf.source); referenced.Add(inf.target);
+            if (composed.actions    != null) foreach (var action   in composed.actions)     referenced.Add(action.need);
+            if (composed.rates      != null) foreach (var entry  in composed.rates.values) referenced.Add(entry.Key);
+            if (composed.influences != null) foreach (var influence in composed.influences) {
+                referenced.Add(influence.source); referenced.Add(influence.target);
             }
             // (#10) Q-S7 guarantees composed.binding is non-null at this point —
             // Compose() materializes an empty Binding{thresholds=new List<>()} when
             // input had none. No null guard needed.
-            foreach (var t in c.binding!.thresholds) referenced.Add(t.need);
+            foreach (var threshold in composed.binding!.thresholds) referenced.Add(threshold.need);
             foreach (var need in referenced)
-                if (!c.needs.values.ContainsKey(need)) c.needs.values[need] = 0.0f;
+                if (!composed.needs.values.ContainsKey(need)) composed.needs.values[need] = 0.0f;
         }
     }
 }

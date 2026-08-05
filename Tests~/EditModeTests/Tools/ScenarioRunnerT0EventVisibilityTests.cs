@@ -16,7 +16,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
             var events = new List<TimedAffectEvent>{
                 new TimedAffectEvent(0f, new AffectEvent("fear", +50f)) };
             var runner = new ScenarioRunner(MakeRoot());
-            var result = runner.Run("a", duration: 1.0f, dt: 0.1f, events: events);
+            var result = runner.Run("a", duration: 1.0f, delta_time: 0.1f, events: events);
             // frames[0] is after t=0 Affect → fear should be 60
             float fear_at_spawn = result.frames[0].effective_needs.GetValueOrDefault("fear", 0f);
             Assert.That(fear_at_spawn, Is.EqualTo(60f).Within(0.1f),

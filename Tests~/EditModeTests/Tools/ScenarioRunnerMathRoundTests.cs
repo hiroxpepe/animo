@@ -21,7 +21,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
         }
 
         [Test] public void Case02_IEEE754_FloorWouldUnderShoot_RoundCorrects() {
-            // Q-S98: double-precision division (double)duration / (double)dt
+            // Q-S98: double-precision division (double)duration / (double)delta_time
             // is used to avoid float32 accumulation errors.
             // Key: (double)10.0f / (double)0.1f = 99.9999985... (sub-unity error)
             // Math.Round gives 100 (correct). Math.Floor would give 99 (wrong).

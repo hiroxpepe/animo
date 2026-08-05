@@ -28,7 +28,7 @@ Three parts, joined by one live link.
 
 ```mermaid
 flowchart LR
-  E["C# console<br/>Animo engine<br/>Live(dt) loop"]
+  E["C# console<br/>Animo engine<br/>Live(delta_time) loop"]
   S["WebSocket server<br/>in the same process"]
   B["Browser dashboard<br/>bars, scores, buttons"]
   E -- "state per frame" --> S
@@ -41,7 +41,7 @@ flowchart LR
 ```
 
 + **The engine** is a plain C# console program. It builds one (or many) agents
-  from a persona file and runs `Live(dt)` in a loop, the same call a game makes
+  from a persona file and runs `Live(delta_time)` in a loop, the same call a game makes
   every frame. Console, not Unity: it is the smallest thing that runs the real
   engine.
 + **The server** is a WebSocket endpoint inside the same process. It pushes the
@@ -90,7 +90,7 @@ The step-in set mirrors the engine public API, so nothing new has to be made:
 + **Unlock** — let go of the lock at once.
 + **Pause and step** — hold the loop, then move one frame at a time to read a
   hard moment closely.
-+ **Change dt** — run slow to look at, or fast to soak.
++ **Change delta_time** — run slow to look at, or fast to soak.
 
 ---
 
@@ -111,7 +111,7 @@ flowchart LR
   WebSocket that pushes state, and a dashboard that draws the bars. No step-in
   yet — just prove the live link.
 + **Stage 2 — Usable.** The full step-in set (Affect, Lock, Unlock), plus
-  pause, step, and dt control. This is the point where a designer can tune an
+  pause, step, and delta_time control. This is the point where a designer can tune an
   agent by feel.
 + **Stage 3 — Rich.** Many agents at once, a picker to watch each one, and a
   record-and-play-again mode so a run can be saved and looked at again.

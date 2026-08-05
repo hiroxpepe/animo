@@ -36,7 +36,7 @@ namespace Animo.Tests.EditMode.Tools {
         }
 
         static MonitorSet MakeSet() {
-            var set = new MonitorSet(dt: 0.5f);
+            var set = new MonitorSet(delta_time: 0.5f);
             set.Add("scout_1", MakeEngine("scout_1"));
             set.Add("scout_2", MakeEngine("scout_2"));
             return set;

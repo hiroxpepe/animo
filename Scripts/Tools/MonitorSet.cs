@@ -20,11 +20,11 @@ namespace Animo.Tools {
         readonly Dictionary<string, MonitorLoop> _loops = new();
         readonly Dictionary<string, Recording> _recordings = new();
         readonly List<string> _order = new();
-        readonly float _dt;
+        readonly float _delta_time;
         string _watched = "";
 
-        public MonitorSet(float dt) {
-            _dt = dt;
+        public MonitorSet(float delta_time) {
+            _delta_time = delta_time;
         }
 
         /// <summary>Every agent id, in the order the agents were added.</summary>
@@ -42,7 +42,7 @@ namespace Animo.Tools {
                 AnimoLog.Warning($"MonitorSet.Add: agent id '{id}' is already in the set; ignored.");
                 return;
             }
-            _loops[id] = new MonitorLoop(engine, _dt);
+            _loops[id] = new MonitorLoop(engine, _delta_time);
             _recordings[id] = new Recording();
             _order.Add(id);
             if (_watched.Length == 0) _watched = id;

@@ -12,8 +12,8 @@ using Animo.Tools;
 namespace Animo.Tests.EditMode.ToolsTests {
     /// <summary>
     /// Spec-content + reflection test for Q-S117 (v0.1.5): ScenarioRunner
-    /// .Run throws ArgumentException for dt &lt;= 0.0f at entry, before
-    /// any time math runs, so a dt=0 call cannot silently produce an
+    /// .Run throws ArgumentException for delta_time &lt;= 0.0f at entry, before
+    /// any time math runs, so a delta_time=0 call cannot silently produce an
     /// empty TraceResult via (int)Infinity = int.MinValue.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
@@ -31,10 +31,10 @@ namespace Animo.Tests.EditMode.ToolsTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S117: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("if (dt <= 0.0f) {"),
-                "Q-S117: spec EN must guard dt at Run entry.");
+            Assert.That(text, Does.Contain("if (delta_time <= 0.0f) {"),
+                "Q-S117: spec EN must guard delta_time at Run entry.");
             Assert.That(text, Does.Contain("System.ArgumentException"),
-                "Q-S117: spec EN must throw ArgumentException for non-positive dt.");
+                "Q-S117: spec EN must throw ArgumentException for non-positive delta_time.");
         }
 
         [Test] public void Case02_ScenarioRunner_DocstringMentionsQS117() {
