@@ -11,6 +11,9 @@ using Animo.Core;
 using Animo.Model;
 
 namespace Animo.Tools {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// (v0.1.5, Q-S67) Affect payload for ScenarioRunner injection.
     /// Mirrors the argument tuple of `Engine.Affect(need, delta,

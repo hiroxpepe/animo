@@ -10,6 +10,9 @@ using Newtonsoft.Json.Linq;
 using Animo.Model;
 
 namespace Animo {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// (v0.1.5, Q-S76 + Q-S151) JSON parsing facade for animo.json files.
     /// Uses Newtonsoft.Json with custom converters for Needs/Rates flat-object

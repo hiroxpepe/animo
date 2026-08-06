@@ -8,6 +8,9 @@ using Animo.Core;
 
 namespace Animo.Tools {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Holds many live agents at once, each in its own MonitorLoop, and keeps a
     /// recording per agent so a run can be looked at again. A tick advances every

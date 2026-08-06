@@ -9,6 +9,9 @@ using Animo.Core;
 
 namespace Animo.Tools {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Reads a step-in message from the dashboard and acts on the loop. The
     /// socket layer only passes the raw text in; this reader understands it. A

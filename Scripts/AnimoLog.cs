@@ -6,6 +6,9 @@
 using System;
 
 namespace Animo {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Animo's logging facade. Wraps Unity Debug or stdout depending on environment.
     /// (v0.1.5, Q-S73 + Q-S127) Error-severity log added for fail-loud paths.

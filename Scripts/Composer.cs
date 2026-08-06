@@ -11,6 +11,9 @@ using Animo.Model;
 [assembly: InternalsVisibleTo("Animo.Tests.EditMode")]
 
 namespace Animo.Core {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // internal Classes
+
     /// <summary>
     /// Composes a final Persona by deep-copying the kind chain and applying
     /// persona-level overrides. See spec §10.

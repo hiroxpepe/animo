@@ -9,6 +9,9 @@ using Animo.Core;
 
 namespace Animo.Tools {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Drives a live <see cref="Engine"/> for the monitor. Each tick it applies
     /// any step-ins queued from the dashboard at the head, advances the engine by

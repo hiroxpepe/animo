@@ -4,6 +4,9 @@
 #nullable enable
 
 namespace Animo {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>Animo domain constants. See spec §14.</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class Const {

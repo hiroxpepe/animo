@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using Animo.Model;
 
 namespace Animo.Core {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Interfaces
+
     /// <summary>
     /// (v0.1.5, Q-S115) Time abstraction for Engine.Live delta_time injection.
     /// Phase 3: Agent.Update calls _engine.Live(delta_time: _time_provider.deltaTime).
@@ -20,7 +23,13 @@ namespace Animo.Core {
         float deltaTime { get; }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Enums [noun]
+
     public enum LockMode { Hard, Soft }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
 
     public class Engine {
         ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -501,7 +510,6 @@ namespace Animo.Core {
             if (_cached_action_triggers.TryGetValue(next_behavior, out var sig))
                 RaiseSignal(sig);
         }
-
 
         void applyNonTierMetadata(int need_index, NeedMeta meta) {
             // (Q-S45 + Q-S48) Apply non-tier NeedMeta fields.

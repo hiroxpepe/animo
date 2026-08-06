@@ -11,6 +11,9 @@ using System.Text;
 using Newtonsoft.Json;
 
 namespace Animo.Tools {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Single simulation frame. Recorded once per Live(delta_time) call.
     /// (Q-S132) Phase 3 lightweight snapshot: stores float[] values as
@@ -124,8 +127,6 @@ namespace Animo.Tools {
                 behavior_total_time[frames[i].behavior] = threshold + delta;
             }
         }
-
-
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // private static Methods [verb]

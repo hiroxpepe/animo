@@ -11,8 +11,14 @@ using Animo.Model;
 
 namespace Animo.Core {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Enums [noun]
+
     /// <summary>Severity of a validation issue.</summary>
     public enum Severity { Info, Warning, Error }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
 
     /// <summary>A single validation issue (e.g. A025 cycle detected).</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
@@ -91,6 +97,9 @@ namespace Animo.Core {
             }
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
 
     /// <summary>animo.json validator implementing rules A000–A040.</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
@@ -178,7 +187,6 @@ namespace Animo.Core {
 
             return result;
         }
-
 
         // ─── Stage 2 ──────────────────────────────────────────────────────────
 

@@ -9,6 +9,9 @@ using Animo.Core;
 using Animo.Model;
 
 namespace Animo {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// (v0.1.5, Q-S29 + Q-S38 + Q-S79) Per-template Flyweight cache for
     /// composed Personas. Holds the result of `Composer.Compose` for each
@@ -115,6 +118,9 @@ namespace Animo {
             CACHE.Clear();
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
 
     /// <summary>
     /// (v0.1.5, Q-S111) Thrown by `PersonaCache.GetComposed` when

@@ -143,6 +143,22 @@ public class ConventionRulesTests
         Assert.That(found, Is.Empty);
     }
 
+    [Test]
+    public void Catches_TwoBlankLinesInARow()
+    {
+        var code = "class Mock {\n\n\n    void run() {}\n}";
+        var found = ConventionRules.find_blank_line_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("keep only one")), Is.True);
+    }
+
+    [Test]
+    public void Passes_OneBlankLine()
+    {
+        var code = "class Mock {\n\n    void run() {}\n}";
+        var found = ConventionRules.find_blank_line_violations(code, "mock.cs");
+        Assert.That(found, Is.Empty);
+    }
+
     static bool caught(string code, string needle) =>
         ConventionRules.find_naming_violations(code, "mock.cs").Any(v => v.Contains(needle));
 

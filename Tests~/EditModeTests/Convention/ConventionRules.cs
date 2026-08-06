@@ -537,6 +537,26 @@ static class ConventionRules
 
     internal static readonly (string kind, string modifiers, string hint)[] SECTION_KINDS_FOR_TEST = SECTION_KINDS;
 
+    // No more than one blank line in a row, anywhere in the file. Two blank
+    // lines read the same as one to a human, so the second is just noise —
+    // and it is cheap to check without any syntax awareness at all.
+    internal static List<string> find_blank_line_violations(string code, string label)
+    {
+        var found = new List<string>();
+        var lines = code.Replace("\r\n", "\n").Split('\n');
+        int run = 0;
+        for (int i = 0; i < lines.Length; i++) {
+            if (lines[i].Trim() == "") {
+                run++;
+                if (run == 2)
+                    found.Add($"{label}:{i + 1}: two or more blank lines in a row, keep only one");
+            } else {
+                run = 0;
+            }
+        }
+        return found;
+    }
+
     internal static List<string> find_section_header_violations(string code, string label)
     {
         var found = new List<string>();
@@ -549,46 +569,56 @@ static class ConventionRules
         // member that follows it. EnumMemberDeclarationSyntax (an enum's
         // individual values, e.g. Low/High) is excluded: it is also a
         // MemberDeclarationSyntax and can share a line with its enclosing
-        // enum, which would otherwise overwrite the real entry.
+        // enum, which would otherwise overwrite the real entry. The owning
+        // parent is kept as-is (not cast to a specific type) so that both
+        // "nested inside a class" and "sitting directly in a namespace"
+        // are correctly told apart from their sibling containers.
         var member_at_line = new Dictionary<int, MemberDeclarationSyntax>();
-        var enclosing_type_at_line = new Dictionary<int, TypeDeclarationSyntax?>();
+        var owner_at_line = new Dictionary<int, SyntaxNode?>();
         foreach (var m in root.DescendantNodes().OfType<MemberDeclarationSyntax>()) {
             if (m is EnumMemberDeclarationSyntax) continue;
             var ln = tree.GetLineSpan(m.Span).StartLinePosition.Line;
             member_at_line[ln] = m;
-            enclosing_type_at_line[ln] = m.Parent as TypeDeclarationSyntax;
-            member_at_line[tree.GetLineSpan(m.Span).StartLinePosition.Line] = m;
+            owner_at_line[ln] = m.Parent;
         }
 
         // one_kind_of: what this member counts as for the label vocabulary,
-        // or null if it has no place in the fixed vocabulary at all (an
-        // enum, an interface, a destructor, ...) — those are left alone.
-        (string kind, string access, bool is_static)? one_kind_of(MemberDeclarationSyntax member)
+        // or null if it has no place in the fixed vocabulary at all (a
+        // destructor, an indexer outside the fixed set, ...) — those are
+        // left alone. is_nested tells a class/enum/interface/etc. declared
+        // directly in a namespace (where only public/internal are valid,
+        // and there is no "inner" concept) apart from one nested inside
+        // another type (where the omitted default is private, like any
+        // other member, and "inner" names the nesting).
+        (string kind, string access, bool is_static, bool is_nested)? one_kind_of(MemberDeclarationSyntax member)
         {
             var modifiers = modifiers_of(member);
+            var is_type_decl = member is BaseTypeDeclarationSyntax;
+            var is_nested = member.Parent is TypeDeclarationSyntax;
             var access = has(modifiers, "public") ? "public"
                 : has(modifiers, "protected") ? "protected"
                 : has(modifiers, "internal") ? "internal"
+                : is_type_decl && !is_nested ? "internal" // the true C# default for a top-level type
                 : "private";
             var is_static = has(modifiers, "static");
             return member switch {
-                FieldDeclarationSyntax f when has(f.Modifiers, "const") => ("Const", access, false),
-                FieldDeclarationSyntax => ("Fields", access, is_static),
-                ConstructorDeclarationSyntax => ("Constructor", access, is_static),
-                DestructorDeclarationSyntax => ("Destructor", access, false),
-                DelegateDeclarationSyntax => ("Delegate", access, is_static),
-                PropertyDeclarationSyntax => ("Properties", access, is_static),
-                MethodDeclarationSyntax => ("Methods", access, is_static),
-                EventDeclarationSyntax or EventFieldDeclarationSyntax => ("Events", access, is_static),
-                ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax => ("Classes", access, is_static),
-                EnumDeclarationSyntax => ("Enums", access, is_static),
-                InterfaceDeclarationSyntax => ("Interfaces", access, is_static),
-                IndexerDeclarationSyntax => ("Indexers", access, is_static),
+                FieldDeclarationSyntax f when has(f.Modifiers, "const") => ("Const", access, false, is_nested),
+                FieldDeclarationSyntax => ("Fields", access, is_static, is_nested),
+                ConstructorDeclarationSyntax => ("Constructor", access, is_static, is_nested),
+                DestructorDeclarationSyntax => ("Destructor", access, false, is_nested),
+                DelegateDeclarationSyntax => ("Delegate", access, is_static, is_nested),
+                PropertyDeclarationSyntax => ("Properties", access, is_static, is_nested),
+                MethodDeclarationSyntax => ("Methods", access, is_static, is_nested),
+                EventDeclarationSyntax or EventFieldDeclarationSyntax => ("Events", access, is_static, is_nested),
+                ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax => ("Classes", access, is_static, is_nested),
+                EnumDeclarationSyntax => ("Enums", access, is_static, is_nested),
+                InterfaceDeclarationSyntax => ("Interfaces", access, is_static, is_nested),
+                IndexerDeclarationSyntax => ("Indexers", access, is_static, is_nested),
                 _ => null
             };
         }
 
-        string? canonical_label_for((string kind, string access, bool is_static) k)
+        string? canonical_label_for((string kind, string access, bool is_static, bool is_nested) k)
         {
             var entry = SECTION_KINDS.FirstOrDefault(s => s.kind == k.kind);
             if (entry.kind == null) return null;
@@ -596,14 +626,19 @@ static class ConventionRules
             // Methods and Events always spell out the access level, even
             // private — a class commonly mixes public and private methods,
             // so the label must say which. Fields/Properties/Classes omit
-            // it for the private+instance default, matching the omitted
-            // `private` keyword rule.
+            // it for the default access (private when nested inside another
+            // type; internal when sitting directly in a namespace, since
+            // that is the true C# default there — private is not valid on
+            // a namespace-level type), matching the omitted `private`
+            // keyword rule. "inner" only makes sense for a type nested
+            // inside another type, never for one declared in a namespace.
+            var default_access = k.is_nested ? "private" : "internal";
             var always_shows_access = k.kind == "Methods" || k.kind == "Events";
-            var omit_access = !always_shows_access && k.access == "private" && !k.is_static;
+            var omit_access = !always_shows_access && k.access == default_access && !k.is_static;
             if (entry.modifiers != "" && !omit_access)
                 parts.Add(k.access);
             if (k.kind != "Classes" && k.is_static) parts.Add("static");
-            if (k.kind == "Classes") parts.Add("inner");
+            if (k.kind == "Classes" && k.is_nested) parts.Add("inner");
             parts.Add(k.kind);
             return string.Join(" ", parts) + (entry.hint == "" ? "" : $" [{entry.hint}]");
         }
@@ -636,16 +671,17 @@ static class ConventionRules
 
             // Find the block of members this label actually covers: from the
             // first member after the label to the member right before the
-            // next divider (or the end of the type).
+            // next divider (or the end of the enclosing container —
+            // whether that is a type or the namespace itself).
             var members_here = new List<MemberDeclarationSyntax>();
-            TypeDeclarationSyntax? section_type = null;
+            SyntaxNode? section_owner = null;
             for (int line = i + 2; line < lines.Length; line++) {
                 var t = lines[line].Trim();
                 if (t.Length >= 10 && t.All(c => c == '/')) break; // next divider
                 if (member_at_line.TryGetValue(line, out var m)) {
-                    var owner = enclosing_type_at_line[line];
-                    if (section_type == null) section_type = owner;
-                    else if (owner != section_type) break; // crossed into a sibling/enclosing type
+                    var owner = owner_at_line[line];
+                    if (section_owner == null) section_owner = owner;
+                    else if (owner != section_owner) break; // crossed into a sibling/enclosing container
                     members_here.Add(m);
                 }
             }

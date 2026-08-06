@@ -8,6 +8,9 @@ using Animo.Core;
 
 namespace Animo.Tools {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Keeps the snapshot of each frame of a run so the run can be looked at
     /// again. It grows as the loop ticks; on play-back a reader seeks to any

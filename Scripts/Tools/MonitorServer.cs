@@ -13,6 +13,9 @@ using Animo.Core;
 
 namespace Animo.Tools {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Puts a MonitorSet on a WebSocket. This is the thin pipe between the agents
     /// and the browser: each frame it advances every agent and ships all their

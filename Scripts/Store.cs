@@ -7,6 +7,9 @@ using System;
 using System.Collections.Generic;
 
 namespace Animo {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>
     /// Singleton registry mapping `agent_id` → live Agent instance. The relay
     /// window for Germio Executor's `Affect` calls. See spec §11.
@@ -102,6 +105,9 @@ namespace Animo {
             return _agents.ContainsKey(agent_id);
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Interfaces
 
     /// <summary>
     /// Minimal Agent surface that Store needs. The real `Animo.Agent` class

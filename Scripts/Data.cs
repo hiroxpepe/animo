@@ -9,6 +9,9 @@ using Newtonsoft.Json;
 
 namespace Animo.Model {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // public Classes
+
     /// <summary>JSON root: schema_version + kinds + personas.</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [Serializable]
