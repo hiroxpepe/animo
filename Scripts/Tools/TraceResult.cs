@@ -19,6 +19,9 @@ namespace Animo.Tools {
     /// </summary>
     [Serializable]
     public sealed class TraceFrame {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Fields
+
         public float time;
         public string behavior = "";
         public Dictionary<string, float> needs          = new();
@@ -35,14 +38,23 @@ namespace Animo.Tools {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [Serializable]
     public sealed class TraceResult {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Fields
+
         public string agent_id = "";
         public float  duration;
         public float  delta_time;
         public List<TraceFrame> frames = new();
 
         // (Q-S93) Populated by ScenarioRunner.Run in a single post-run pass.
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public Dictionary<string, int>   behavior_count      { get; } = new();
         public Dictionary<string, float> behavior_total_time { get; } = new();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (Q-S93) Serialize to CSV. Columns: time, behavior, is_locked,
@@ -88,6 +100,9 @@ namespace Animo.Tools {
             return JsonConvert.SerializeObject(object_value, Formatting.Indented);
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal Methods [verb]
+
         /// <summary>
         /// Populate behavior_count and behavior_total_time from frames[].
         /// Called once by ScenarioRunner.Run after all frames are recorded.
@@ -111,6 +126,9 @@ namespace Animo.Tools {
         }
 
 
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
 
         static List<string> sortedKeys(Dictionary<string, float> dictionary) {
             var keys = new List<string>(dictionary.Keys);

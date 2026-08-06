@@ -19,11 +19,17 @@ namespace Animo.Tools {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [Serializable]
     public readonly struct AffectEvent {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public AffectEvent(string need, float delta, bool force_reset = false) {
             this.need        = need;
             this.delta       = delta;
             this.force_reset = force_reset;
         }
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string need        { get; }
         public float  delta       { get; }
         public bool   force_reset { get; }
@@ -32,10 +38,16 @@ namespace Animo.Tools {
     /// <summary>(v0.1.5, Q-S4) Timed Affect injection for ScenarioRunner.</summary>
     [Serializable]
     public readonly struct TimedAffectEvent {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public TimedAffectEvent(float time, AffectEvent event_value) {
             this.time = time;
             this.event_value   = event_value;
         }
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public float       time { get; }
         public AffectEvent event_value   { get; }
     }
@@ -72,6 +84,9 @@ namespace Animo.Tools {
     /// respects all four contracts.
     /// </summary>
     public sealed class ScenarioRunner {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly Root _root;
 
         // (v0.1.5, Q-S60 + Q-S92) Single Engine instance per Run() call.
@@ -112,6 +127,9 @@ namespace Animo.Tools {
         int _sequence = 0;
         #pragma warning restore CS0414
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public ScenarioRunner(Root root) {
             _root = root;
             // Q-S29: Initialize PersonaCache once at construction.
@@ -119,6 +137,9 @@ namespace Animo.Tools {
             // template via PersonaCache.GetComposed.
             Animo.PersonaCache.Initialize(root: root);
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// Drive Engine.Live for `duration` seconds with frame size `delta_time`.
@@ -251,6 +272,9 @@ namespace Animo.Tools {
             result.BuildAnalysis();
             return result;
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
 
         static void recordFrame(TraceResult result, float time, Engine engine,
                                    System.Collections.Generic.List<string> pending_signals,

@@ -25,9 +25,15 @@ namespace Animo.Tools {
     /// </summary>
     public sealed class MonitorServer {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly MonitorSet _set;
         readonly int _port;
         readonly int _frame_delay_ms;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
 
         public MonitorServer(MonitorSet set, int port = 8181, int frame_delay_ms = 100) {
             _set = set;
@@ -37,6 +43,9 @@ namespace Animo.Tools {
 
         public MonitorServer(MonitorLoop loop, int port = 8181, int frame_delay_ms = 100)
             : this(setOfOne(loop), port, frame_delay_ms) { }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// Listen and take dashboards as they connect. Each connection runs its
@@ -66,6 +75,9 @@ namespace Animo.Tools {
             }
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
+
         static MonitorSet setOfOne(MonitorLoop loop) {
             var set = new MonitorSet(loop.DeltaTime);
             set.Add(loop.Engine.AgentID, loop.Engine);
@@ -81,6 +93,9 @@ namespace Animo.Tools {
                 // closing a broken socket may throw; nothing more to do
             }
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private Methods [verb]
 
         async Task handleAsync(WebSocket socket, CancellationToken token) {
             try {

@@ -14,15 +14,21 @@ namespace Animo.Core {
     /// MockTime implements this for deterministic headless tests.
     /// </summary>
     public interface ITimeProvider {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Properties [noun, adjective]
+
         float deltaTime { get; }
     }
 
     public enum LockMode { Hard, Soft }
 
     public class Engine {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly Persona _persona;
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Pre-allocated hot-path arrays (§16.4)
 
         float[] _needs;
@@ -32,19 +38,19 @@ namespace Animo.Core {
         //      effective snapshot — only writes remained (alloc + seed + per-frame copy).
         float[] _action_scores;
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Index maps (built once in ctor; cold path only)
 
         readonly Dictionary<string, int> _need_index;
         readonly Dictionary<string, int> _action_id_to_index;
         readonly Dictionary<int, int[]>  _need_tier_indices;  // per-Persona (Q-S30 + Q-S69)
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // String cache (§16.5)
 
         readonly Dictionary<string, string> _cached_action_triggers;
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // State fields
 
         float  _lock_remaining       = 0.0f;       // Q-S70
@@ -67,7 +73,7 @@ namespace Animo.Core {
         // IReadOnlyList cast boxing in Step 3 hot path. Set in ctor.
         List<Threshold> _thresholds = null!;
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Constructor
 
         public Engine(Persona persona) {
@@ -167,10 +173,13 @@ namespace Animo.Core {
                 threshold.is_above = _effective_needs[threshold.need_index] >= threshold.trigger_threshold;
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Events [verb, verb phrase]
+
         public event Action<string>? OnSignal;      // Q-S26
 
-        ///////////////////////////////////////////////////////////////////////
-        // Public properties
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
 
         public string AgentID => _persona.agent_id ?? "";
 
@@ -181,7 +190,7 @@ namespace Animo.Core {
              _locked_behavior_index < _persona.actions.Count)
             ? _persona.actions[_locked_behavior_index].id : "";
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Live(delta_time) — 5 steps + T0
 
         public void Live(float delta_time) {
@@ -230,7 +239,7 @@ namespace Animo.Core {
                 step5Switch();
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Public API
 
         public void Affect(string need, float delta, bool force_reset = false) {
@@ -328,6 +337,9 @@ namespace Animo.Core {
                 action_scores: action_scores);
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal Methods [verb]
+
         internal float GetEffectiveNeed(string need) =>
             _need_index.TryGetValue(need, out var i) ? _effective_needs[i] : 0f;
 
@@ -346,9 +358,12 @@ namespace Animo.Core {
         internal string GetExpandedActionTrigger(string behavior) =>
             _cached_action_triggers.TryGetValue(behavior, out var threshold) ? threshold : behavior;
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // protected Methods [verb]
+
         protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Step 2: EffectiveNeeds
 
         void step2EffectiveNeeds() {
@@ -406,7 +421,7 @@ namespace Animo.Core {
             }
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Step 4: Score
 
         void step4ScoreActions() {
@@ -460,7 +475,7 @@ namespace Animo.Core {
             if (!IsLocked) _force_reset_pending = false;
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Step 5: Switch
 
         void step5Switch() {
@@ -505,6 +520,9 @@ namespace Animo.Core {
     /// </summary>
     [System.Serializable]
     public sealed class EngineSnapshot {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public EngineSnapshot(
             string behavior,
             bool is_locked,
@@ -519,6 +537,9 @@ namespace Animo.Core {
             this.effective_needs = effective_needs;
             this.action_scores = action_scores;
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
 
         public string behavior { get; }
         public bool is_locked { get; }

@@ -13,6 +13,9 @@ namespace Animo.Model {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [Serializable]
     public class Root {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string schema_version { get; set; } = "";
         public List<Kind> kinds { get; set; } = new();
         public List<Persona> personas { get; set; } = new();
@@ -21,6 +24,9 @@ namespace Animo.Model {
     /// <summary>Type definition. Cascades into Personas via kind_ids.</summary>
     [Serializable]
     public class Kind {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string kind_id { get; set; } = "";
         public Rates? rates { get; set; }
         public Suppression? suppression { get; set; }
@@ -37,6 +43,9 @@ namespace Animo.Model {
     /// <summary>Individual agent definition. Inherits via kind_ids.</summary>
     [Serializable]
     public class Persona {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string agent_id { get; set; } = "";
         public string? persona_name { get; set; }
         public List<string>? kind_ids { get; set; }
@@ -58,6 +67,9 @@ namespace Animo.Model {
         /// </summary>
         [JsonIgnore]
         public int[]? sorted_influence_order { get; set; }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S64) Deep-clone the composed Persona so each
@@ -158,6 +170,9 @@ namespace Animo.Model {
     /// </summary>
     [Serializable]
     public class NeedMeta {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public int   tier            { get; set; }
         /// <summary>
         /// (v0.1.5, Q-S48) Per-Need decay rate multiplier applied in Engine
@@ -169,6 +184,9 @@ namespace Animo.Model {
         /// value by this factor before storing it in a per-Need rate cache.
         /// </summary>
         public float decay_multiplier { get; set; } = 1.0f;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S56) Per-Need default NeedMeta. Used by Engine ctor
@@ -191,6 +209,9 @@ namespace Animo.Model {
             }
             return new NeedMeta { tier = tier };
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S134) Shallow-safe copy of this NeedMeta.
@@ -243,7 +264,13 @@ namespace Animo.Model {
     /// The contract is documented here so Phase 3 cannot regress.
     [Serializable]
     public class Needs {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public Dictionary<string, float> values { get; set; } = new();
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
+
         public float Get(string need) =>
             values.TryGetValue(need, out var v) ? v : 0f;
         public float Normalized(string need) =>
@@ -263,12 +290,18 @@ namespace Animo.Model {
     /// projection pattern.
     [Serializable]
     public class Rates {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public Dictionary<string, float> values { get; set; } = new();
     }
 
     /// <summary>Tier suppression factors [0, 1]. Only tier2..tier5 are valid.</summary>
     [Serializable]
     public class Suppression {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public float tier2 { get; set; } = 0f;
         public float tier3 { get; set; } = 0f;
         public float tier4 { get; set; } = 0f;
@@ -278,6 +311,9 @@ namespace Animo.Model {
     /// <summary>Directed need-to-need effect. Coefficient in [-1, 1].</summary>
     [Serializable]
     public class Influence {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string source { get; set; } = "";
         public string target { get; set; } = "";
         public float coefficient { get; set; } = 0f;
@@ -289,6 +325,9 @@ namespace Animo.Model {
         /// </summary>
         public int source_index { get; set; } = -1;
         public int target_index { get; set; } = -1;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S141) Q-S134 pattern extended to all reference-type model
@@ -314,11 +353,20 @@ namespace Animo.Model {
     [Serializable]
     public class Action {
         // need_index cache is internal in spec; tests use the public API only.
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal Fields
+
         internal int need_index;
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string id { get; set; } = "";
         public string need { get; set; } = "";
         public int tier { get; set; } = 1;
         public float exponent { get; set; } = 1.0f;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S141) Q-S134 pattern: explicit DeepCopy() so future
@@ -342,7 +390,13 @@ namespace Animo.Model {
     /// <summary>Action continuation bonus. v0.1.3 dropped 'decay' field.</summary>
     [Serializable]
     public class Commitment {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public float bonus { get; set; } = 0f;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>(v0.1.5, Q-S141) See Action.DeepCopy() rationale.</summary>
         public Commitment DeepCopy() {
@@ -353,11 +407,17 @@ namespace Animo.Model {
     /// <summary>Germio integration binding.</summary>
     [Serializable]
     public class Binding {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string? on_action_change { get; set; }
         // v0.1.5 (Q-S12): non-nullable with empty-list default. Awake-time
         // foreach over `thresholds` is branch-free; null cannot bypass
         // Composer's default-fill (Q-S7) and crash Agent.Awake.
         public List<Threshold> thresholds { get; set; } = new();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S141) Binding contains a List of Thresholds — explicit
@@ -374,6 +434,9 @@ namespace Animo.Model {
     /// <summary>Two-stage hysteresis threshold trigger (v0.1.1).</summary>
     [Serializable]
     public class Threshold {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal Fields
+
         internal int need_index;
         // v0.1.5 (Q-S14): per-Threshold pre-expanded trigger string.
         // Replaces the old `_cached_threshold_triggers[threshold.need]` dictionary
@@ -394,10 +457,16 @@ namespace Animo.Model {
         // first Live(delta_time). Step 3 fire branch transitions Below → Above;
         // Step 3 reset branch transitions Above → Below.
         internal bool is_above;
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string need { get; set; } = "";
         public float trigger_threshold { get; set; } = 0f;
         public float? reset_threshold { get; set; }
         public string trigger { get; set; } = "";
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// (v0.1.5, Q-S141) Threshold carries internal state fields

@@ -12,6 +12,9 @@ namespace Animo {
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class AnimoLog {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Fields
+
         /// <summary>
         /// (Q-S128) Optional test hook. When set, Warning/Error/Write calls invoke
         /// this delegate in addition to their normal output. Enables EditMode tests
@@ -20,6 +23,9 @@ namespace Animo {
         /// Reset to null between tests via [TearDown].
         /// </summary>
         public static Action<string, string>? OnLog = null;  // (level, message)
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         public static void Write(string message) {
             OnLog?.Invoke("Write", message);

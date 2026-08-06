@@ -8,6 +8,9 @@ namespace Animo {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class Const {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Const [nouns]
+
         public const int NEED_INDEX_HUNGER      = 0;
         public const int NEED_INDEX_FATIGUE     = 1;
         public const int NEED_INDEX_FEAR        = 2;
@@ -55,6 +58,9 @@ namespace Animo {
         // `ReadOnlyCollection<string>` which implements `IReadOnlyList<string>`;
         // the public surface has no index-setter. Phase 3 code that needs
         // the count uses `.Count` (same value as the pre-Q-S131 `.Length`).
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Fields
+
         public static readonly System.Collections.Generic.IReadOnlyList<string> STANDARD_NEEDS =
             System.Array.AsReadOnly(new[] {
                 "hunger", "fatigue", "fear",

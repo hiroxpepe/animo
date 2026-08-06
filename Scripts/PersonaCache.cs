@@ -36,10 +36,16 @@ namespace Animo {
         // already writes them to null/clear so the suppression is
         // narrow to the field declarations only.
         #pragma warning disable CS0414
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Fields
+
         static Root? _root;
         static ValidationResult? _validation;
         #pragma warning restore CS0414
         static readonly Dictionary<string, Persona> CACHE = new();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         /// <summary>
         /// Set the Root once at app startup. Runs Validator on Root
@@ -141,6 +147,9 @@ namespace Animo {
     /// </summary>
     [Serializable]
     public sealed class PersonaCacheNotInitializedException : InvalidOperationException {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public PersonaCacheNotInitializedException(string message) : base(message) { }
     }
 
@@ -161,6 +170,9 @@ namespace Animo {
     /// </summary>
     [Serializable]
     public sealed class PersonaTemplateRejectedException : InvalidOperationException {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public PersonaTemplateRejectedException(string message) : base(message) { }
     }
 }

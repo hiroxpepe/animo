@@ -16,10 +16,19 @@ namespace Animo.Tools {
     /// </summary>
     public sealed class Recording {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly List<EngineSnapshot> _frames = new();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
 
         /// <summary>How many frames the recording holds.</summary>
         public int Count => _frames.Count;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>Append one frame — the snapshot the loop just handed out.</summary>
         public void Add(EngineSnapshot snapshot) {

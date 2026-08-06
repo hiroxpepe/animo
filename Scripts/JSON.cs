@@ -17,10 +17,16 @@ namespace Animo {
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class JSON {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Fields
+
         static readonly JsonSerializerSettings SETTINGS = new JsonSerializerSettings {
             Converters = { new NeedsConverter(), new RatesConverter() },
             MissingMemberHandling = MissingMemberHandling.Ignore
         };
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         /// <summary>
         /// Parse an animo.json text payload into a Root aggregate.
@@ -49,12 +55,18 @@ namespace Animo {
 
         // ── Custom converters ──────────────────────────────────────────────
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // inner Classes
+
         /// <summary>
         /// (Q-S151) Converts flat JSON object {"hunger": 40, "fatigue": 20}
         /// into Needs.values Dictionary. Without this, Newtonsoft maps
         /// properties to Needs class members (finds none), leaving values empty.
         /// </summary>
         sealed class NeedsConverter : JsonConverter<Needs> {
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            // public Methods [verb]
+
             public override Needs? ReadJson(JsonReader reader, Type type, Needs? existing,
                                             bool hasExisting, JsonSerializer s) {
                 if (reader.TokenType == JsonToken.Null) return null;
@@ -75,6 +87,9 @@ namespace Animo {
 
         /// <summary>(Q-S151) Same flat-object converter for Rates.</summary>
         sealed class RatesConverter : JsonConverter<Rates> {
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            // public Methods [verb]
+
             public override Rates? ReadJson(JsonReader reader, Type type, Rates? existing,
                                             bool hasExisting, JsonSerializer s) {
                 if (reader.TokenType == JsonToken.Null) return null;

@@ -21,8 +21,17 @@ namespace Animo {
         // Singleton
 
         static Store? _instance;
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly Dictionary<string, IAnimoAgent> _agents = new();
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Properties [noun, adjective]
+
         public static Store Instance => _instance ??= new Store();
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         /// <summary>Reset the singleton state. Test-only seam (no spec contract).</summary>
         public static void ResetForTesting() {
@@ -99,7 +108,13 @@ namespace Animo {
     /// implements this; tests can fake it with a tiny shim.
     /// </summary>
     public interface IAnimoAgent {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Properties [noun, adjective]
+
         string agent_id { get; }
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private Methods [verb]
+
         /// <summary>
         /// (v0.1.5, Q-S4) Relay Affect from Store to the Agent's Engine.
         /// Called by Store.Affect to route Germio Executor events.

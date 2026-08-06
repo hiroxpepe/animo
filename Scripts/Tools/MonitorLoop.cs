@@ -22,21 +22,33 @@ namespace Animo.Tools {
     /// </summary>
     public sealed class MonitorLoop {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Const [nouns]
+
         /// <summary>The smallest step the loop will run. A smaller ask clamps up.</summary>
         public const float DT_MIN = 0.001f;
 
         /// <summary>The largest step the loop will run. A larger ask clamps down.</summary>
         public const float DT_MAX = 10f;
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly Engine _engine;
         readonly Queue<Action<Engine>> _pending_steps = new();
         float _delta_time;
         bool _paused;
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public MonitorLoop(Engine engine, float delta_time) {
             _engine = engine;
             _delta_time = clampDeltaTime(delta_time);
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
 
         /// <summary>The engine being driven, so a caller can read its state.</summary>
         public Engine Engine => _engine;
@@ -53,6 +65,9 @@ namespace Animo.Tools {
             get => _delta_time;
             set => _delta_time = clampDeltaTime(value);
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// Queue an Affect step-in. It lands at the head of the next frame, so the
@@ -100,11 +115,17 @@ namespace Animo.Tools {
             return _engine.Snapshot();
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
+
         static float clampDeltaTime(float delta_time) {
             if (delta_time < DT_MIN) return DT_MIN;
             if (delta_time > DT_MAX) return DT_MAX;
             return delta_time;
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private Methods [verb]
 
         void applyPending() {
             while (_pending_steps.Count > 0)

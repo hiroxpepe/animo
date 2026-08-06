@@ -18,6 +18,9 @@ namespace Animo.Core {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [Serializable]
     public class Issue {
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public Issue() {}
         public Issue(string rule_id, Severity severity, string message, string? path = null) {
             this.rule_id  = rule_id;
@@ -25,6 +28,9 @@ namespace Animo.Core {
             this.message  = message;
             this.path     = path;
         }
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public string    rule_id  { get; set; } = "";
         public Severity  severity { get; set; } = Severity.Error;
         public string    message  { get; set; } = "";
@@ -36,11 +42,17 @@ namespace Animo.Core {
     public class ValidationResult {
         // (Q-S138) O(1) backing lists. O(1) per query for has_errors, errors, warnings, infos.
         // (Q-S119) Validator implements full A000-A040 rule set.
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly List<Issue> _errors   = new();
         readonly List<Issue> _warnings = new();
         readonly List<Issue> _infos    = new();
 
         // Authoritative flat list (all issues).
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
+
         public List<Issue> issues { get; set; } = new();
 
         // (Q-S149) Safe bool defaults → Phase 3 O(1) reads.
@@ -51,6 +63,9 @@ namespace Animo.Core {
         public IReadOnlyList<Issue> errors   => _errors;
         public IReadOnlyList<Issue> warnings => _warnings;
         public IReadOnlyList<Issue> infos    => _infos;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         public bool HasRule(string rule_id) =>
             issues.Any(i => i.rule_id == rule_id);
@@ -64,6 +79,9 @@ namespace Animo.Core {
         }
 
         // Helper used by Validator internally.
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal Methods [verb]
+
         internal void Add(Issue issue) {
             issues.Add(issue);
             switch (issue.severity) {
@@ -78,13 +96,25 @@ namespace Animo.Core {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class Validator {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Const [nouns]
+
         internal const float SIBLING_THRESHOLD_EPSILON = 0.001f;
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Const [nouns]
+
         const int MAX_ID_LEN = 128;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Fields
 
         static readonly Regex SNAKE_CASE = new(@"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", RegexOptions.Compiled);
 
         // ─── Stage 1 ──────────────────────────────────────────────────────────
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
 
         public static ValidationResult Validate(Root root) {
             var result = new ValidationResult();
@@ -248,6 +278,9 @@ namespace Animo.Core {
 
             return result;
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
 
         static void validateKindFields(Kind kind, int kind_index, Action<Issue> emit) {
             string kind_path = $"kinds[{kind_index}]";

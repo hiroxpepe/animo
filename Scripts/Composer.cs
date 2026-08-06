@@ -23,7 +23,13 @@ namespace Animo.Core {
     internal static class Composer {
 
         // (Q-S47) 0.01f covers IEEE-754 round-trip drift (~1e-7) at [0,100] scale.
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Const [nouns]
+
         internal const float THRESHOLD_KEY_EPSILON = 0.01f;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // internal static Methods [verb]
 
         internal static Persona Compose(Persona persona, Root root) {
             var composed = new Persona {
@@ -61,13 +67,16 @@ namespace Animo.Core {
             return composed;
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Kind-id resolution
 
         // (Q-S47) Compound-key match with EPSILON on trigger_threshold.
         internal static bool ThresholdsMatch(Threshold first, Threshold second) =>
             first.need == second.need &&
             Math.Abs(first.trigger_threshold - second.trigger_threshold) < THRESHOLD_KEY_EPSILON;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private static Methods [verb]
 
         static IEnumerable<string> resolveKindIds(Persona persona, Root root) {
             if (persona.kind_ids == null || persona.kind_ids.Count == 0)
@@ -87,7 +96,7 @@ namespace Animo.Core {
             return null;
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Kind merge (builds up the base; persona overrides come after)
 
         static void mergeKind(Persona composed, Kind kind) {
@@ -100,7 +109,7 @@ namespace Animo.Core {
             if (kind.needs_meta  != null) mergeNeedsMeta(composed, kind.needs_meta);
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Persona own-field merge (persona wins)
 
         static void mergePersonaOwn(Persona composed, Persona source) {
@@ -118,7 +127,7 @@ namespace Animo.Core {
             if (source.needs_meta != null) mergeNeedsMeta(composed, source.needs_meta);
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Field-level merges
 
         static void mergeNeeds(Persona composed, Needs source) {
@@ -227,7 +236,7 @@ namespace Animo.Core {
             foreach (var entry in source) composed.needs_meta[entry.Key] = entry.Value.DeepCopy();
         }
 
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////
         // Post-merge fill passes
 
         // (Q-S11 + Q-S86) Every Threshold must have a numeric reset_threshold.

@@ -20,6 +20,9 @@ namespace Animo.Tools {
     /// </summary>
     public static class StepInReader {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public static Methods [verb]
+
         /// <summary>
         /// Read a step-in for a set of agents. A "watch" message changes which
         /// agent the dashboard follows; every other message is sent to the

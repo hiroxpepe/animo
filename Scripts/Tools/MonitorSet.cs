@@ -17,21 +17,33 @@ namespace Animo.Tools {
     /// </summary>
     public sealed class MonitorSet {
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Fields
+
         readonly Dictionary<string, MonitorLoop> _loops = new();
         readonly Dictionary<string, Recording> _recordings = new();
         readonly List<string> _order = new();
         readonly float _delta_time;
         string _watched = "";
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // Constructor
+
         public MonitorSet(float delta_time) {
             _delta_time = delta_time;
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Properties [noun, adjective]
 
         /// <summary>Every agent id, in the order the agents were added.</summary>
         public IReadOnlyList<string> Ids => _order;
 
         /// <summary>The agent the dashboard is watching now.</summary>
         public string Watched => _watched;
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         /// <summary>
         /// Add an agent under an id. The first one added is watched. A repeat id
