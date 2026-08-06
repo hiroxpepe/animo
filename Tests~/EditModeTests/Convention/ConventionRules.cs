@@ -548,10 +548,15 @@ static class ConventionRules
     // separate, stricter decision made in canonical_label_for.
     internal static bool is_kind_attempt(string label_text)
     {
-        const string any_access = "public|private|protected|internal|inner";
+        const string any_access = "public|private|protected|internal";
         return SECTION_KINDS.Any(sk => {
             var kind_word = sk.kind == "Const" ? "Const|Constants" : sk.kind;
-            var mod_group = $@"(?:({any_access})\s+)?";
+            // Classes is the one kind whose label can stack two modifier
+            // words (an access word, then "inner", for a nested type) —
+            // every other kind takes at most one modifier word.
+            var mod_group = sk.kind == "Classes"
+                ? $@"(?:({any_access})\s+)?(?:(inner)\s+)?"
+                : $@"(?:({any_access})\s+)?";
             var static_group = sk.kind == "Classes" ? "" : @"(?:(static)\s+)?";
             var hint_group = sk.hint == "" ? "" : @"(?:\s*\[([a-z ,]+)\])?";
             return Regex.IsMatch(label_text, $@"^(?i:{mod_group}{static_group}(?:{kind_word}){hint_group})$");

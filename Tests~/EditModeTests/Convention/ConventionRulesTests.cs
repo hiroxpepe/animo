@@ -216,6 +216,19 @@ public class ConventionRulesTests
         Assert.That(found.Any(v => v.Contains("needs a blank line above it")), Is.False);
     }
 
+    [Test]
+    public void Passes_PublicInnerClassesIsRecognizedAsAKindMatch()
+    {
+        var code = "class Outer {\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // public inner Classes\n"
+            + "\n"
+            + "        public class Inner {}\n"
+            + "}";
+        var found = ConventionRules.find_section_header_violations(code, "mock.cs");
+        Assert.That(found, Is.Empty);
+    }
+
     static bool caught(string code, string needle) =>
         ConventionRules.find_naming_violations(code, "mock.cs").Any(v => v.Contains(needle));
 
