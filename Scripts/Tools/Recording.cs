@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using Animo.Core;
 
 namespace Animo.Tools {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -18,7 +17,6 @@ namespace Animo.Tools {
     /// rather than throwing, so a scrub bar can never fall off.
     /// </summary>
     public sealed class Recording {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Fields
 

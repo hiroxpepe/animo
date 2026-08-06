@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Animo.Model {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -177,6 +176,7 @@ namespace Animo.Model {
         // public Properties [noun, adjective]
 
         public int   tier            { get; set; }
+
         /// <summary>
         /// (v0.1.5, Q-S48) Per-Need decay rate multiplier applied in Engine
         /// PHASE C via applyNonTierMetadata. 1.0 = no change (default).
@@ -328,6 +328,7 @@ namespace Animo.Model {
         /// instead of string lookups. -1 = not yet baked.
         /// </summary>
         public int source_index { get; set; } = -1;
+
         public int target_index { get; set; } = -1;
 
         ///////////////////////////////////////////////////////////////////////////////////////////////

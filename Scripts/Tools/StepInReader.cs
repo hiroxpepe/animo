@@ -8,7 +8,6 @@ using Newtonsoft.Json.Linq;
 using Animo.Core;
 
 namespace Animo.Tools {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -22,7 +21,6 @@ namespace Animo.Tools {
     ///   kind = affect | pause | resume | delta_time
     /// </summary>
     public static class StepInReader {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public static Methods [verb]
 

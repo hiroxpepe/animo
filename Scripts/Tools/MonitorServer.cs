@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using Animo.Core;
 
 namespace Animo.Tools {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -27,7 +26,6 @@ namespace Animo.Tools {
     /// task and is closed cleanly when it drops or the server stops.
     /// </summary>
     public sealed class MonitorServer {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Fields
 

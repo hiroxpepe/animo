@@ -10,7 +10,6 @@ namespace Animo {
     /// <summary>Animo domain constants. See spec §14.</summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>
     public static class Const {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Const [nouns]
 

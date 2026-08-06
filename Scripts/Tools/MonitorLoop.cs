@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using Animo.Core;
 
 namespace Animo.Tools {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -24,7 +23,6 @@ namespace Animo.Tools {
     /// falls in the middle of a step.
     /// </summary>
     public sealed class MonitorLoop {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Const [nouns]
 

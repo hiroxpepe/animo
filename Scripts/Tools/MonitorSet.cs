@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using Animo.Core;
 
 namespace Animo.Tools {
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // public Classes
 
@@ -19,7 +18,6 @@ namespace Animo.Tools {
     /// Stage 3 layer over the single-agent loop.
     /// </summary>
     public sealed class MonitorSet {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Fields
 
