@@ -39,6 +39,7 @@ namespace Animo {
         // already writes them to null/clear so the suppression is
         // narrow to the field declarations only.
         #pragma warning disable CS0414
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // private static Fields
 

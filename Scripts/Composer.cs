@@ -26,6 +26,7 @@ namespace Animo.Core {
     internal static class Composer {
 
         // (Q-S47) 0.01f covers IEEE-754 round-trip drift (~1e-7) at [0,100] scale.
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Const [nouns]
 

@@ -30,6 +30,7 @@ namespace Animo.Tools {
             this.delta       = delta;
             this.force_reset = force_reset;
         }
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 
@@ -48,6 +49,7 @@ namespace Animo.Tools {
             this.time = time;
             this.event_value   = event_value;
         }
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 

@@ -271,6 +271,7 @@ namespace Animo.Model {
         // public Properties [noun, adjective]
 
         public Dictionary<string, float> values { get; set; } = new();
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Methods [verb]
 
@@ -356,10 +357,12 @@ namespace Animo.Model {
     [Serializable]
     public class Action {
         // need_index cache is internal in spec; tests use the public API only.
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // internal Fields
 
         internal int need_index;
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 
@@ -460,6 +463,7 @@ namespace Animo.Model {
         // first Live(delta_time). Step 3 fire branch transitions Below → Above;
         // Step 3 reset branch transitions Above → Below.
         internal bool is_above;
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 

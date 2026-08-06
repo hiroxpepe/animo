@@ -34,6 +34,7 @@ namespace Animo.Core {
             this.message  = message;
             this.path     = path;
         }
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 
@@ -48,6 +49,7 @@ namespace Animo.Core {
     public class ValidationResult {
         // (Q-S138) O(1) backing lists. O(1) per query for has_errors, errors, warnings, infos.
         // (Q-S119) Validator implements full A000-A040 rule set.
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Fields
 
@@ -56,6 +58,7 @@ namespace Animo.Core {
         readonly List<Issue> _infos    = new();
 
         // Authoritative flat list (all issues).
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 
@@ -85,6 +88,7 @@ namespace Animo.Core {
         }
 
         // Helper used by Validator internally.
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // internal Methods [verb]
 

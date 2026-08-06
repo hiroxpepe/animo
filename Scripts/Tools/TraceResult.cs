@@ -50,6 +50,7 @@ namespace Animo.Tools {
         public List<TraceFrame> frames = new();
 
         // (Q-S93) Populated by ScenarioRunner.Run in a single post-run pass.
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
 

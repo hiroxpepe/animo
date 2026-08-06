@@ -668,6 +668,17 @@ static class ConventionRules
             var trimmed = lines[i].Trim();
             if (trimmed.Length < 10 || trimmed.Any(c => c != '/')) continue;
 
+            // A blank line must sit above the divider, unless the divider
+            // is the very first thing after a type/namespace's opening
+            // brace — right under `public class Foo {`, no blank is
+            // wanted or needed.
+            if (i > 0) {
+                var prev_line = lines[i - 1].TrimEnd();
+                var prev_trim = prev_line.Trim();
+                if (prev_trim != "" && !prev_trim.EndsWith("{"))
+                    found.Add($"{label}:{i + 1}: section divider needs a blank line above it");
+            }
+
             var indent = lines[i].Length - lines[i].TrimStart(' ').Length;
             var slash_count = trimmed.Length;
             if (indent + slash_count != 103)

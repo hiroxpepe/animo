@@ -61,6 +61,7 @@ namespace Animo {
         // `ReadOnlyCollection<string>` which implements `IReadOnlyList<string>`;
         // the public surface has no index-setter. Phase 3 code that needs
         // the count uses `.Count` (same value as the pre-Q-S131 `.Length`).
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public static Fields
 

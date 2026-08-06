@@ -189,6 +189,33 @@ public class ConventionRulesTests
         Assert.That(found.Any(v => v.Contains("need a section header")), Is.False);
     }
 
+    [Test]
+    public void Catches_DividerMissingBlankLineAbove()
+    {
+        var code = "class Mock {\n"
+            + "        int x;\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // Methods [verb]\n"
+            + "\n"
+            + "        void run() {}\n"
+            + "}";
+        var found = ConventionRules.find_section_header_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("needs a blank line above it")), Is.True);
+    }
+
+    [Test]
+    public void Passes_DividerRightAfterAnOpeningBraceNeedsNoBlankLine()
+    {
+        var code = "class Mock {\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // Fields\n"
+            + "\n"
+            + "        int x;\n"
+            + "}";
+        var found = ConventionRules.find_section_header_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("needs a blank line above it")), Is.False);
+    }
+
     static bool caught(string code, string needle) =>
         ConventionRules.find_naming_violations(code, "mock.cs").Any(v => v.Contains(needle));
 

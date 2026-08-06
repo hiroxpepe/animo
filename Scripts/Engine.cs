@@ -198,6 +198,7 @@ namespace Animo.Core {
             (_locked_behavior_index >= 0 && _persona.actions != null &&
              _locked_behavior_index < _persona.actions.Count)
             ? _persona.actions[_locked_behavior_index].id : "";
+
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Methods [verb]
 
