@@ -1,6 +1,8 @@
 // Copyright (c) STUDIO MeowToon. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#nullable enable
+
 using System.Runtime.CompilerServices;
 
 // v0.1.5 (Q-S32): expose internal Engine debug accessors

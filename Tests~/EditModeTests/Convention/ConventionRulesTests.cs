@@ -1,5 +1,5 @@
 // Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 #nullable enable
 using NUnit.Framework;
 using System.Linq;
@@ -15,6 +15,30 @@ namespace Animo.Tests.EditMode.Convention;
 [Category("Convention")]
 public class ConventionRulesTests
 {
+    [Test]
+    public void Catches_MissingNullableInHeader()
+    {
+        var code = "// Copyright (c) STUDIO MeowToon. All rights reserved.\n"
+            + "// Licensed under the MIT License. See LICENSE in the project root for license information.\n"
+            + "\n"
+            + "using System;\n";
+        var found = ConventionRules.find_header_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("must be '#nullable enable'")), Is.True);
+    }
+
+    [Test]
+    public void Passes_TheStandardHeader()
+    {
+        var code = "// Copyright (c) STUDIO MeowToon. All rights reserved.\n"
+            + "// Licensed under the MIT License. See LICENSE in the project root for license information.\n"
+            + "\n"
+            + "#nullable enable\n"
+            + "\n"
+            + "using System;\n";
+        var found = ConventionRules.find_header_violations(code, "mock.cs");
+        Assert.That(found, Is.Empty);
+    }
+
     static bool caught(string code, string needle) =>
         ConventionRules.find_naming_violations(code, "mock.cs").Any(v => v.Contains(needle));
 

@@ -22,7 +22,6 @@ namespace Animo.Tests.MiniUnity.SelfTests {
     /// <author>h.adachi (STUDIO MeowToon)</author>
     [TestFixture]
     public class MiniUnitySelfTests {
-#nullable enable
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // SetUp / TearDown
