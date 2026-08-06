@@ -131,7 +131,7 @@ public class ConventionRulesTests
     }
 
     [Test]
-    public void Passes_FreeFormLabelThatIsNotAKindAttempt()
+    public void Passes_FreeFormLabelWordingIsNeverRewrittenButKindIsStillRequired()
     {
         var code = "class Mock {\n"
             + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
@@ -140,7 +140,8 @@ public class ConventionRulesTests
             + "        void run() {}\n"
             + "}";
         var found = ConventionRules.find_section_header_violations(code, "mock.cs");
-        Assert.That(found, Is.Empty);
+        Assert.That(found.Any(v => v.Contains("must be")), Is.False);
+        Assert.That(found.Any(v => v.Contains("need a section header")), Is.True);
     }
 
     [Test]
@@ -157,6 +158,35 @@ public class ConventionRulesTests
         var code = "class Mock {\n\n    void run() {}\n}";
         var found = ConventionRules.find_blank_line_violations(code, "mock.cs");
         Assert.That(found, Is.Empty);
+    }
+
+    [Test]
+    public void Catches_FreeFormLabelDoesNotExemptTheKindRequirement()
+    {
+        var code = "class Mock {\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // Step 2: EffectiveNeeds\n"
+            + "\n"
+            + "        void step2EffectiveNeeds() {}\n"
+            + "}";
+        var found = ConventionRules.find_section_header_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("need a section header") && v.Contains("Methods [verb]")), Is.True);
+    }
+
+    [Test]
+    public void Passes_WhenAKindDividerSitsAboveAFreeFormOne()
+    {
+        var code = "class Mock {\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // Methods [verb]\n"
+            + "\n"
+            + "        ///////////////////////////////////////////////////////////////////////////////////////////////\n"
+            + "        // Step 2: EffectiveNeeds\n"
+            + "\n"
+            + "        void step2EffectiveNeeds() {}\n"
+            + "}";
+        var found = ConventionRules.find_section_header_violations(code, "mock.cs");
+        Assert.That(found.Any(v => v.Contains("need a section header")), Is.False);
     }
 
     static bool caught(string code, string needle) =>

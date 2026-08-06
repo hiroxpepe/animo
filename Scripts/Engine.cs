@@ -198,6 +198,8 @@ namespace Animo.Core {
             (_locked_behavior_index >= 0 && _persona.actions != null &&
              _locked_behavior_index < _persona.actions.Count)
             ? _persona.actions[_locked_behavior_index].id : "";
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // public Methods [verb]
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Live(delta_time) — 5 steps + T0
@@ -371,6 +373,9 @@ namespace Animo.Core {
         // protected Methods [verb]
 
         protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // private Methods [verb]
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Step 2: EffectiveNeeds

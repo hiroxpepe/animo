@@ -527,7 +527,7 @@ static class ConventionRules
         ("Delegate", "public|private|protected|internal", ""),
         ("Properties", "public|private|protected|internal", "noun, adjective"),
         ("Methods", "public|private|protected|internal", "verb"),
-        ("Classes", "inner", ""),
+        ("Classes", "inner|public|private|protected|internal", ""),
         ("Events", "public|private|protected|internal", "verb, verb phrase"),
         ("Const", "", "nouns"),
         ("Enums", "public|private|protected|internal", "noun"),
@@ -536,6 +536,27 @@ static class ConventionRules
     };
 
     internal static readonly (string kind, string modifiers, string hint)[] SECTION_KINDS_FOR_TEST = SECTION_KINDS;
+
+    // Whether a label is even trying to be one of the fixed Kind words —
+    // loosely, so a wording variant like "Private constants" is still
+    // recognized as an attempt at "Const [nouns]" and normalized, rather
+    // than silently treated as free-form. Matching is deliberately looser
+    // than the canonical form it is checked against: any access word (even
+    // one a given Kind's canonical form never shows, like "Private" on
+    // Const) is accepted as an optional prefix here, and "Const" accepts
+    // its plural too. What is actually shown in the canonical form is a
+    // separate, stricter decision made in canonical_label_for.
+    internal static bool is_kind_attempt(string label_text)
+    {
+        const string any_access = "public|private|protected|internal|inner";
+        return SECTION_KINDS.Any(sk => {
+            var kind_word = sk.kind == "Const" ? "Const|Constants" : sk.kind;
+            var mod_group = $@"(?:({any_access})\s+)?";
+            var static_group = sk.kind == "Classes" ? "" : @"(?:(static)\s+)?";
+            var hint_group = sk.hint == "" ? "" : @"(?:\s*\[([a-z ,]+)\])?";
+            return Regex.IsMatch(label_text, $@"^(?i:{mod_group}{static_group}(?:{kind_word}){hint_group})$");
+        });
+    }
 
     // No more than one blank line in a row, anywhere in the file. Two blank
     // lines read the same as one to a human, so the second is just noise —
@@ -661,13 +682,7 @@ static class ConventionRules
             // Is the label even trying to be one of the fixed Kind words?
             // If not, it is free-form — protected, never checked against
             // the real members below, per the strict-match design.
-            var is_kind_attempt = SECTION_KINDS.Any(sk => {
-                var mod_group = sk.modifiers == "" ? "" : $@"(?:({sk.modifiers})\s+)?";
-                var static_group = sk.kind == "Classes" ? "" : @"(?:(static)\s+)?";
-                var hint_group = sk.hint == "" ? "" : @"(?:\s*\[([a-z ,]+)\])?";
-                return Regex.IsMatch(section_label, $@"^(?i:{mod_group}{static_group}{sk.kind}{hint_group})$");
-            });
-            if (!is_kind_attempt) continue;
+            if (!is_kind_attempt(section_label)) continue;
 
             // Find the block of members this label actually covers: from the
             // first member after the label to the member right before the
@@ -697,6 +712,51 @@ static class ConventionRules
             var expected = canonical_label_for(distinct[0]);
             if (expected != null && section_label != expected)
                 found.Add($"{label}:{i + 2}: section label '{section_label}' must be '{expected}'");
+        }
+
+        // A free-form label next to an individual member (e.g. "Step 2:
+        // EffectiveNeeds") does not exempt that member's kind/access/static
+        // run from also having its own Kind-labeled divider somewhere above
+        // it — the two serve different purposes and neither substitutes
+        // for the other. Walk every run of consecutive same-kind members
+        // and make sure a genuine Kind label covers it, even if a
+        // free-form divider sits physically closer to the member.
+        bool is_kind_label(string text) => is_kind_attempt(text);
+
+        IEnumerable<SyntaxList<MemberDeclarationSyntax>> containers =
+            root.DescendantNodes().OfType<TypeDeclarationSyntax>().Select(t => t.Members)
+            .Concat(root.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().Select(n => n.Members));
+
+        foreach (var members in containers) {
+            (string, string, bool, bool)? prev_kind = null;
+            foreach (var member in members) {
+                var k = one_kind_of(member);
+                if (k == null) { prev_kind = null; continue; }
+                if (k.Equals(prev_kind)) continue;
+                prev_kind = k;
+
+                var member_line = tree.GetLineSpan(member.Span).StartLinePosition.Line;
+                bool has_kind_divider = false;
+                for (int back = member_line - 1; back >= 0; back--) {
+                    var t = lines[back].Trim();
+                    if (t.Length >= 10 && t.All(c => c == '/')) {
+                        if (back + 1 < lines.Length) {
+                            var lbl = lines[back + 1].Trim();
+                            if (lbl.StartsWith("//") && is_kind_label(lbl.Substring(2).Trim())) {
+                                has_kind_divider = true;
+                                break;
+                            }
+                        }
+                        continue; // this divider was not a Kind match — keep looking further back
+                    }
+                    if (t.Length > 0 && !t.StartsWith("//") && !t.StartsWith("///")) break; // real code — stop
+                }
+                if (!has_kind_divider) {
+                    var expected = canonical_label_for(k.Value);
+                    if (expected != null)
+                        found.Add($"{label}:{member_line + 1}: members here need a section header ('{expected}')");
+                }
+            }
         }
         found.Sort(StringComparer.Ordinal);
         return found;
