@@ -21,7 +21,6 @@ namespace Animo {
         public const int NEED_INDEX_CURIOSITY   = 5;
         public const int NEED_INDEX_IDLE        = 6;
         public const int NEED_INDEX_FRUSTRATION = 7;
-
         public const float MIN_NEED         =   0.0f;
         public const float MAX_NEED         = 100.0f;
         public const float MIN_EXPONENT     =   0.1f;
@@ -34,18 +33,14 @@ namespace Animo {
         public const int   MAX_TIER         =   5;
         public const int   MAX_ID_LENGTH    = 128;
         public const int   IDLE_TIER        =   5;
-
         public const float DEFAULT_RESET_OFFSET = 5.0f;
         public const float DEFAULT_COMMITMENT_BONUS = 0.0f;
         public const float MIN_COMMITMENT_BONUS = 0.0f;
         public const float MAX_COMMITMENT_BONUS = 50.0f;
         public const float COMMITMENT_BONUS_WARN_THRESHOLD = 30.0f;
-
         public const float LOCK_DURATION_WARN_THRESHOLD = 30.0f;
         public const float LOCK_DURATION_MAX = 600.0f;
-
         public const string CURRENT_SCHEMA_VERSION = "1.5";
-
         public const string DEFAULT_ON_ACTION_CHANGE = "animo_{agent_id}_{behavior}";
 
         // (v0.1.5, Q-S131) Type widened to `IReadOnlyList<string>` — same
@@ -132,10 +127,8 @@ namespace Animo {
         // STANDARD_NEEDS above.
         public static readonly System.Collections.Generic.IReadOnlyList<string> SUPPORTED_SCHEMA_VERSIONS =
             System.Array.AsReadOnly(new[] { "1.3", "1.4", "1.5" });
-
         public static readonly System.Collections.Generic.IReadOnlyList<string> TEMPLATE_PLACEHOLDERS_ACTION =
             System.Array.AsReadOnly(new[] { "agent_id", "behavior" });
-
         public static readonly System.Collections.Generic.IReadOnlyList<string> TEMPLATE_PLACEHOLDERS_THRESHOLD =
             System.Array.AsReadOnly(new[] { "agent_id" });
     }

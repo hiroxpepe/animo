@@ -44,3 +44,4 @@ project_all_code.md
 Tests~/EditModeTests/nuget.config
 Tests~/MiniUnity/nuget.config
 Tests~/MiniUnity.SelfTests/nuget.config
+Tests~/EditModeTests/TestResults/

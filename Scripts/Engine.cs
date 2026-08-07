@@ -75,7 +75,6 @@ namespace Animo.Core {
         string _previous_behavior    = "";          // Q-S110 / Q-S31 sentinel
         string _current_behavior     = "";
         bool   _force_reset_pending  = false;       // Q-S5
-
         LockMode _lock_mode          = LockMode.Hard;
 
         // (#2 Zero-GC) Pre-cached non-null List<Threshold> reference avoids per-frame
@@ -191,7 +190,6 @@ namespace Animo.Core {
         // public Properties [noun, adjective]
 
         public string AgentID => _persona.agent_id ?? "";
-
         public string Behavior   => _current_behavior;
         public bool   IsLocked   => _lock_remaining > 0f;  // Q-S126: computed property
         public string LockedBehavior =>
