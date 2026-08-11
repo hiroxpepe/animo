@@ -45,3 +45,7 @@ Tests~/EditModeTests/nuget.config
 Tests~/MiniUnity/nuget.config
 Tests~/MiniUnity.SelfTests/nuget.config
 Tests~/EditModeTests/TestResults/
+
+# Markdown files are documentation, never a Unity-referenced asset;
+# no .meta for them is ever needed.
+*.md.meta
