@@ -184,6 +184,15 @@ request to stop.
 
 **task** — One piece of work, with its own id, on a `TASKLIST.md`.
 
+**TDD** — Short for "test-driven development": write a failing test
+first, then write the code that makes it pass.
+
+**Publish** — To send an event out to every part of the code that
+listens for it.
+
+**injection** — The act of putting one piece of code or data inside
+another, at run time.
+
 ## How to keep this list
 
 + One term, one sense. Give the sense in one place only — here.

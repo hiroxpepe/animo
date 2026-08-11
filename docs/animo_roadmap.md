@@ -1,9 +1,11 @@
-# Animo Roadmap to v1.0.0
+# Animo Roadmap
 
 > **The main plan: from spec fix to a release ready for real use**
-> **Document version**: 1.0
-> **Status**: Active — Phase 1/2/3 complete (v0.3.0), Phase 4 next
-> **Last updated**: end of Phase 3 (Task 3-6 Exit Gate)
+> **Document version**: 1.1
+> **Status**: Active — Phase 1-4 complete (v0.3.9), Phase 5 next (needs
+> a real Unity run to check; not something this sandbox can confirm)
+> **Last updated**: after Phase 4 (Agent, Store, AnimoLog, Runner, and
+> Trace all found built and tested in the real code)
 > **Author**: STUDIO MeowToon — h.adachi
 > **Companion spec**: [`animo_spec_v0.1.5_EN.md`](animo_spec_v0.1.5_EN.md)
 
@@ -80,16 +82,16 @@ flowchart LR
 
 ## 2. Phase Overview
 
-| Phase | Version         | Theme                                    | Status      | Exit Criteria (Proof)                                                |
-| ----- | --------------- | ---------------------------------------- | ----------- | -------------------------------------------------------------------- |
-| **1** | `v0.1.4-design` | Spec FIX and operational pattern         | ✅ Complete | EN/JP spec + 59 mermaid diagrams build-checked                       |
-| **2** | `v0.2.0-test`   | Schema definition + pure C# test harness | 🔥 Next     | All test cases Red. Schema validates 3 sample JSONs.                 |
-| **3** | `v0.3.0`        | Core impl + zero-GC proof                |             | All tests Green. `GC.Alloc == 0` in `Live(delta_time)` over 100K calls.      |
-| **4** | `v0.4.0`        | Unity integration + CLI tool             |             | `animo-runner` CLI runs from terminal. `Animo.Agent` works in Unity. |
-| **5** | `v0.5.0-beta`   | Scale and stress test                    |             | 100 agents × 60 fps stable in empty scene. 1-hour soak: no leak.     |
-| **6** | `v0.6.0-beta`   | G+B+A integration + 3 demos              |             | Three genre demos run with `Lock` and `frustration` working.         |
-| **7** | `v0.9.0-rc`     | Docs and LLM prompt set                  |             | Tutorial works. LLM produces a valid `animo.json` from a prompt.     |
-| **8** | `v1.0.0`        | Stable release                           | 🎯          | Tag pushed. Release notes published. Semver applies from now.        |
+| Phase | Version         | Theme                                    | Status             | Exit Criteria (Proof)                                                   |
+| ----- | --------------- | ---------------------------------------- | ------------------ | ----------------------------------------------------------------------- |
+| **1** | `v0.1.4-design` | Spec FIX and operational pattern         | Complete           | EN/JP spec + 59 mermaid diagrams build-checked                          |
+| **2** | `v0.2.0-test`   | Schema definition + pure C# test harness | Complete           | All test cases Red. Schema validates 3 sample JSONs.                    |
+| **3** | `v0.3.0`        | Core impl + zero-GC proof                | Complete           | All tests Green. `GC.Alloc == 0` in `Live(delta_time)` over 100K calls. |
+| **4** | `v0.4.0`        | Unity integration + CLI tool             | Complete           | `animo-runner` CLI runs from terminal. `Animo.Agent` works in Unity.    |
+| **5** | `v0.5.0-beta`   | Scale and stress test                    | pending a real run | 100 agents, 60 fps stable in empty scene. 1-hour soak: no leak.         |
+| **6** | `v0.6.0-beta`   | G+B+A integration + 3 demos              | pending Phase 5    | Three genre demos run with `Lock` and `frustration` working.            |
+| **7** | `v0.9.0-rc`     | Docs and LLM prompt set                  | pending Phase 6    | Tutorial works. LLM produces a valid `animo.json` from a prompt.        |
+| **8** | `v1.0.0`        | Stable release                           | pending Phase 7    | Tag pushed. Release notes published. Semver applies from now.           |
 
 ### 2.1 Time-Effort Distribution (rough)
 
@@ -110,7 +112,7 @@ Phase 2 and 3 take half of the total. This is on purpose. The proof has to hold 
 
 ## 3. Phase 1 — Spec FIX (v0.1.4-design)
 
-### Status: ✅ Complete
+### Status: ✅ Complete (Phase 1)
 
 ### 3.1 Goal
 
@@ -146,7 +148,7 @@ Phase 2 and 3 take half of the total. This is on purpose. The proof has to hold 
 
 ## 4. Phase 2 — Schema and Test Foundation (v0.2.0-test)
 
-### Status: 🔥 Next
+### Status: ✅ Complete (Phase 2)
 
 ### 4.1 Goal
 
@@ -382,17 +384,17 @@ public class A025_CycleDetectionTests {
 
 #### 4.6.3 Edge Case Catalog (cross-class)
 
-| Category       | Cases                                                                          |
-| -------------- | ------------------------------------------------------------------------------ |
-| **Numeric**    | NaN, +Infinity, -Infinity, +0.0, -0.0, max float, min float, denormals         |
-| **Empty**      | empty string `""`, empty array `[]`, empty object `{}`, missing field          |
-| **Null**       | null reference, null string                                                    |
-| **Bounds**     | range min, range min - epsilon, range max, range max + epsilon                 |
-| **Volume**     | 0 elements, 1 element, 1000 elements, 10000 elements                           |
-| **Duplicates** | same `id` twice in array, same `kind_id` twice in `kind_ids`                   |
-| **Time**       | `delta_time = 0`, `delta_time < 0`, `delta_time = NaN`, `delta_time = very large`                              |
-| **Encoding**   | Unicode in `agent_id` (must fail snake_case)                                   |
-| **Order**      | reversed `influences` order (must produce same EffectiveNeeds after topo sort) |
+| Category       | Cases                                                                             |
+| -------------- | --------------------------------------------------------------------------------- |
+| **Numeric**    | NaN, +Infinity, -Infinity, +0.0, -0.0, max float, min float, denormals            |
+| **Empty**      | empty string `""`, empty array `[]`, empty object `{}`, missing field             |
+| **Null**       | null reference, null string                                                       |
+| **Bounds**     | range min, range min - epsilon, range max, range max + epsilon                    |
+| **Volume**     | 0 elements, 1 element, 1000 elements, 10000 elements                              |
+| **Duplicates** | same `id` twice in array, same `kind_id` twice in `kind_ids`                      |
+| **Time**       | `delta_time = 0`, `delta_time < 0`, `delta_time = NaN`, `delta_time = very large` |
+| **Encoding**   | Unicode in `agent_id` (must fail snake_case)                                      |
+| **Order**      | reversed `influences` order (must produce same EffectiveNeeds after topo sort)    |
 
 Each cross-class edge case becomes a row in `EdgeCases/`.
 
@@ -410,7 +412,8 @@ Each cross-class edge case becomes a row in `EdgeCases/`.
 
 #### 4.6.5 Task 2-3 Checklist
 
-+ [ ] All 33 Validator decision tables documented in `docs/test_plan_v0.1.4.md`.
++ [x] All 33 Validator decision tables written up (once in the
+      original test plan, now folded into the real, running test set).
 + [ ] All Validator test classes exist with named test methods.
 + [ ] Composer decision table documented and implemented.
 + [ ] Engine 5-step decision tables documented and implemented.
@@ -449,9 +452,9 @@ These have no answer in v0.1.4. They must be resolved here.
 | Q8  | negative `commitment.bonus`                          | A012-style range Error          | TBD      |
 | Q9  | `Lock(duration: 0)`                                  | immediate Unlock                | TBD      |
 | Q10 | `Lock(duration: -1.0)`                               | throw `ArgumentException`       | TBD      |
-| Q11 | `Live(delta_time: 0)`                                        | no-op, return                   | TBD      |
-| Q12 | `Live(delta_time: -0.5)`                                     | clamp to 0 with Warning         | TBD      |
-| Q13 | `Live(delta_time: float.NaN)`                                | throw `ArgumentException`       | TBD      |
+| Q11 | `Live(delta_time: 0)`                                | no-op, return                   | TBD      |
+| Q12 | `Live(delta_time: -0.5)`                             | clamp to 0 with Warning         | TBD      |
+| Q13 | `Live(delta_time: float.NaN)`                        | throw `ArgumentException`       | TBD      |
 | Q14 | `Lock` called while already locked                   | extend duration vs replace      | TBD      |
 | Q15 | `Unlock` called while not locked                     | no-op                           | TBD      |
 | Q16 | `force_reset` called while `is_locked = true` (Hard) | ignored, but Need still updates | TBD      |
@@ -507,7 +510,7 @@ These have no answer in v0.1.4. They must be resolved here.
 
 + [ ] `animo.schema.json` exists and validates 3 sample JSONs.
 + [ ] `Animo.Tests.MiniUnity` exists with 3 self-tests Green.
-+ [ ] All decision tables documented in `docs/test_plan_v0.1.4.md` (or v0.1.5).
++ [x] All decision tables written up (folded into the real test set now).
 + [ ] Total test count ≥ 180; non-MiniUnity tests are 100% Red.
 + [ ] All spec ambiguities resolved (no `TBD` left).
 + [ ] Spec patched to v0.1.5 if any ambiguity decision changed semantics.
@@ -546,7 +549,7 @@ All three must succeed. Then Phase 3 starts.
 
 ## 5. Phase 3 — Core Implementation and Zero-GC Proof (v0.3.0)
 
-### Status: pending Phase 2
+### Status: ✅ Complete (Phase 3)
 
 ### 5.1 Goal
 
@@ -827,7 +830,7 @@ All three must pass.
 
 ## 6. Phase 4 — Unity Integration and CLI (v0.4.0)
 
-### Status: pending Phase 3
+### Status: ✅ Complete (Phase 4 — Agent.cs, Store.cs, AnimoLog.cs, ScenarioRunner.cs, TraceResult.cs all found in the real code)
 
 ### 6.1 Goal
 
@@ -1007,7 +1010,7 @@ unity-cli -batchmode -quit -projectPath . -executeMethod AnimoDemo.RunHeadless
 
 ## 7. Phase 5 — Scale and Stress Test (v0.5.0-beta)
 
-### Status: pending Phase 4
+### Status: pending a real Unity run (this sandbox has no way to check FPS or a long soak test)
 
 ### 7.1 Goal
 

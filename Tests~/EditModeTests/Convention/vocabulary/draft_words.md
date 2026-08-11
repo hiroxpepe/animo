@@ -112,12 +112,10 @@ form — a short form is put right in the code, and not kept here.
 + odd
 + maker makers
 + too
-+ english
 + many
 + today
 + weigh weighs weighed weighing
 + people
-+ standard standards
 + exact
 + nothing
 + algorithm
@@ -310,9 +308,65 @@ form — a short form is put right in the code, and not kept here.
 + docs
 + fail fails failed failing
 + hurry hurries hurried
-+ ones
 + f
 + draft
 + basic
 + md
 + phase phases
++ wish wishes
++ fair
++ honest honestly
++ plainly
++ tiny
++ reminder reminders
++ argue argues argued
++ leave leaves left leaving
++ mid
++ judgement judgements
++ layer layers
++ caller callers
++ sandbox sandboxes
++ device devices
++ runtime runtimes
++ task tasks
++ pure
++ session sessions
++ dev
++ screen screens
++ folder folders
++ develop develops developed developing
++ reach reaches
++ prove proves proved
++ flee flees fled fleeing
++ cross crosses crossed
++ rise rises rose rising
++ poke pokes
++ dashboard dashboards
++ designer designers
++ tune tunes tuned tuning
++ race races
++ switch switches switched
++ chrome
++ heading headings
++ flow flows
++ redraw redraws
++ cleanly
++ closely
++ soak soaks
++ display displays
++ japanese
++ cannot
++ pick picks picked
++ re
++ direct
++ during
++ indirect
++ neither
++ assertion assertions
++ tonight
++ spot spots
++ v
++ mermaid
++ content
++ either
++ listen listens listened
