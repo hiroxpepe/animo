@@ -370,3 +370,9 @@ form — a short form is put right in the code, and not kept here.
 + content
 + either
 + listen listens listened
++ spec specs
++ stable
++ scene scenes
++ fit fits
++ track tracks tracked
++ win wins won winning

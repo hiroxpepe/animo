@@ -193,6 +193,15 @@ listens for it.
 **injection** — The act of putting one piece of code or data inside
 another, at run time.
 
+**garbage** — Memory a program no longer needs, cleared out
+later by the run time.
+
+**FPS** — Short for "frames a second": how many pictures a game
+draws on the screen in one second.
+
+**leak** — Memory a program keeps holding on to by mistake, long
+after it is done with it.
+
 ## How to keep this list
 
 + One term, one sense. Give the sense in one place only — here.
