@@ -6,7 +6,6 @@ GO to are put into the shared word lists, and then taken out from here.
 A word here has to be a real word, said out in full, and not a short
 form — a short form is put right in the code, and not kept here.
 
-+ _tab_count
 + adjacency
 + adjective
 + adjectives
@@ -51,7 +50,6 @@ form — a short form is put right in the code, and not kept here.
 + countable
 + dashboard
 + decay
-+ decay_multiplier
 + declarations
 + deduplicated
 + default
@@ -68,7 +66,6 @@ form — a short form is put right in the code, and not kept here.
 + drifted
 + dumb
 + duplicate
-+ each_tab
 + ecosystem
 + endings
 + english
@@ -103,12 +100,10 @@ form — a short form is put right in the code, and not kept here.
 + inward
 + irregular
 + irregulars
-+ is_duplicate
 + its
 + japanese
 + judgement
 + keyword
-+ kind_id
 + literal
 + loop
 + markdown
@@ -117,7 +112,6 @@ form — a short form is put right in the code, and not kept here.
 + mended
 + merge
 + mergeactions
-+ mergeactionspersonafirst
 + mergebinding
 + mergecommitment
 + merged
@@ -133,7 +127,6 @@ form — a short form is put right in the code, and not kept here.
 + meta
 + mid
 + min
-+ min_index
 + modifier
 + multiplier
 + needmeta
@@ -185,7 +178,6 @@ form — a short form is put right in the code, and not kept here.
 + scattered
 + scenario
 + schema
-+ schema_version
 + script
 + shown
 + skip
@@ -202,7 +194,6 @@ form — a short form is put right in the code, and not kept here.
 + syllable
 + syllables
 + tab
-+ tab_index
 + tabstate
 + tag
 + tags
@@ -236,12 +227,6 @@ form — a short form is put right in the code, and not kept here.
 + whichever
 + whose
 + zero
-+ _cached_action_triggers
-+ _delta_time
-+ _force_reset_pending
-+ _need_tier_indices
-+ _pending_steps
-+ applynontiermetadata
 + applypending
 + cached
 + clamp
@@ -249,7 +234,6 @@ form — a short form is put right in the code, and not kept here.
 + coefficient
 + converter
 + delta
-+ delta_time
 + deltatime
 + duration
 + exponent
@@ -257,7 +241,6 @@ form — a short form is put right in the code, and not kept here.
 + intensity
 + itimeprovider
 + max
-+ max_lower
 + metadata
 + needsconverter
 + parse
@@ -279,9 +262,6 @@ form — a short form is put right in the code, and not kept here.
 + tier4
 + tier5
 + unlock
-+ _loops
-+ _recordings
-+ _validation
 + async
 + builder
 + csv
@@ -290,11 +270,9 @@ form — a short form is put right in the code, and not kept here.
 + fallback
 + frustration
 + handleasync
-+ has_fallback
 + initialize
 + initialized
 + invariant
-+ invariant_culture
 + loops
 + readloopasync
 + recordings
@@ -303,20 +281,15 @@ form — a short form is put right in the code, and not kept here.
 + severity
 + stage2
 + unregister
-+ uses_frustration
 + validate
 + validateactions
 + validateinfluences
 + validatekindfields
 + validateneeds
-+ validatepersonafields
 + validaterates
 + validatesuppression
 + validation
-+ _infos
-+ _warnings
 + checkplaceholders
-+ has_warnings
 + infos
 + placeholders
 + warnings
