@@ -296,3 +296,210 @@ form — a short form is put right in the code, and not kept here.
 + crown crowns
 + md
 + capitalize capitalizes capitalized capitalizing
++ adachi
++ ajv
++ alert alerts
++ alike
++ animation animations
++ animobootstrapper
++ animolog
++ applynontiermetadata
++ architecturally
++ array arrays
++ assemblyinfo
++ asmdef
++ assert asserts asserted asserting
++ b
++ bake bakes baked baking
++ baseline baselines
++ benchmark benchmarks
++ blackboard
++ blanket
++ bleed bleeds bled bleeding
++ bool
++ bootstrap bootstraps
++ bear bears bore born bearing
++ bug bugs
++ bullet bullets
++ byte bytes
++ cannot
++ cascade cascades cascaded cascading
++ changelog
++ chatter chatters chattered chattering
++ citation citations
++ clamp clamps clamped clamping
++ clash clashes clashed clashing
++ closure closures
++ codebase
++ com
++ compiler compilers
++ correctly
++ corrupt corrupts corrupted corrupting
++ cs
++ deepcopy
++ debug debugs debugged debugging
++ debugger debuggers
++ decay decays decayed decaying
++ declaration declarations
++ default defaults defaulted defaulting
++ delete deletes deleted deleting deletion
++ dependency dependencies
++ descent
++ diagram diagrams
++ docstring docstrings
++ dotnet
++ double doubles doubled doubling
++ down downs
++ drift drifts drifted drifting
++ eight
++ eighteen
++ eleven
++ epsilon
++ f
++ fifth
++ fifty
++ finding findings
++ five
++ flyweight
++ forbid forbids forbade forbidden forbidding
++ forty
++ gemini
++ genre genres
++ germio
++ getcomposed
++ getneed
++ ghost ghosts
++ goblin goblins
++ guard guards guarded guarding
++ h
++ harness harnesses
++ haserror
++ hasrulewithseverity
++ heroine heroines
++ https
++ hundred
++ hundredth
++ hungry
++ hysteresis
++ inclusive
++ infinite
++ infinity
++ ins
++ inspect inspects inspected inspecting inspector
++ intent
++ knob knobs
++ latch latches
++ layout layouts
++ lifecycle
++ log logs logged logging
++ lookup lookups
++ math
++ mean means meant meaning
++ milestone milestones
++ mismatch mismatches mismatched
++ misspell misspells misspelled misspelling
++ monster monsters
++ mutable
++ nd
++ needtiermaptests
++ network networks networked networking
++ nine
++ ninth
++ node nodes
++ notimplementedexception
++ null
++ odds
++ open opens opened opening
++ orphan orphans
++ outer
++ outright
++ overwrite overwrites overwrote overwriting
++ partial
++ peaceful
++ personacache
++ pipeline pipelines
++ point points pointed pointing pointer
++ pragma
++ pre
++ precision
++ protocol protocols
++ prove proves proved proven proving
++ pseudocode
++ purely
++ python
++ q
++ rd
++ read reads readable
++ registry registries
++ reject rejects rejected rejecting rejection
++ remake remakes remade remaking
++ remove removes removed removing removal
++ repeat repeats repeated repeating repeatable
++ reuse reuses reused reusing
++ rewrite rewrites rewrote rewritten
++ right rightly
++ risk risks risked risking
++ roundabout
++ scout scouts
++ script scripts
++ seam seams
++ sentinel sentinels
++ seven
++ seventeenth
++ shape shapes shaped shaping
++ shorthand
++ sibling siblings
++ silently
++ simulate simulates simulated simulating simulation
++ singleton singletons
++ six
++ sixteen
++ sixty
++ sketch sketches
++ skip skips skipped skipping
++ sleight sleights
++ slot slots
++ spawn spawns spawned spawning
++ specification specifications
++ spill spills spilled spilling spillover
++ st
++ stale
++ starve starves starved starving
++ state states stated stating
++ suffocate suffocates suffocated suffocating
++ suite suites
++ surface surfaces surfaced surfacing
++ syntax
++ th
++ thousand thousands
++ topo
++ trap traps trapped trapping
++ twelve
++ twentieth
++ twenty
++ typo typos
++ affect affects affected affecting unaffected
++ alter alters altered altering unaltered
++ change changes changed changing unchanged
++ condition conditions conditioned conditioning unconditional
++ cover covers covered covering uncovered
++ underneath
++ do does did done doing undo undid
++ load loads loaded loading unload
++ lock locks locked locking unlocked unlocking
++ meet meets met meeting unmet
++ safe unsafe
++ see sees saw seen seeing unseen
++ vanish vanishes vanished vanishing
++ villager villagers
++ waste wastes wasted wasting wasteful
++ whoever
++ widen widens widened widening
++ wrong wrongly
++ zombie zombies
++ constreadonlylist
++ copyright copyrights
++ editmode
++ miniunity
++ thirty
++ traceframe
