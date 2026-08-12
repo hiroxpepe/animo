@@ -6,373 +6,320 @@ GO to are put into the shared word lists, and then taken out from here.
 A word here has to be a real word, said out in full, and not a short
 form — a short form is put right in the code, and not kept here.
 
-+ adjacency adjacencies
-+ affect affects affected affecting
-+ agent agents
-+ analysis analyses
-+ assembly assemblies
-+ async
-+ bonus bonuses
-+ boundary boundaries
-+ cache caches cached caching
-+ candidate candidates
-+ coefficient coefficients
-+ compose composes composed composing
-+ consume consumes consumed consuming
-+ converter converters
-+ cost costs costed costing
-+ culture cultures
-+ csv
-+ cycle cycles cycled cycling
-+ decay decays decayed decaying
-+ deduplicate deduplicates deduplicated deduplicating
-+ delta deltas
-+ difference differences
-+ duplicate duplicates duplicated duplicating
-+ emit emits emitted emitting
-+ expand expands expanded expanding
-+ exponent exponents
-+ fallback fallbacks
-+ factor factors factored factoring
-+ frustration frustrations
-+ graph graphs graphed graphing
-+ incoming
-+ influence influences influenced influencing
-+ intensity intensities
-+ invariant invariants
-+ issue issues issued issuing
-+ loop loops looped looping
-+ merge merges merged merging
-+ meta
-+ metadata
-+ miss misses missed missing
-+ multiplier multipliers
-+ neighbor neighbors
-+ non
-+ normalize normalizes normalized normalizing
-+ own owns owned owning
-+ personas
-+ previous
-+ queue queues queued queuing
-+ quietly
-+ recording recordings
-+ reference references referenced referencing
-+ reject rejects rejected rejecting
-+ remaining
-+ resolve resolves resolved resolving
-+ runner runners
-+ scenario scenarios
-+ schema schemas
-+ score scores scored scoring
-+ scratch scratches scratched scratching
-+ sequence sequences
-+ serialize serializes serialized serializing
-+ severity severities
-+ signal signals signaled signaling
-+ skip skips skipped skipping
-+ stack stacks stacked stacking
-+ stage2
-+ standard standards
-+ step2
-+ step3
-+ step4
-+ step5
-+ sweep sweeps swept sweeping
-+ threshold thresholds
-+ tier tiers
-+ tier2
-+ tier3
-+ tier4
-+ tier5
-+ topological
-+ total totals totaled totaling
-+ trace traces traced tracing
-+ trigger triggers triggered triggering
-+ unlock unlocks unlocked unlocking
-+ unregister unregisters unregistered unregistering
-+ validate validates validated validating
-+ validation validations
-+ vertex vertices
-+ warning warnings
-+ visited
-
-+ ahead
-+ commit commits committing committed
-+ english
-+ once
-+ project projects
-+ two
-+ world worlds
-+ less
-+ feel feels felt feeling
-+ aim aims
-+ obey obeys
-+ unless
-+ everyday
-+ odd
-+ maker makers
-+ too
-+ many
-+ today
-+ weigh weighs weighed weighing
-+ people
-+ exact
-+ nothing
++ _tab_count
++ adjacency
++ adjective
++ adjectives
++ adverb
++ adverbs
 + algorithm
 + alias
-+ apart
-+ appears
-+ belongs
-+ bend
++ alignment
++ alloc
++ an
++ anchored
++ apostrophe
++ assembly
++ assertion
++ audio
++ auxiliary
++ badge
++ badges
++ blank
++ bonus
++ bounds
++ browser
++ bumps
++ bytes
++ cache
++ caller
 + camelcase
 + canonical
-+ caps
-+ clearly
-+ coding
-+ combinations
-+ comment
-+ comments
++ ceiling
++ checkbox
++ chrome
++ client
++ clone
 + commonly
-+ computes
++ comparative
++ comparatives
 + consecutive
-+ constant
++ consonant
 + constructor
 + contiguous
-+ convention
-+ correct
++ contraction
++ countable
++ dashboard
++ decay
++ decay_multiplier
 + declarations
-+ declare
++ deduplicated
++ default
++ defaultfor
 + delegate
-+ depends
 + destructor
++ digits
 + directive
-+ disagree
 + divider
++ docs
++ dot
++ doubles
 + drift
-+ easier
-+ easiest
++ drifted
++ dumb
++ duplicate
++ each_tab
 + ecosystem
-+ everywhere
-+ exactly
-+ expected
++ endings
++ english
++ enums
 + explicit
-+ exposed
-+ external
-+ following
++ fillresetthresholds
++ flip
++ folder
++ forbid
 + four
 + fourth
-+ gear
-+ grammar
-+ guessing
++ freely
++ generator
++ graph
++ header
++ headings
 + helper
-+ hint
-+ immediately
++ id
++ identifier
++ identifiers
++ idle
++ ids
++ incoming
++ indent
 + indexer
 + indexers
++ indirect
++ info
 + instant
 + interfaces
 + interleave
 + inward
++ irregular
++ irregulars
++ is_duplicate
++ its
++ japanese
++ judgement
 + keyword
-+ magazine
-+ meets
++ kind_id
++ literal
++ loop
++ markdown
++ maturity
++ mend
++ mended
++ merge
++ mergeactions
++ mergeactionspersonafirst
++ mergebinding
++ mergecommitment
++ merged
++ mergeinfluences
++ mergekind
++ mergeneeds
++ mergeneedsmeta
++ mergepersonaown
++ mergerates
++ mergesuppression
++ mergethresholds
++ mermaid
++ meta
++ mid
++ min
++ min_index
 + modifier
++ multiplier
++ needmeta
 + ness
-+ observed
++ nested
++ networking
++ newer
++ newest
++ non
++ normalized
++ npm
++ obey
++ offline
 + older
 + omitted
-+ operator
-+ operators
++ ones
 + our
 + ours
 + outward
++ pad
++ parameter
 + participle
++ password
 + payload
-+ piece
++ personas
++ plainly
 + plural
-+ priority
-+ ranks
++ plurals
++ possessive
++ programming
++ pronoun
++ published
++ queue
++ re
 + reappearing
++ rebuild
++ referenced
++ regularises
++ reminders
 + reordered
-+ require
++ repo
++ reset
++ resets
++ resolvekindids
 + restyle
-+ ride
-+ riding
++ runner
++ runtime
++ sandbox
 + scattered
-+ search
-+ section
-+ sections
-+ segment
-+ sheet
++ scenario
++ schema
++ schema_version
++ script
++ shown
++ skip
 + slash
 + slashes
-+ something
-+ steady
-+ strict
-+ technical
-+ tense
-+ unchecked
-+ unlabeled
-+ usings
-+ variable
-+ we
-+ whatever
-+ within
-+ alone
-+ along
-+ already
-+ always
-+ both
-+ browser
-+ code
-+ column
-+ differ
-+ differs
-+ enums
-+ faster
-+ function
-+ goal
-+ happening
-+ happens
-+ indent
-+ inside
-+ just
-+ leans
-+ literal
-+ matter
-+ nested
-+ npm
-+ original
-+ outside
-+ rank
-+ rather
-+ row
-+ shape
-+ shapes
-+ since
-+ sit
-+ sits
-+ spell
++ soak
++ span
++ spec
 + spelled
-+ spelling
-+ spells
++ stack
 + sub
++ suffix
++ superlative
++ syllable
++ syllables
++ tab
++ tab_index
++ tabstate
++ tag
++ tags
++ tense
++ tenses
++ their
++ them
++ these
++ third
++ those
++ three
++ thresholds
++ thresholdsmatch
++ tiers
++ timer
++ topological
++ tracked
++ trimmed
++ two
++ typing
++ unchecked
++ uncountable
++ unlabeled
++ unsure
 + untouched
-+ which
-+ whole
-+ wins
-+ without
-+ alloc
-+ also
-+ anywhere
-+ area
-+ arrive
-+ aside
-+ connect
-+ connects
-+ describes
-+ enemy
-+ fast
-+ faults
-+ flip
-+ freely
-+ game
-+ games
-+ human
-+ hunger
-+ judgment
-+ large
-+ larger
-+ life
-+ link
-+ met
-+ network
-+ networking
-+ newest
-+ ones
-+ output
-+ password
-+ personal
-+ platform
-+ program
-+ programming
-+ programs
-+ react
-+ repo
-+ rises
-+ safety
-+ terms
-+ told
-+ toward
-+ tuned
-+ docs
-+ fail fails failed failing
-+ hurry hurries hurried
-+ f
-+ draft
-+ basic
-+ md
-+ phase phases
-+ wish wishes
-+ fair
-+ honest honestly
-+ plainly
-+ tiny
-+ reminder reminders
-+ argue argues argued
-+ leave leaves left leaving
-+ mid
-+ judgement judgements
-+ layer layers
-+ caller callers
-+ sandbox sandboxes
-+ device devices
-+ runtime runtimes
-+ task tasks
-+ pure
-+ session sessions
-+ dev
-+ screen screens
-+ folder folders
-+ develop develops developed developing
-+ reach reaches
-+ prove proves proved
-+ flee flees fled fleeing
-+ cross crosses crossed
-+ rise rises rose rising
-+ poke pokes
-+ dashboard dashboards
-+ designer designers
-+ tune tunes tuned tuning
-+ race races
-+ switch switches switched
-+ chrome
-+ heading headings
-+ flow flows
-+ redraw redraws
-+ cleanly
-+ closely
-+ soak soaks
-+ display displays
-+ japanese
-+ cannot
-+ pick picks picked
-+ re
-+ direct
-+ during
-+ indirect
-+ neither
-+ assertion assertions
-+ tonight
-+ spot spots
++ usings
 + v
-+ mermaid
-+ content
-+ either
-+ listen listens listened
-+ spec specs
-+ stable
-+ scene scenes
-+ fit fits
-+ track tracks tracked
-+ win wins won winning
++ vertex
++ vowel
++ watcher
++ whichever
++ whose
++ zero
++ _cached_action_triggers
++ _delta_time
++ _force_reset_pending
++ _need_tier_indices
++ _pending_steps
++ applynontiermetadata
++ applypending
++ cached
++ clamp
++ clampdeltatime
++ coefficient
++ converter
++ delta
++ delta_time
++ deltatime
++ duration
++ exponent
++ indices
++ intensity
++ itimeprovider
++ max
++ max_lower
++ metadata
++ needsconverter
++ parse
++ pending
++ provider
++ ratesconverter
++ scratch
++ serialize
++ step2
++ step3
++ step3thresholds
++ step4
++ step5
++ step5switch
++ template
++ tick
++ tier2
++ tier3
++ tier4
++ tier5
++ unlock
++ _loops
++ _recordings
++ _validation
++ async
++ builder
++ csv
++ dictionary
++ emit
++ fallback
++ frustration
++ handleasync
++ has_fallback
++ initialize
++ initialized
++ invariant
++ invariant_culture
++ loops
++ readloopasync
++ recordings
++ resume
++ runasync
++ severity
++ stage2
++ unregister
++ uses_frustration
++ validate
++ validateactions
++ validateinfluences
++ validatekindfields
++ validateneeds
++ validatepersonafields
++ validaterates
++ validatesuppression
++ validation
++ _infos
++ _warnings
++ checkplaceholders
++ has_warnings
++ infos
++ placeholders
++ warnings
++ crown crowns
++ md
++ capitalize capitalizes capitalized capitalizing
