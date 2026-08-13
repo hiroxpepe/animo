@@ -28,9 +28,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S112: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("if (_bus == null)"),
+            Assert.That(text, Does.Contain("Should `_bus` be `null`, write one Warning"),
                 "Q-S112: Awake must check _bus == null and emit a Warning.");
-            Assert.That(text, Does.Contain("has no Germio.Bus assigned"),
+            Assert.That(text, Does.Contain("§11.1's own promise"),
                 "Q-S112: Warning message must reference §12.1 contract intent.");
         }
     }

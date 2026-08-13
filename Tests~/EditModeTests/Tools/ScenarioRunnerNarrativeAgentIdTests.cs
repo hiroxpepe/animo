@@ -27,8 +27,8 @@ namespace Animo.Tests.EditMode.ToolsTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S109: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("${agent_id}_run_${_sequence++}"),
-                "Q-S109: spec EN must use the in-scope ${agent_id}_run_${_sequence++} form.");
+            Assert.That(text, Does.Contain("$\"{agent_id}_run_{_sequence++}\""),
+                "Q-S109: spec EN must use the in-scope $\"{agent_id}_run_{_sequence++}\" form.");
         }
     }
 }

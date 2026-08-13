@@ -28,7 +28,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S116: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("System.Math.Clamp(eff.Get(inf.target)"),
+            Assert.That(text, Does.Contain("System.Math.Clamp"),
                 "Q-S116: §9.6.5 cascade pseudocode must use System.Math.Clamp.");
         }
     }

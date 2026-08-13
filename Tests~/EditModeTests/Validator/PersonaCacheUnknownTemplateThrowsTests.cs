@@ -27,7 +27,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S103: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("throw new PersonaTemplateRejectedException"),
+            Assert.That(text, Does.Contain("throws `PersonaTemplateRejectedException`"),
                 "Q-S103: spec EN GetComposed must throw PersonaTemplateRejectedException " +
                 "for unknown template_id, not return an empty Persona.");
         }

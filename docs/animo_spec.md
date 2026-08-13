@@ -518,7 +518,6 @@ flowchart TB
 
 | Target                             | How they are merged                                                                        | Note                                                                                                        |
 | ---------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | Dictionary (`needs`, `rates`)      | the last one given wins, key by key                                                        | key by key                                                                                                  |
 | Array (`actions`)                  | the Persona's own order is kept; the last one given wins (Q-S19) — see note below          | the last one given wins, on value; the Persona's own order comes first; only adding is ever allowed (Q-S61) |
 | Array (`influences`)               | the Persona's own order is kept; the last one given wins (Q-S20) — see note below          | the last one given wins, on value; the Persona's own order comes first                                      |
@@ -594,52 +593,34 @@ tier 1 can be written over by a Persona giving `oxygen` at tier 2
 
 The paired key `(need, trigger_threshold)`, used when joining `thresholds` together, compares its float half with `Math.Abs(diff) < THRESHOLD_KEY_EPSILON` (= `0.01f`, per Q-S47, a fix on Q-S43's own, first `0.5f`), never with a plain `==`. Example code, only to show the idea, for the merge:
 
-```csharp
-// Composer.MergeThresholds
-const float THRESHOLD_KEY_EPSILON = 0.01f;   // (Q-S47): made sharper, from Q-S43's own 0.5f
+| Step | What it does |
+| --- | --- |
+| 1 | Two thresholds are said to match should their `need` be the same, AND `Math.Abs(a.trigger_threshold - b.trigger_threshold) < THRESHOLD_KEY_EPSILON` (set at `0.01f`). |
+| 2 | For each Persona threshold, go through the merged-so-far list, IN ORDER, and find the FIRST entry that matches (v0.1.5, Q-S85). |
+| 3 | Should a match be found, the Persona's own threshold writes over that entry. Should no match be found, the Persona's own threshold is added to the end. |
 
-bool ThresholdsMatch(Threshold a, Threshold b) {
-    return a.need == b.need
-        && Math.Abs(a.trigger_threshold - b.trigger_threshold) < THRESHOLD_KEY_EPSILON;
-}
+**(v0.1.5, Q-S85) IMPORTANT: this match does NOT carry over.** Should
+A=80.000, B=80.006, C=80.012, then A matches B (a gap of 0.006 <
+0.01) and B matches C (a gap of 0.006 < 0.01), but A does NOT match
+C (a gap of 0.012 ≥ 0.01). So that a merge gives the same result,
+no matter the order it is given in, the merge holds to the rule of
+**the first one found, wins**: the FIRST entry that matches, in the
+merged-so-far list, is the one written over (a Persona wins over a
+Kind). Any second match is left as it is, with no word given — A039
+shows a Warning, for two thresholds sitting close, at check time,
+but the merge is already done by then. This gives:
 
-// (v0.1.5, Q-S85) IMPORTANT: ThresholdsMatch does NOT carry over.
-// If A=80.000, B=80.006, C=80.012 then A≈B (diff 0.006 < 0.01)
-// and B≈C (diff 0.006 < 0.01) but A≉C (diff 0.012 ≥ 0.01).
-// So that a merge gives the same result, no matter the order it
-// is given in, the merge loop uses the rule of **first found,
-// wins**: go through the merged-so-far list IN ORDER; the FIRST
-// entry that matches is the one to override (a Persona wins over
-// a Kind). Any second match is left as it is (with no word given
-// — A039 shows sibling-pair Warnings, at check time, but the
-// merge is already done by then). This gives:
-//   - The same output, every time: the same input list gives the
-//     same output.
-//   - The Persona's own place kept first (a Persona's own match
-//     always overrides the first Kind threshold found).
-//   - The gap that does not carry over cannot spring a surprise
-//     that depends on order, such as "C folds into A, or C stays
-//     apart, depending on whether B was worked through first."
-//
-// In the merge loop, when checking "does this Persona threshold
-// override a Kind threshold already there," use ThresholdsMatch,
-// rather than a lookup keyed by
-// Dictionary<(string, float), Threshold>. The check runs once for
-// each Persona threshold, but `thresholds` stays small (10 or
-// fewer, in real use), so this costs less than the Dictionary,
-// keyed by a float, which breaks easily.
-foreach (var p_threshold in persona.binding.thresholds) {
-    int found = -1;
-    for (int i = 0; i < merged.Count; i++) {   // (Q-S85) the first one found, wins
-        if (ThresholdsMatch(merged[i], p_threshold)) {
-            found = i;
-            break;
-        }
-    }
-    if (found >= 0) merged[found] = p_threshold;   // Persona overrides
-    else            merged.Add(p_threshold);
-}
-```
++ The same output, every time: the same input list gives the same
+  output.
++ The Persona's own place kept first (a Persona's own match always
+  writes over the first Kind threshold found).
++ The gap that does not carry over cannot spring a surprise that
+  turns on order, such as "C folds into A, or C stays apart,
+  resting only on whether B was worked through first."
+
+The check, of whether one threshold matches another, runs once,
+for each Persona threshold; since `thresholds` stays small (10 or less, in real use), this costs less than a lookup keyed by a
+pair holding a float, which breaks easily.
 
 **A fix on the reason behind Q-S47.** Q-S43 first used `EPSILON = 0.5f`, on the claim that *"a writer's own gap between points is always 5 or more, by A035 / Q-S15"*. Q-S47 catches that this reason mixed up two, different things: A035's own gap of 5 sits between **`trigger_threshold` and `reset_threshold`, on the same Threshold** (the hysteresis window), NOT between two, separate Thresholds, with different triggers, on the same Need. **The spec gives no promise at all** about the gap between two, separate thresholds. A writer setting `fear=80.0 → alert` and `fear=80.4 → panic` would have had both points folded into one, by Q-S43's own, far-too-wide `0.5f` window — quietly losing two points the writer meant to keep apart.
 
@@ -1082,23 +1063,21 @@ The LLM has exactly one thing it may set: the order of `influences[]`, in the JS
 
 Reading from `eff` as the true source makes a chain, such as A→B→C, work as it should (already taken up, since v0.1.0):
 
-```csharp
-// ✅ adopted since v0.1.0 (and corrected in Q-S116 for Animo.Core's
-// no-UnityEngine policy — see comment below)
-float intensity = eff.Normalized(inf.source);
-float delta     = inf.coefficient * intensity * eff.Get(inf.source);
-// (v0.1.5, Q-S116) The Engine lives inside `Animo.Core`, whose own
-// asmdef sets `noEngineReferences: true`. UnityEngine.Mathf cannot
-// be pointed to at all, from here. Use `System.Math.Clamp` (part
-// of the BCL, since .NET Standard 2.1) for the hot path's own
-// Clamp. Before Q-S116, the spec wrote `Mathf.Clamp(...)`, and a
-// Phase 3 builder, copying it straight, would have hit a
-// "the name `Mathf` does not exist" build error, inside
-// Animo.Core. The UnityEngine.Mathf form still stands, and is
-// fine, inside `Animo` (the layer that ties into Unity), where
-// UnityEngine IS, in fact, pointed to.
-eff.Set(inf.target, System.Math.Clamp(eff.Get(inf.target) + delta, 0f, 100f));
-```
+The step, in words: work out `intensity`, from the source Need's own,
+evened-out value; work it out, times the edge's own `coefficient`, and
+by the source's own true value, to get `delta`; add `delta` to the
+target Need, then hold the result within `[0, 100]`.
+
+**(v0.1.5, Q-S116) Where the Clamp comes from.** The Engine lives
+inside `Animo.Core`, whose own asmdef sets
+`noEngineReferences: true`. `UnityEngine.Mathf` cannot be pointed
+to at all, from here. The hot path's own Clamp must use
+`System.Math.Clamp` (part of the BCL, since .NET Standard 2.1),
+never `Mathf.Clamp`; a build using `Mathf.Clamp` inside
+`Animo.Core` would fail, since the name `Mathf` does not exist,
+there. The `Mathf.Clamp` form still stands, and is fine, inside
+`Animo` (the layer that ties into Unity), where `UnityEngine` IS,
+in fact, pointed to.
 
 ### 8.7 Affect() Behavior (force_reset re-defined in v0.1.3)
 
@@ -1143,23 +1122,20 @@ flowchart TB
 
 Where more than one `Affect` is called, within the same frame (a common case — more than one game system sends a push, each `Update`), the flag holds true to **an OR of its own past state**:
 
-```csharp
-// Inside Engine.Affect:
-_force_reset_pending |= force_reset;      // ✅ an OR against the past state
-// _force_reset_pending = force_reset;    // ❌ a plain set is a bug
-```
+Inside `Engine.Affect`, the flag is set with an OR against its own
+past state (`_force_reset_pending |= force_reset`), never with a
+plain set (`_force_reset_pending = force_reset`) — a plain set
+would be a bug, since it could clear a `true` set moments before.
 
 A later call to `Affect(_, _, force_reset: false)` **must never clear** a `true` already held from before. The flag is cleared in exactly one place: right after Step 4, inside `Live(delta_time)` — **and only where the engine is not locked**. While it is Hard- or Soft-locked, the clear is held back, and the flag lives on, until the first Step 5, right after unlocking, takes it up (see §23.4.2). This makes "I called for a true, right-now need, this frame" stay true, until the engine *truly honors* it, no matter the order calls came in, or the state of the lock.
 
-A real failure this flag stops from happening:
-
-```csharp
-// Frame N
-Store.Instance.Affect(agent_id: "g1", need: "fear",   delta: +30f, force_reset: true);
-Store.Instance.Affect(agent_id: "g1", need: "hunger", delta: +5f);   // a routine tick
-// With no OR: the hunger call wipes out fear's own, right-now flag.
-// With the OR: the right-now need fires in Step 4, as it was meant to.
-```
+A real failure this flag stops from happening: should a game, in
+one frame, call `Affect("fear", +30, force_reset: true)`, then, a
+moment later in the same frame, call a routine tick such as
+`Affect("hunger", +5)` (with no `force_reset` given), the OR keeps
+the true, right-now flag alive — with no OR, that routine tick
+would quietly wipe out fear's own, right-now flag, and the true,
+right-now need would never fire, in Step 4, as it was meant to.
 
 #### 8.7.3 When to Use force_reset
 
@@ -1247,112 +1223,22 @@ The Engine's own constructor must run through four stages, **in
 this order**; changing the place of any two breaks one of the promises this
 spec makes.
 
-```csharp
-// PHASE A (Q-S27): build _need_index and set aside slots for the
-//   standard Needs. Standard Needs sit at fixed slots 0..7;
-//   non-standard Needs from _persona.needs are added from slot 8
-//   on. See §5.4.
-_need_index = new Dictionary<string, int>();
-for (int i = 0; i < Const.STANDARD_NEEDS.Count; i++) {
-    _need_index[Const.STANDARD_NEEDS[i]] = i;
-}
-int next_idx = Const.STANDARD_NEEDS.Count;
-// (v0.1.5, Q-S65) `_persona.needs` is a `Needs` class holding a
-// `Dictionary<string, float> values`, not a Dictionary itself.
-// Read through `_persona.needs?.values`.
-foreach (var kv in _persona.needs?.values ?? new Dictionary<string, float>()) {
-    if (!_need_index.ContainsKey(kv.Key)) {
-        _need_index[kv.Key] = next_idx++;
-    }
-}
-// PHASE A.2 (Q-S30 + Q-S37 cross-check): a Need named only in
-// `needs_meta` (its tier was given, but it was never put into
-// `needs`) still needs a slot, so `_need_tier_indices` has
-// somewhere to point. Rule A038 already gives a Warning for this;
-// here, the slot is still given, rather than throwing an error.
-if (_persona.needs_meta != null) {
-    foreach (var meta in _persona.needs_meta) {
-        if (!_need_index.ContainsKey(meta.Key)) {
-            _need_index[meta.Key] = next_idx++;
-        }
-    }
-}
-_effective_needs          = new float[next_idx];
-_previous_effective_needs = new float[next_idx];
-_needs                    = new float[next_idx];
-foreach (var kv in _persona.needs?.values ?? new Dictionary<string, float>()) {
-    _needs[_need_index[kv.Key]] = kv.Value;
-}
+| Phase | What it does |
+| --- | --- |
+| **A** (Q-S27) | Build `_need_index`, and set aside slots for the standard Needs — the standard Needs sit at fixed slots 0..7 (§5.4); a Need, outside the standard set, from `_persona.needs`, is added, from slot 8 on. Set aside the `_effective_needs`, `_previous_effective_needs`, and `_needs` arrays, sized to fit; fill `_needs` with the true value, for each Need the Persona gives. (Q-S65: `_persona.needs` is a `Needs` class, holding a `Dictionary<string, float> values`, never a Dictionary on its own — read through `_persona.needs?.values`.) |
+| **A.2** (Q-S30 + Q-S37) | A Need named only in `needs_meta` (its tier was given, but it was never put into `needs`) still needs a slot, so `_need_tier_indices` has somewhere to point. Rule A038 already gives a Warning for this; here, the slot is still given, rather than throwing an error. |
+| **B** (Q-S37) | Bake `need_index` into each Action and Threshold (right after the deep copy, in `Agent.Awake`). This must come BEFORE Phase C, so `_need_tier_indices` can read `_need_index[meta.Key]`, and the hot path can read `action.need_index` right away. |
+| **C** (Q-S30 + Q-S69) | Build the Persona's own `_need_tier_indices`. The field's own type is `Dictionary<int, int[]>` (§15.6 — the hot path needs `int[]`, with no waste of memory, for Step 4's own reading; a List costs more). While it is being built, a local `Dictionary<int, List<int>>`, as scratch space, is used, since the count, for each tier, grows, as a `needs_meta` Need joins; at the end, each List is turned into a plain `int[]`, and put into the real field. Step 1: start from the fixed, shared map (Q-S16). Step 2: widen with a Need outside the standard set, named in `needs_meta` (a standard Need is skipped here, since §13.3 already fixes its own tier). Step 3 (Q-S45 + Q-S56): give every Need, in the composed Persona, a call to `ApplyNonTierMetadata`, not only the ones named in `needs_meta` (v0.1.5 holds no field of this kind yet, so this pass has no true effect; a later version's own field, such as a rate of fading, would take hold here). Step 4 (§8.3.4) reads from this Persona's own `_need_tier_indices`, never from the fixed, shared `Const.NEED_INDICES_BY_TIER`, alone. |
+| **D** (Q-S8 + Q-S23 + Q-S25) | Seed `_previous_effective_needs`, and each Threshold's own `is_above`, by running one Step 2 pass, over the Needs at spawn. |
 
-// PHASE B (Q-S37): bake need_index into each Action and Threshold
-// (right after DeepCopy, in Agent.Awake). This must come BEFORE
-// PHASE C, so `_need_tier_indices` can read `_need_index[meta.Key]`,
-// and the hot path can read `action.need_index` right away.
-foreach (var action in _persona.actions ?? new List<Action>()) {
-    action.need_index = _need_index[action.need];
-}
-foreach (var threshold in _persona.binding?.thresholds ?? Array.Empty<Threshold>()) {
-    threshold.need_index = _need_index[threshold.need];
-}
-
-// PHASE C (Q-S30 + Q-S69): build the Persona's own
-// _need_tier_indices. The field's own type is
-// `Dictionary<int, int[]>` (§15.6 — the hot path needs `int[]`, with
-// no waste of memory, for Step 4's own reading; a List costs more).
-// While it is being built, a local `Dictionary<int, List<int>>`
-// scratch space is used, since the count per tier grows as
-// needs_meta Needs are added; at the end, each List is turned into
-// a plain `int[]` and put into the real field.
-var scratch_tier_indices = new Dictionary<int, List<int>>();
-// Step 1: start from the fixed, shared map (Q-S16).
-foreach (var kv in Const.NEED_INDICES_BY_TIER) {
-    scratch_tier_indices[kv.Key] = new List<int>(kv.Value);
-}
-// Step 2 (which tier a Need joins): widen with any non-standard
-// Need named in needs_meta. A standard Need is skipped here, since
-// §13.3 already fixes its tier.
-if (_persona.needs_meta != null) {
-    foreach (var meta in _persona.needs_meta) {
-        bool is_standard = Array.IndexOf(Const.STANDARD_NEEDS, meta.Key) >= 0;
-        if (is_standard) continue;   // §13.3 fixes the tier (Q-S30)
-        int tier = meta.Value.tier;
-        if (!scratch_tier_indices.ContainsKey(tier)) {
-            scratch_tier_indices[tier] = new List<int>();
-        }
-        scratch_tier_indices[tier].Add(_need_index[meta.Key]);
-    }
-}
-// (Q-S69) Turn the scratch space into the real field: one array per
-// tier, built once, at construction time only.
-_need_tier_indices = new Dictionary<int, int[]>();
-foreach (var kv in scratch_tier_indices) {
-    _need_tier_indices[kv.Key] = kv.Value.ToArray();
-}
-
-// Step 3 (fields other than tier, Q-S45 + Q-S56): give every Need
-// in the composed Persona a call to ApplyNonTierMetadata, not only
-// the ones named in needs_meta. v0.1.5 has no field of this kind
-// yet, so this pass has no real effect; a later version's own
-// fields (such as a rate of decay) would take hold here.
-foreach (var entry in _need_index) {
-    string need_name = entry.Key;
-    int    idx       = entry.Value;
-    NeedMeta meta;
-    if (_persona.needs_meta != null
-        && _persona.needs_meta.TryGetValue(need_name, out var explicit_meta)) {
-        meta = explicit_meta;
-    } else {
-        meta = NeedMeta.DefaultFor(need_name);
-    }
-    ApplyNonTierMetadata(idx, meta);
-}
-// Step 4 (§8.3.4) reads from this Persona's own _need_tier_indices,
-// never from the fixed, shared Const.NEED_INDICES_BY_TIER alone.
-
-// PHASE D (Q-S8 + Q-S23 + Q-S25): seed _previous_effective_needs
-// and each Threshold's own is_above, by running one Step-2 pass
-// over the Needs at spawn.
-```
+The order stands as: **A (the index map, and setting aside the
+arrays) → A.2 (slots for needs_meta-only Needs) → B (baking
+need_index into Action and Threshold, Q-S37) → C (building
+`_need_tier_indices`, Q-S30) → D (seeding each Threshold, from
+Q-S8/Q-S23/Q-S25)**. Any change to this order breaks at least one
+promise — running C before A.2, for one, would throw on
+`_need_index[meta.Key]` for a needs_meta-only Need; running B
+before A would have nothing at all to bake against.
 
 The order stands as: **A (the index map, and setting aside the
 arrays) → A.2 (slots for needs_meta-only Needs) → B (baking
@@ -1409,39 +1295,18 @@ flowchart LR
 
 #### 9.2.3 Implementation Plan
 
-```csharp
-internal static class Composer {
-    internal static Persona Compose(Persona persona, Root root) {
-        // 1. make a whole, new Persona instance
-        // 2. build every reference-type field again, with `new`
-        //    - Needs / Rates: a new Dictionary
-        //    - Influence / Action: a new List, plus `new` for each item
-        //    - Suppression / Commitment / Binding: a new instance
-        // 3. a value type is copied (C#'s own, default way of working)
-        // 4. work through kind_ids[] in order; merge in each Kind's own fields
-        // 5. merge in the persona's own fields, last
-        // 6. fill any Need key left out, with 0.0
-        // 7. fill a `binding` left out, with a default Binding (v0.1.5, Q-S7 + Q-S12):
-        //    should the composed binding read null → new Binding {
-        //        on_action_change = Const.DEFAULT_ON_ACTION_CHANGE,
-        //        thresholds      = new List<Threshold>()   // Q-S12
-        //    } so that Agent.Awake's own String Cache (§15.5) can never
-        //    break, on EITHER `binding` or `binding.thresholds`.
-        //    Should the composed binding read as real, but its own
-        //    `thresholds` reads null (a hand-built Persona), it too is
-        //    set right, to an empty list.
-        //    Validator A016 still gives a Warning, on the original JSON's
-        //    own leaving-out.
-        // 7b. for each `thresholds[i]` whose `reset_threshold` reads
-        //     null (left out), set it to Math.Max(0.0, trigger_threshold - 5.0)
-        //     (v0.1.5, Q-S11). A034 has already turned down a value
-        //     given, by hand, below zero.
-        // 8. drop a doubled `kind_ids`, keeping the last one seen (v0.1.5, Q7)
-        //    — Validator A033 gives a Warning; the cascade's own rule stays true (§7.3).
-        // 9. give back the whole, fully built, fully separate Persona
-    }
-}
-```
+| Step | What it does |
+| --- | --- |
+| 1 | make a whole, new Persona instance |
+| 2 | build every reference-type field again, with `new` — Needs/Rates get a new Dictionary; Influence/Action get a new List, plus `new` for each item; Suppression/Commitment/Binding get a new instance |
+| 3 | a value type is copied (C#'s own, default way of working) |
+| 4 | work through `kind_ids[]` in order; merge in each Kind's own fields |
+| 5 | merge in the persona's own fields, last |
+| 6 | fill any Need key left out, with `0.0` |
+| 7 | fill a `binding` left out, with a default Binding (Q-S7 + Q-S12): should the composed binding read null, build `new Binding { on_action_change = Const.DEFAULT_ON_ACTION_CHANGE, thresholds = new List<Threshold>() }`, so Agent.Awake's own String Cache (§15.5) can never break, on EITHER `binding` or `binding.thresholds`. Should the composed binding read as real, but its own `thresholds` reads null (a hand-built Persona), it too is set right, to an empty list. Validator A016 still gives a Warning, on the original JSON's own leaving-out. |
+| 7b | for each threshold whose `reset_threshold` reads null (left out), set it to `Math.Max(0.0, trigger_threshold - 5.0)` (Q-S11). A034 has already turned down a value given, by hand, below zero. |
+| 8 | drop a doubled `kind_ids`, keeping the last one seen (Q7) — Validator A033 gives a Warning; the cascade's own rule stays true (§7.3) |
+| 9 | give back the whole, fully built, fully separate Persona |
 
 ### 9.3 How It Is Used, Step by Step
 
@@ -1522,36 +1387,15 @@ The fix: `Unregister(agent)` must check
 A different instance ⇒ a Warning, and does nothing at all; the
 first one keeps its own registration.
 
-```csharp
-// In Animo.Store.Unregister
-// (v0.1.5, Q-S81) The argument's own type is `IAnimoAgent`, NOT the
-// real, named `Animo.Agent` class. Before Q-S81, the spec's own
-// sample wrote the named class, but `Scripts/Store.cs:42` states
-// `public void Unregister(IAnimoAgent agent)` — a Phase 3 build,
-// following the named-class spec text, would have given a
-// mismatched shape (a NEW form that would not meet the interface's
-// own promise, leaving the IAnimoAgent.Unregister wire loose). Q-S81
-// brings both the spec's own words and the code onto the one, same
-// interface form.
-public void Unregister(IAnimoAgent agent) {
-    if (_agents.TryGetValue(agent.agent_id, out var existing)) {
-        if (ReferenceEquals(existing, agent)) {
-            _agents.Remove(agent.agent_id);   // ✅ the same instance: remove
-        } else {
-            AnimoLog.Warning(
-                $"Unregister called on agent_id '{agent.agent_id}' " +
-                $"by a different instance than the one registered. " +
-                $"Probably a second copy, from Q-S6's own keep-first defense. " +
-                $"Original registration kept as it was (does nothing at all).");
-            // ✅ Q-S22: do NOT remove — it would wipe out the first one's own record
-        }
-    } else {
-        AnimoLog.Warning(
-            $"Unregister called on agent_id '{agent.agent_id}' " +
-            $"which is not registered. (Does nothing at all.)");
-    }
-}
-```
+`Unregister(IAnimoAgent agent)` (v0.1.5, Q-S81 — the argument's own
+type is `IAnimoAgent`, matching `Register`, never the real, named
+`Agent` class) checks `_agents.TryGetValue(agent.agent_id, ...)`.
+Should a match be found, AND `ReferenceEquals(existing, agent)` be
+true, remove it. Should a match be found, but the instance not be
+the same (a second copy, turned down at Register, per Q-S6, but
+still living, in the scene), write a Warning, and do nothing at all
+— removing it would wipe out the first one's own record. Should no
+match be found at all, write a different Warning, and do nothing.
 
 This stands as the true match to Q-S6: Register keeps the list
 safe *from* a second one pushing its way in; Unregister keeps the
@@ -1560,21 +1404,11 @@ first," by checking the real instance the list truly holds.
 
 ### 10.3 Public API
 
-```csharp
-// Register
-Animo.Store.Instance.Register(agent: this);
-
-// Unregister
-Animo.Store.Instance.Unregister(agent: this);
-
-// Affect relay (called from Germio Executor)
-Animo.Store.Instance.Affect(
-    agent_id:    "goblin_01",
-    need:        "fear",
-    delta:       +30f,
-    force_reset: false
-);
-```
+| Call | What it does |
+| --- | --- |
+| `Animo.Store.Instance.Register(agent: this)` | signs up an Agent |
+| `Animo.Store.Instance.Unregister(agent: this)` | takes an Agent off the list |
+| `Animo.Store.Instance.Affect(agent_id: "goblin_01", need: "fear", delta: +30f, force_reset: false)` | passes an Affect on, to the named Agent (called, most often, from Germio's own Executor) |
 
 ### 10.3.1 Affect Edge-Case Contract (v0.1.5)
 
@@ -1644,224 +1478,39 @@ name**, never a name for one, single, running thing. `Agent.Awake`
 carries the job of giving out a name, unique to this one running
 thing, *before* it registers. The way this is done:
 
-```csharp
-// (v0.1.5, Q-S68) Agent class declaration MUST implement IAnimoAgent
-// so Store.Register(IAnimoAgent agent) accepts `this`. Pre-Q-S68 the
-// spec narrative said "Animo.Agent : MonoBehaviour" without mentioning
-// the IAnimoAgent interface; the Awake call `Store.Instance.Register(
-// agent: this)` would have been a proven build error (cannot
-// convert Agent to IAnimoAgent). The interface contract (defined in
-// `Scripts/Store.cs`) requires only `string agent_id { get; }` —
-// trivial for Agent to satisfy via the composed Persona.
-public sealed class Agent : MonoBehaviour, IAnimoAgent {
-    [SerializeField] string _persona_template_id = "";
-    [SerializeField] Germio.Bus? _bus = null;
-    // (v0.1.5, Q-S75) Animator field for the host-side View binding.
-    // Pre-Q-S75 §10.4.1 Awake step (6) called `_animator?.Play(stateName:
-    // trigger)` to push the Q-S34/Q-S44 initial behavior to the host's
-    // Animator without going through Bus, but the field had no
-    // declaration in this class — confirmed missing-field compile error.
-    // SerializeField + nullable Animator? lets developers wire the
-    // Animator in the Inspector OR leave it null when the host uses
-    // a different View backend (e.g. ECS-driven mesh, custom shader);
-    // the `_animator?.Play(...)` call, only made if not null, makes
-    // the missing-Animator path a silent does nothing at all rather than a NullRef.
-    [SerializeField] Animator? _animator = null;
-    Persona _composed_persona = null!;
-    Engine  _engine           = null!;
+`Agent` (v0.1.5, Q-S68) implements `IAnimoAgent`, so
+`Store.Register(IAnimoAgent agent)` may take `this`. It holds
+`_persona_template_id`, `_bus` (a `Germio.Bus?`), `_animator` (an
+`Animator?`, added by Q-S75, since a host with a different View, or
+none at all, must still build), `_composed_persona`, and `_engine`.
 
-    /// <summary>(Q-S68 + Q-S96) IAnimoAgent.agent_id — surfaces the runtime-
-    /// unique value (post-Q-S28 override) for Store keying. Reads
-    /// from the composed Persona; true and real after Awake step (3).
-    /// (Q-S96) Null-safe: returns "&lt;uninitialized&gt;" placeholder if
-    /// `_composed_persona` is still null (i.e. Awake's Q-S38 fail-loud
-    /// catch ran before step (3) assigned `_composed_persona`).
-    /// Without the null-coalesce, OnDestroy on an Awake-failed Agent
-    /// would NRE inside `Store.Unregister(agent.agent_id)` — turning
-    /// the fail-loud-but-keep-scene-alive promise of Q-S38 into a
-    /// scene-unload-time crash. The sentinel string never collides
-    /// with a real id (snake_case rule forbids angle brackets), so
-    /// Store.Unregister's TryGetValue always falls through to the
-    /// "agent_id not registered" does nothing at all path.</summary>
-    public string agent_id => _composed_persona?.agent_id ?? "<uninitialized>";
+**`agent_id`** (Q-S68 + Q-S96): reads `_composed_persona?.agent_id`,
+falling back to a `"<uninitialized>"` mark, should `Awake` have
+failed before setting it — this stops `OnDestroy` from crashing,
+on an Agent whose own `Awake` never finished.
 
-    // Animo.Agent.Awake (Q-S28 + Q-S34 + Q-S38 + Q-S68 + Q-S111 + Q-S112)
-    void Awake() {
-        // (v0.1.5, Q-S112) If no Bus is wired, log the §11.1 contract's
-        // "log a Warning once, then go silent" before subscribing.
-        // Pre-Q-S112 the §10.4.1 sample wrote
-        //   `_engine.OnSignal += signal_id => _bus?.Publish(signal_id);`
-        // and leaned on the `?.` to skip a publish, with no word given — but
-        // §11.1 promises a Warning, made to help a writer, so the builder
-        // notices a missing Bus reference. The `?.` alone gave NO
-        // a check for the cause; a Bus given in the ready-made shape, but stripped to null
-        // by a build-pipeline misconfiguration looked exactly like
-        // an intentionally-Bus-less Animo, except every Threshold
-        // fire vanished into the void. Q-S112 honors the §11.1
-        // contract by emitting one Warning here, before the rest
-        // of Awake runs.
-        if (_bus == null) {
-            AnimoLog.Warning(
-                $"Agent '{name}' has no Germio.Bus assigned (§11.1: log Warning once, " +
-                "then go silent). Engine signals will not be published; if this is " +
-                "meant this way (say, a host with no Germio at all), ignore this message.");
-        }
-        Persona template;
-        try {
-            // (1) Q-S29: pull the composed Persona from the per-template cache.
-            //     (v0.1.5, Q-S38 + Q-S111) GetComposed now throws TWO distinct
-            //     exception types so Awake can produce honest diagnostics:
-            //       - PersonaCacheNotInitializedException — Bootstrapper
-            //         missing, or run in the wrong order (a build
-            //         bug, at the very start — pass it on, fail with a loud word, the scene WILL die).
-            //       - PersonaTemplateRejectedException — JSON authoring
-            //         error: unknown template_id (Q-S103) or stage-2
-            //         validation failure (Q-S38 fail-loud) — catch
-            //         and disable just this Agent, scene continues.
-            //     Pre-Q-S111 both threw bare InvalidOperationException
-            //     and Awake caught the union, so the log claimed
-            //     "stage-2 fail-loud" even when Bootstrapper had never
-            //     run. Diagnosis from logs alone was impossible.
-            template = Animo.PersonaCache.GetComposed(template_id: _persona_template_id);
-        } catch (PersonaTemplateRejectedException ex) {
-            AnimoLog.Error(
-                $"Agent '{name}' template '{_persona_template_id}' rejected " +
-                $"by PersonaCache (Q-S38 stage-2 fail-loud OR Q-S103 unknown " +
-                $"template_id): {ex.Message}. Disabling this Agent; the rest " +
-                "of the scene continues.");
-            enabled = false;
-            return;
-        }
+**`Awake`**, in order:
 
-        // (Q-S144) The one, true rule for AnimoLog.Error: PersonaCache
-        // **only ever throws**, with no call to AnimoLog at all — the
-        // exception's own message carries the full word of what went
-        // wrong. Agent.Awake's own catch block is the one, true place
-        // that calls AnimoLog.Error, and it calls it only once, with
-        // the Agent's own name and template id put in front. Should
-        // both sides call AnimoLog, the very same failure would be
-        // written down twice, over the same root cause.
-        // PersonaCacheNotInitializedException, on purpose, is NOT caught —
-        // it passes on, out of Awake, Unity writes it down as a hard
-        // scene-load error, and the builder fixes the Bootstrapper. That
-        // is the right thing to do, for a real break in the build, at
-        // the very start; hiding it here would let the scene stumble on,
-        // with every Agent turned off, and no clue why.
-        // (2) Q-S64: a deep copy, so this Agent has its own state, free to change
-        //     Persona (PersonaCache gives back one, shared, composed
-        //     template; changing it would ruin every sibling).
-        _composed_persona = template.DeepCopy();
-        // (3) Q-S28: put in place a value for agent_id, unique to this
-        //     one, running thing. The way this is done:
-        //     "{json agent_id}_{GameObject.GetInstanceID()}"
-        //     so the template it came from can still be seen, while the
-        //     running-time id is proven unique, within one session.
-        //
-    //     (Q-S59 warning — for many players, over a network)
-    //     `GetInstanceID()` only stays the same within one, single
-    //     Unity session, and is NOT the same across hosts, a reload
-    //     of the scene, or a save and load. For a game played over
-    //     a network, where Bus messages must match, between clients
-    //     (or between a client and a server), the host's own layer
-    //     MUST use a source of id that stays fixed —
-    //     say, NetworkObject.NetworkObjectId, a UUID the server gives,
-    //     or an ECS's own thing-id, mapped to stay fixed. Do NOT use
-    //     `GetInstanceID()` for any path whose message crosses
-    //     over a network at all; the spec leaves this choice to the
-    //     host's own layer, on purpose, so that a host with many
-    //     players can pick a way that is safe over a network, with
-    //     no split needed at all, in the Engine itself.
-    _composed_persona.agent_id = $"{_composed_persona.agent_id}_{GetInstanceID()}";
-    // (4) Q-S22 / Q-S6: now Register — guaranteed unique
-    Animo.Store.Instance.Register(agent: this);
-    // (5) Build Engine; its template-string cache will expand
-    //     `{agent_id}` using the runtime-unique value.
-    _engine = new Engine(persona: _composed_persona);
-    _engine.OnSignal += signal_id => _bus?.Publish(signal_id: signal_id);
-    // (6) Q-S34 + Q-S44: drive the first Live(delta_time) NOW so the Engine has a
-    //     decided behavior, then push the EXPANDED action-change trigger
-    //     (e.g. `animo_goblin_47291_flee`) directly to the host. Q-S31
-    //     guarantees OnSignal is silent for this first transition;
-    //     without step (6), the host has no way to know what initial
-    //     Action to play and the character T-poses until the second
-    //     behavior change.
-    //
-    //     (Q-S44 fix) Pre-Q-S44 step (6) called `_animator?.Play(stateName:
-    //     _engine.behavior)` with the raw Action id — but Animo's normal
-    //     Bus path uses `binding.on_action_change` template expansion
-    //     (e.g. `animo_{agent_id}_{behavior}` → `animo_goblin_47291_flee`).
-    //     Pushing the raw id only on frame 1 creates an Animator-state-
-    //     name asymmetry: the host has to handle BOTH `Flee` (raw, frame
-    //     1) and `animo_goblin_47291_flee` (expanded, all later frames).
-    //     Q-S44 routed the first push through the same expander so the
-    //     host sees a consistent payload format throughout. Bus is still
-    //     not involved (Q-S31 silent contract preserved).
-    //
-    //     (v0.1.5, Q-S102) Q-S44 was WRONG for the Animator branch.
-    //     Unity's Animator Controller uses STATIC state names defined
-    //     at edit time (e.g. "Flee", "Idle") — NOT runtime-expanded
-    //     strings containing `GetInstanceID()` (e.g. "animo_goblin_
-    //     47291_flee"). If we pass the expanded trigger to Animator.
-    //     Play(), Unity logs "no state named 'animo_goblin_47291_flee'"
-    //     EVERY frame and every NPC freezes in T-pose — Q-S44's
-    //     "consistency" actively destroyed the Animator integration.
-    //     Q-S102 splits the messages: **Animator gets the raw
-    //     `_engine.behavior`** (matches Animator Controller state
-    //     names — what authors actually create in the Unity editor),
-    //     and `_engine.GetExpandedActionTrigger(...)` is reserved for
-    //     the Bus path (where the dynamic id IS the routing key, and
-    //     subscribers want the expanded payload). The two channels
-    //     have different consumers and different naming requirements;
-    //     the asymmetry Q-S44 chased was a feature, not a bug.
-    _engine.Live(delta_time: 0.0f);                                      // produce initial behavior decision
-    _animator?.Play(stateName: _engine.behavior);                // (Q-S102) raw id — matches Animator Controller
-    // (Step 6's `Live(delta_time: 0.0f)` is safe: Step 1 (decay) is
-    //  multiplicative-by-delta_time so delta_time=0 does nothing at all for needs; Steps
-    //  2-5 still run and produce the initial scoring decision.
-    //  Threshold seeding (Q-S8/Q-S25) makes sure no false fire happens.)
-    }   // end Awake() (Q-S68: class block continues below)
+| Step | What it does |
+| --- | --- |
+| 0 (Q-S112) | Should `_bus` be `null`, write one Warning, before signing up for anything — following §11.1's own promise. |
+| 1 (Q-S29 + Q-S38 + Q-S111) | Call `PersonaCache.GetComposed`. Should this throw `PersonaTemplateRejectedException` (a mistake in one template's own JSON, or a Stage 2 fail), write an Error, turn `enabled = false`, and return — the rest of the scene lives on. Should it throw `PersonaCacheNotInitializedException` (a real, build-level break), let it pass on, with no catch at all — the scene SHOULD fail to load, so the true cause is seen. (Q-S144) The one, true rule for `AnimoLog.Error`: `PersonaCache` **only ever throws**, with no call to `AnimoLog` at all; `Agent.Awake`'s own catch block is the one, true place that calls `AnimoLog.Error`, and it calls it only once — should both sides write it down, the very same failure would be written down twice, over the same root cause. |
+| 2 (Q-S64) | Make a deep copy: `_composed_persona = template.DeepCopy()` — so this Agent holds its own state, free to change (the cached template stays shared, and comes to no harm). |
+| 3 (Q-S28 + Q-S59) | Put in place a value for `agent_id`, unique to this one, running thing: `$"{agent_id}_{GetInstanceID()}"`. This stays fixed only within one, single Unity session — a game played over a network must use its own, fixed source of id (say, a `NetworkObjectId`), never `GetInstanceID()`, for any message that crosses hosts. |
+| 4 (Q-S6 + Q-S22) | Register with `Animo.Store.Instance` — now proven to be its own, one-of-a-kind id. |
+| 5 | Build the Engine, from `_composed_persona`; join `Engine.OnSignal` to `_bus?.Publish`. |
+| 6 (Q-S34 + Q-S44 + Q-S102) | Run `_engine.Live(delta_time: 0.0f)`, to work out the very first behavior, then push it, straight, to `_animator?.Play(stateName: _engine.behavior)` — the PLAIN act id, matching the state names an Animator Controller truly holds (never the spelled-out Bus form, which Unity's own Animator does not know at all). With no this step, every NPC would stand frozen, in a T-pose, until the second change in behavior. |
 
-    // (v0.1.5, Q-S80) Per-frame tick. Pre-Q-S80 the §10.4.1 sample
-    // code declared only Awake and OnDestroy — every NPC would seed
-    // its initial behavior in Awake, then freeze forever because no
-    // Live(delta_time) ran after that. Update() drives the engine each frame
-    // with Unity's frame delta. Threshold fires (Step 3) → OnSignal
-    // → Bus.Publish; behavior changes (Step 5) → OnBehaviorChanged
-    // → _cached_action_triggers lookup → Bus.Publish + (optionally)
-    // _animator.Play. The whole pipeline runs from this one call.
-    //
-    // (v0.1.5, Q-S115) Phase 3 may introduce an `ITimeProvider`
-    // abstraction as a constructor-injected (or SerializeField-
-    // injected) dependency to break this Update from a hard
-    // `UnityEngine.Time.deltaTime` reference. The default
-    // implementation reads `Time.deltaTime`; tests substitute one
-    // backed by `Animo.Tests.MiniUnity.MockTime`. Pre-Q-S115 EditMode
-    // tests running Agents through `MockScene.Tick(delta_time)` advanced
-    // `MockTime.deltaTime` correctly but the Agent's `Update()`
-    // ignored it and read `UnityEngine.Time.deltaTime` (which is
-    // 0, or with no value, outside Play mode), so the copied time stood
-    // still — every Tick called `_engine.Live(0.0f)`. The DI point
-    // written down here is the Phase-3 promise; the v0.1.5 stand-in
-    // remains `Time.deltaTime` direct so the headless build is
-    // unbroken.
-    void Update() {
-        _engine.Live(delta_time: Time.deltaTime);   // (Q-S115) Phase 3: replace with ITimeProvider.delta_time
-    }
+**`Update`** (Q-S80 + Q-S115): calls `_engine.Live(delta_time:
+Time.deltaTime)`, each frame — with no this call, an NPC would
+seed its own, first behavior, in `Awake`, then freeze forever.
+Phase 3 may bring in an `ITimeProvider`, to free this from a hard
+tie to `UnityEngine.Time`, for tests.
 
-    void OnDestroy() {
-        // (v0.1.5, Q-S96) Early-out if Awake's Q-S38 fail-loud catch
-        // disabled this Agent before step (4) registered it. Without
-        // this guard, Store.Unregister(this) would dereference
-        // agent_id, which (per the Q-S96 null-safe getter) returns
-        // "<uninitialized>" — Store would log a "not registered"
-        // Warning at scene-unload time for every Awake-failed Agent,
-        // which is correct but noisy. The early-out keeps the
-        // unload path silent for the expected case.
-        if (_composed_persona == null) return;
-        Animo.Store.Instance.Unregister(agent: this);   // Q-S22 instance-equality guard
-    }
-}   // end class Agent
-```
+**`OnDestroy`** (Q-S96 + Q-S22): should `_composed_persona` be
+`null` (Awake never finished), return, with no word at all — this
+keeps the unload path quiet, for the case this is meant to cover.
+Otherwise, calls `Animo.Store.Instance.Unregister(agent: this)`.
 
 **Why override at Agent layer, not Engine ctor**:
 
@@ -1919,128 +1568,21 @@ Before Q-S29, §5.3 (Task 4-1-c) said `Agent.Awake` runs: read the JSON → Vali
 
 **The fix**: bring in `Animo.PersonaCache` — a Flyweight cache, keyed by the template's own id (the JSON's own `agent_id`). The check, and the putting-together, run **exactly once**, for each template, for each session; each Agent then takes the composed Persona from the cache, and makes its own, deep copy of it, for its own state, free to change.
 
-```csharp
-namespace Animo {
-    /// <summary>
-    /// v0.1.5 (Q-S29) A Flyweight cache: the check, and the putting-
-    /// together, run ONCE, for each template id, no matter how many
-    /// Agents spawn from it.
-    /// Safe across threads, for how Unity is used, in the common case
-    /// (Awake only ever runs on the main thread).
-    /// </summary>
-    public static class PersonaCache {
-        // Keyed by the JSON's own `agent_id` (the template's own name, per Q-S28).
-        static readonly Dictionary<string, Persona> _cache = new();
-        static Root? _root;
-        static ValidationResult? _validation;
+`PersonaCache` is a Flyweight cache, keyed by a template's own id.
+The check, and the putting-together, run **exactly once**, for each
+template, no matter how many Agents spawn from it. Safe across
+threads, for how Unity is used, in the common case (`Awake` only
+ever runs on the main thread).
 
-        /// <summary>Set the Root once, at the app's own start. Runs Validator on Root.</summary>
-        public static void Initialize(Root root) {
-            _root = root;
-            _validation = Validator.Validate(root: root);
-            if (_validation.has_errors) {
-                AnimoLog.Error(
-                    $"animo.json failed validation with " +
-                    $"{_validation.errors.Count} errors. " +
-                    $"Engines built from this Root will be unsafe.");
-                // Caller decides whether to abort scene load.
-            }
-            _cache.Clear();
-        }
+| Member | What it does |
+| --- | --- |
+| `Initialize(Root root)` | called once, when the game first starts. Runs `Validator.Validate(root)`, and keeps the finding; should this hold an error, `AnimoLog.Error` writes it down, but the caller still decides whether to stop the scene's own load. Clears the cache. |
+| `GetComposed(string template_id)` | a reader that composes only once. Should `Initialize` never have run, throws `PersonaCacheNotInitializedException` (Q-S111 — a build-level break, kept apart from a mistake in one template). Should no Persona hold this `template_id`, throws `PersonaTemplateRejectedException` (Q-S103 — never a broken, empty stand-in, which would crash later, further along). Otherwise, runs `Composer.Compose`, then `Validator.ValidateStage2` (folding its own finding into the whole); should Stage 2 hold an error, writes it down, and throws `InvalidOperationException` (Q-S38 — fail loud, but the caller may catch this, and turn off only the one Agent, keeping the scene alive). Once past all this, keeps the composed Persona in the cache, and gives it back. |
+| `ClearForTesting()` | clears the cache, the Root, and the kept finding — for tests. |
 
-        /// <summary>
-        /// A reader that composes only once. The first call, for each template, runs
-        /// Composer.Compose; subsequent calls return the cached result.
-        /// Caller MUST DeepCopy the returned Persona before mutation.
-        /// </summary>
-        public static Persona GetComposed(string template_id) {
-            if (_root == null) {
-                // (v0.1.5, Q-S111) Distinct exception type so Agent.
-                // Awake's catch can route Bootstrapper-missing
-                // apart from a mistake made, when one template was written.
-                throw new PersonaCacheNotInitializedException(
-                    "PersonaCache.Initialize(root) must be called once at startup. " +
-                    "Add an AnimoBootstrapper MonoBehaviour with " +
-                    "[DefaultExecutionOrder(-1000)] to the initial scene.");
-            }
-            if (!_cache.TryGetValue(template_id, out var composed)) {
-                var raw = _root.personas.FirstOrDefault(p => p.agent_id == template_id);
-                if (raw == null) {
-                    // (v0.1.5, Q-S103) Pre-Q-S103 this returned
-                    // `new Persona { agent_id = template_id }` — but
-                    // that empty fallback has `actions = null`,
-                    // `influences = null`, `binding = null`. The
-                    // caller (Agent.Awake) feeds it to
-                    // `new Engine(persona: ...)`, whose ctor's
-                    // `foreach (var action in _composed_persona.actions)`
-                    // immediately NREs. Q-S38's "fail-loud but keep
-                    // the scene alive" promise is broken because
-                    // GetComposed never even threw — it returned
-                    // garbage that crashed downstream.
-                    //
-                    // Q-S103 throws InvalidOperationException with a
-                    // distinctive message so Agent.Awake's Q-S111
-                    // refined catch (which now distinguishes
-                    // PersonaCacheNotInitializedException vs
-                    // PersonaTemplateRejectedException — see Q-S111)
-                    // can route this to the same fail-loud-disable
-                    // path as a stage-2 validation failure. Same
-                    // surface to Agent.Awake (skip this Agent, keep
-                    // the scene), but no NRE downstream and no
-                    // silent corruption.
-                    throw new PersonaTemplateRejectedException(
-                        $"PersonaCache: no Persona with agent_id '{template_id}' " +
-                        "(authoring error in animo.json — fix the template id or " +
-                        "remove the Agent's _persona_template_id reference).");
-                }
-                composed = Composer.Compose(persona: raw, root: _root);
-                // (Q-S29 + Q-S15/Q-S17/Q-S18/Q-S20/Q-S39/Q-S41/Q-S47/Q-S49/Q-S57
-                // stage-2 integration): Stage-2 rules — A019 (typo vs
-                // composed needs_meta, Q-S39), A025 (composed cycle,
-                // Q-S17), A035 (post-fill trigger>reset, Q-S15), A036
-                // (composed actions[] non-empty, Q-S18), A037 (more-than-one-
-                // edge same target — Warning, Q-S20), A038's "needs_meta
-                // orphan" (Q-S41 + Q-S49 + Q-S57 — sees actions/
-                // influences/thresholds/rates), A039 (sibling threshold
-                // closeness Warning, Q-S47) — run AFTER Composer. We
-                // run them here, per template, and merge findings into
-                // _validation so all stage-2 diagnostics surface from
-                // Initialize-time.
-                var stage2 = Validator.ValidateStage2(composed: composed);
-                _validation!.Merge(stage2);
-                if (stage2.has_errors) {
-                    // (v0.1.5, Q-S38): fail-loud per Master's policy.
-                    // Pre-Q-S38 we logged the error but cached the
-                    // broken Persona and returned it — Agent.Awake
-                    // would build an Engine and crash on first Live
-                    // via the Q-S9 tie-break (the for-loop pinned by
-                    // Q-S52; pre-Q-S52 spec narrative used the LINQ
-                    // short form `actions.First(...)`) on an empty list
-                    // throws InvalidOperationException in the middle
-                    // of Update. Throwing here moves the failure to
-                    // Awake, where the host can catch + log + skip
-                    // the Agent without taking down the scene.
-                    var msg = $"PersonaCache: template '{template_id}' failed " +
-                              $"stage-2 validation with {stage2.errors.Count} " +
-                              $"errors (e.g. {stage2.errors[0].rule_id}). " +
-                              $"Refusing to cache; Engine cannot be safely built.";
-                    AnimoLog.Error(msg);
-                    throw new InvalidOperationException(msg);
-                }
-                _cache[template_id] = composed;
-            }
-            return composed;
-        }
-
-        /// <summary>For tests: clear every cached template.</summary>
-        public static void ClearForTesting() {
-            _cache.Clear();
-            _root = null;
-            _validation = null;
-        }
-    }
-}
-```
+The caller MUST make its own, deep copy of the Persona given back,
+before it changes anything — `GetComposed` always gives back the
+one, same, shared instance, for a given template.
 
 #### 10.6.2 The Validator Runs ONCE; A025 / A035 / A036 / A040 Too (Q-S29 + Q-S113)
 
@@ -2063,79 +1605,28 @@ The DeepCopy, for each Agent, cannot be done away with (each Agent needs its own
 
 `PersonaCache.Initialize(root)` MUST be called once, for each scene — *before* any Agent's own Awake runs. The way this is done, in Unity, is one, single `MonoBehaviour`, with `[DefaultExecutionOrder(-1000)]` (or earlier still), that reads the JSON, and starts the cache:
 
-```csharp
-[DefaultExecutionOrder(-1000)]   // makes sure Awake runs before any Agent's own
-public sealed class AnimoBootstrapper : MonoBehaviour {
-    [SerializeField] TextAsset _animo_json = null!;
-    void Awake() {
-        // (v0.1.5, Q-S76) Animo.Json static helper wraps Newtonsoft.Json
-        // (or System.Text.Json depending on Phase 3 build profile) and
-        // returns a fully-populated `Animo.Model.Root`. Pre-Q-S76 the
-        // sample code wrote `Animo.Json.Parse(...)` but neither the
-        // class nor a method declaration existed anywhere in `Scripts/`
-        // — confirmed missing-type compile error. The class lives in
-        // `Scripts/Json.cs` (Phase 3) with signature:
-        //   public static class Json {
-        //       public static Root Parse(string text) { ... }
-        //   }
-        // Hosts that prefer a different JSON library can substitute by
-        // calling their library's deserializer directly here — the
-        // wrapper exists for ergonomic parity with the rest of Animo.
-        var root = Animo.Json.Parse(_animo_json.text);
-        Animo.PersonaCache.Initialize(root: root);
-        // After this, every Agent.Awake can safely call
-        // PersonaCache.GetComposed(template_id).
-    }
-    void OnDestroy() {
-        // (v0.1.5, Q-S58 + Q-S78) Cleanup BOTH PersonaCache AND Store on
-        // scene unload. Pre-Q-S58 only PersonaCache was cleared,
-        // leaving the singleton `Animo.Store.Instance._agents`
-        // dictionary populated with references to (potentially)
-        // already-destroyed Agents. Under Unity Editor "Enter Play
-        // Mode Options (Fast)" — which preserves static state
-        // between Play sessions — these stale entries accumulated
-        // and corrupted Bus routing on subsequent runs.
-        //
-        // (v0.1.5, Q-S78) `Store.ResetForTesting()` is declared as
-        // `public static void` in `Scripts/Store.cs`. C# language
-        // spec (CS0176) forbids invoking static members through
-        // instance references — `Store.Instance.ResetForTesting()`
-        // would fail to compile. Q-S78 corrects to the type-name
-        // form `Animo.Store.ResetForTesting()`. (Q-S58's intent —
-        // pair Store cleanup with PersonaCache cleanup — is
-        // unchanged; only the call syntax is fixed.) Both
-        // ResetForTesting() calls are idempotent + cheap.
-        // (v0.1.5, Q-S118) Editor-only guard. Pre-Q-S118 the Q-S58
-        // cleanup ran on EVERY scene unload — including production
-        // scene transitions in a shipped game. That destroyed
-        // long-lived Agents: a player's companion NPC marked
-        // `DontDestroyOnLoad` survives the scene change, but the
-        // bootstrapper attached to the OUTGOING scene runs OnDestroy,
-        // and `Store.ResetForTesting()` wipes the global singleton's
-        // `_agents` dictionary including the surviving companion's
-        // entry. The companion is alive but unrouted — Bus events
-        // never reach it (the registry no longer holds the
-        // (agent_id, IAnimoAgent) pair). Q-S58's intent was *Editor
-        // Fast Play Mode static-state cleanup* — only a build-time
-        // concern. Production scenes need the Store to outlive any
-        // single scene's lifetime so that DontDestroyOnLoad Agents
-        // continue to receive Bus traffic.
-        //
-        // The guard here checks `Application.isEditor` AND
-        // `!Application.isPlaying`: Editor Fast Play "Stop" produces
-        // (true, false) in OnDestroy — clean. Production runtime
-        // scene transitions produce (false, true) — skip. A Unity
-        // Editor session that's actively playing (between Play and
-        // Stop) produces (true, true) — ALSO skip, because that's
-        // the same DontDestroyOnLoad scenario the production case
-        // describes. Only the Editor-after-Stop path runs the cleanup.
-        if (!Application.isEditor || Application.isPlaying) return;
+`AnimoBootstrapper` is a `MonoBehaviour`, marked
+`[DefaultExecutionOrder(-1000)]` (making sure its own `Awake` runs
+before any Agent's own). It holds one field, `_animo_json`, a
+`TextAsset`.
 
-        Animo.PersonaCache.ClearForTesting();   // scene unload cleanup (Q-S29)
-        Animo.Store.ResetForTesting();          // (Q-S58 + Q-S78 + Q-S118) — type-name form, editor-only
-    }
-}
-```
+**`Awake`**: reads the JSON, through `Animo.Json.Parse` (a
+stand-in for a JSON library — Newtonsoft, or `System.Text.Json`,
+resting on the Phase 3 build), giving back a `Root`; then calls
+`Animo.PersonaCache.Initialize(root: root)`. After this, every
+Agent's own `Awake` may call, with no risk,
+`PersonaCache.GetComposed(template_id)`.
+
+**`OnDestroy`** (v0.1.5, Q-S58 + Q-S78 + Q-S118): clears BOTH
+`PersonaCache` AND `Store`, on a scene's own unload — but ONLY
+while the Editor sits, stopped, after a Play session (checked by
+`if (!Application.isEditor || Application.isPlaying) return;`).
+
+| Point | Why it matters |
+| --- | --- |
+| Q-S58 | Clearing only `PersonaCache`, and not `Store`, left `Store.Instance._agents` full of stale entries, under the Editor's own "Fast Play Mode" (which keeps static state, between runs) — corrupting how the Bus routes signals, on the run after. |
+| Q-S78 | `Store.ResetForTesting()` is a static method; calling it through an instance (`Store.Instance.ResetForTesting()`) would fail to build, under C#'s own rule (CS0176). The right form is `Animo.Store.ResetForTesting()`, by the type's own name. |
+| Q-S118 | With no guard, this clean-up ran on EVERY scene unload — even in a shipped game. An NPC held by `DontDestroyOnLoad` would live on, past the change, but its own entry in `Store` would be wiped — the NPC stays alive, but cut off, with no signal ever reaching it again. The guard limits the clean-up to the Editor, once stopped, after a Play session; a real game's own scene change is left untouched. |
 
 For a test with no screen at all, or `ScenarioRunner`, the constructor `new ScenarioRunner(root)` calls `PersonaCache.Initialize` on its own, from within; a test never needs its own, separate bootstrapper.
 
@@ -2185,14 +1676,10 @@ Q-S26 adds the missing wire, as a C# `event Action<string>? OnSignal`, on `Engin
 
 `Agent` signs up, once, in `Awake`:
 
-```csharp
-// Animo.Agent (MonoBehaviour)
-void Awake() {
-    _engine = new Engine(persona: _composed_persona);
-    _engine.OnSignal += signal_id => _bus?.Publish(signal_id: signal_id);
-    Animo.Store.Instance.Register(agent: this);
-}
-```
+`Agent` (a MonoBehaviour) signs up, once, in `Awake`: it builds the
+Engine from the composed Persona, joins itself to `Engine.OnSignal`
+(sending each signal on to `_bus?.Publish(signal_id: signal_id)`),
+and registers itself with `Animo.Store.Instance`.
 
 Engine stays a plain C# library — it knows only `string` messages, never `Germio.Bus`. A test can sign up a `MockBus`-style listener, straight, to `engine.OnSignal`, with no touch at all to Bus or Agent.
 
@@ -2482,69 +1969,24 @@ Error before Engine ever starts.
 
 ### 12.2.1 Validator + ValidationResult API surface (v0.1.5, Q-S29 surfacing)
 
-```csharp
-namespace Animo {
-    /// <summary>Two-stage Validator (v0.1.5, Q-S15/Q-S17/Q-S18/Q-S30).</summary>
-    public static class Validator {
-        /// <summary>Stage 1 — raw Root. Runs A000-A034 and A038. </summary>
-        public static ValidationResult Validate(Root root);
+**`Validator`** (v0.1.5, Q-S15/Q-S17/Q-S18/Q-S30):
 
-        /// <summary>
-        /// Stage 2 — per composed Persona. Runs A019 (a check for a
-        /// spelling mistake, against the composed needs_meta —
-        /// Q-S39), A025 (a cycle, once composed), A035 (after
-        /// fill-in, trigger>reset), A036 (composed actions[] holds
-        /// something), A037 (more-than-one-edge, same target —
-        /// Warning), A038's "needs_meta, with nothing pointing to
-        /// it" check (Q-S41 + Q-S49 + Q-S57 — a Need not used in
-        /// composed needs/actions/influences/
-        /// thresholds/rates), A039 (a Warning, for two thresholds
-        /// sitting close together — Q-S47, fires where two
-        /// thresholds, on the same Need, have triggers within
-        /// 1.0f), and A040 (composed
-        /// actions[].id staying its own, alone — Q-S113, Error). A038's
-        /// tier-out-of-range remains a Stage 1 Error. Called by
-        /// PersonaCache.GetComposed (Q-S29) and merged into the
-        /// Initialize-time ValidationResult. (v0.1.5, Q-S119:
-        /// A040 was added to this listing — Q-S113 added the rule
-        /// to spec §12 but missed updating this docstring's enumeration.)
-        /// </summary>
-        public static ValidationResult ValidateStage2(Persona composed);
-    }
+| Member | What it does |
+| --- | --- |
+| `Validate(Root root)` | Stage 1 — works on the raw Root. Runs A000-A034 and A038. |
+| `ValidateStage2(Persona composed)` | Stage 2 — works on the composed Persona. Runs A019 (a check for a spelling mistake, against the composed needs_meta — Q-S39), A025 (a cycle, once composed), A035 (after fill-in, trigger>reset), A036 (composed actions[] holds something), A037 (more-than-one-edge, same target — Warning), A038's "needs_meta, with nothing pointing to it" check (Q-S41 + Q-S49 + Q-S57), A039 (a Warning, for two thresholds sitting close together — Q-S47), and A040 (composed actions[].id staying its own, alone — Q-S113, Error). A038's own tier-out-of-range stays a Stage 1 Error. Called by `PersonaCache.GetComposed` (Q-S29), and merged into the Initialize-time ValidationResult. |
 
-    /// <summary>Findings collection from one Validator run.</summary>
-    public sealed class ValidationResult {
-        public List<ValidationFinding> errors   { get; }
-        public List<ValidationFinding> warnings { get; }
-        public List<ValidationFinding> infos    { get; }
+**`ValidationResult`**:
 
-        // (v0.1.5, Q-S74) Property name uses snake_case to match the
-        // rest of the Animo C# API surface (Persona.agent_id, Issue.
-        // rule_id, Threshold.expanded_trigger, and the rest.). Pre-Q-S74 §10.6.1
-        // sample code wrote `HasErrors` (PascalCase) while
-        // `Scripts/Validator.cs` declared `has_errors` and existing
-        // tests (AssertResult.cs, NumericEdgeTests.cs, and the rest.) read
-        // `has_errors` — C# is case-sensitive; the spec narrative was
-        // wrong. Q-S74 unifies on `has_errors`.
-        // (Q-S149) `has_errors` and `has_warnings` give back a plain
-        // `bool`, worked out fresh, each time — never a throw. A
-        // debugger's own Watch window reads every property, on its
-        // own, as it runs; a throwing stand-in here would flood the
-        // IDE with a wall of errors, shown for no true reason.
-        public bool has_errors => errors.Count > 0;
-        public bool has_warnings => warnings.Count > 0;
-        public bool HasRule(string rule_id);
+| Member | What it does |
+| --- | --- |
+| `errors` / `warnings` / `infos` | lists of `ValidationFinding` |
+| `has_errors` / `has_warnings` (bool) | worked out fresh, each time, from the list's own count — never a throw (Q-S149) |
+| `HasRule(string rule_id)` | true where a finding names this rule |
+| `Merge(ValidationResult other)` | folds another's findings into this one, keeping this one's own findings first — used by `PersonaCache.GetComposed`, to fold each template's own Stage 2 findings into the whole, at Initialize time (Q-S29) |
 
-        /// <summary>
-        /// Merge another ValidationResult's findings into this one.
-        /// Used by PersonaCache.GetComposed to fold per-template
-        /// stage-2 findings into the Initialize-time aggregate (Q-S29).
-        /// Order preserved (this's findings stay first).
-        /// </summary>
-        public void Merge(ValidationResult other);
-    }
-}
-```
+**(v0.1.5, Q-S74)** Every property here uses `snake_case`, to match
+the rest of the Animo C# API's own surface.
 
 `ValidateStage2` is also the path used by Phase 3 unit tests to assert
 A025/A035/A036/A037, against composed test cases, with no need to run again
@@ -2649,150 +2091,62 @@ No single, one naming style is forced, across libraries. **What it means matters
 
 ### 13.2 Full Code (v0.1.4)
 
-```csharp
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
+`Animo.Const` holds no `Env` in its own name, on purpose — these
+are domain-defining values, not values for how the game is set to
+run.
 
-namespace Animo {
-    /// <summary>
-    /// Animo domain constants.
-    /// Not "Env" because these are domain values, not environment settings.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
-    public static class Const {
-#nullable enable
+**The eight standard Needs**, in their own, fixed order (used by
+A019's own check for a spelling mistake):
 
-        // ============================================================
-        // Standard needs (used by A019 typo detection)
-        // ============================================================
+| Index | Constant | Need's own name |
+| --- | --- | --- |
+| 0 | `NEED_INDEX_HUNGER` | `hunger` |
+| 1 | `NEED_INDEX_FATIGUE` | `fatigue` |
+| 2 | `NEED_INDEX_FEAR` | `fear` |
+| 3 | `NEED_INDEX_LONELINESS` | `loneliness` |
+| 4 | `NEED_INDEX_CONFIDENCE` | `confidence` |
+| 5 | `NEED_INDEX_CURIOSITY` | `curiosity` |
+| 6 | `NEED_INDEX_IDLE` | `idle` |
+| 7 | `NEED_INDEX_FRUSTRATION` | `frustration` |
 
-        /// <summary>The 8 standard Maslow-derived needs (frustration added in v0.1.4).</summary>
-        public static readonly string[] STANDARD_NEEDS = {
-            "hunger", "fatigue", "fear",
-            "loneliness", "confidence", "curiosity",
-            "idle", "frustration"
-        };
+`STANDARD_NEEDS` holds these eight names, in this same order; each
+index is pre-worked-out, to keep the hot path free of any lookup
+by string (v0.1.2). A Need made for one game is given its own
+slot, when the Engine is built, through a Dictionary.
 
-        // ============================================================
-        // Standard Need indices (v0.1.2 — float[] flat array access)
-        // ============================================================
-        // Pre-computed indices for STANDARD_NEEDS to avoid string lookups
-        // on the hot path. A Need key made for one game (say, one true to a story) is given a slot, at
-        // Engine construction time via Dictionary<string, int>.
+**`NEED_TIER_BY_NAME`** and **`NEED_INDICES_BY_TIER`** — read by
+§8.3's own `max_lower_tier_intensity`; the true table stands at
+§13.3, below. **(Q-S150)** Both are held as `IReadOnlyDictionary`,
+never a plain Dictionary, free to change — a Dictionary, left open
+to change, would let real code corrupt Maslow's own tier map,
+while the game runs.
 
-        public const int NEED_INDEX_HUNGER      = 0;
-        public const int NEED_INDEX_FATIGUE     = 1;
-        public const int NEED_INDEX_FEAR        = 2;
-        public const int NEED_INDEX_LONELINESS  = 3;
-        public const int NEED_INDEX_CONFIDENCE  = 4;
-        public const int NEED_INDEX_CURIOSITY   = 5;
-        public const int NEED_INDEX_IDLE        = 6;
-        public const int NEED_INDEX_FRUSTRATION = 7;
+**Other fixed values:**
 
-        // ============================================================
-        // Need → Tier map (Maslow suppression; frustration at Tier 2)
-        // ============================================================
-        // Not just documentation — the Engine's max_lower_tier_intensity
-        // computation (§8.3) reads these maps as its one, true source.
-        // (Q-S150) Both maps below are held as IReadOnlyDictionary, never
-        // a plain, changeable Dictionary — a Dictionary, left open to
-        // change, would let real code corrupt Maslow's own tier map,
-        // while the game runs.
+| Constant | Value | What it is for |
+| --- | --- | --- |
+| `MIN_NEED` / `MAX_NEED` | `0.0f` / `100.0f` | the range a Need's own value stays within |
+| `MIN_EXPONENT` / `MAX_EXPONENT` | `0.1f` / `5.0f` | the range an act's own curve may take |
+| `MIN_COEFFICIENT` / `MAX_COEFFICIENT` | `-1.0f` / `1.0f` | the range an Influence's own pull may take |
+| `MIN_SUPPRESSION` / `MAX_SUPPRESSION` | `0.0f` / `1.0f` | the range a tier's own holding-back may take |
+| `MIN_TIER` / `MAX_TIER` | `1` / `5` | the range a tier number may take |
+| `MAX_ID_LENGTH` | `128` | the longest an id may be |
+| `IDLE_TIER` | `5` | the tier the `idle` Need sits at |
+| `DEFAULT_RESET_OFFSET` | `5.0f` | the gap Composer fills in, for a left-out `reset_threshold` |
+| `DEFAULT_COMMITMENT_BONUS` | `0.0f` | the default, where `commitment.bonus` is left out |
+| `COMMITMENT_BONUS_WARN_THRESHOLD` | `30.0f` | A028 fires a Warning, past this |
+| `LOCK_DURATION_WARN_THRESHOLD` | `30.0f` | A031 fires a Warning, past this |
+| `LOCK_DURATION_MAX` | `600.0f` (10 minutes) | the hard, top limit on a Lock's own duration |
+| `SUPPORTED_SCHEMA_VERSIONS` | `{ "1.3", "1.4" }` | schema versions still taken |
+| `CURRENT_SCHEMA_VERSION` | `"1.4"` | the version now in use |
+| `TEMPLATE_PLACEHOLDERS_ACTION` | `{ "agent_id", "behavior" }` | the marks a template, for an act, may hold |
+| `TEMPLATE_PLACEHOLDERS_THRESHOLD` | `{ "agent_id" }` | the mark a template, for a threshold, may hold |
+| `DEFAULT_ON_ACTION_CHANGE` | `"animo_{agent_id}_{behavior}"` | the default template, for a Germio binding |
 
-        public static readonly IReadOnlyDictionary<string, int> NEED_TIER_BY_NAME =
-            new Dictionary<string, int>() {
-                { "hunger",     1 }, { "fatigue",    1 },
-                { "fear",       2 }, { "frustration", 2 },
-                { "loneliness", 3 },
-                { "confidence", 4 },
-                { "curiosity",  5 }, { "idle",       5 },
-            };
-
-        public static readonly IReadOnlyDictionary<int, int[]> NEED_INDICES_BY_TIER =
-            new Dictionary<int, int[]>() {
-                { 1, new[] { NEED_INDEX_HUNGER, NEED_INDEX_FATIGUE } },
-                { 2, new[] { NEED_INDEX_FEAR, NEED_INDEX_FRUSTRATION } },
-                { 3, new[] { NEED_INDEX_LONELINESS } },
-                { 4, new[] { NEED_INDEX_CONFIDENCE } },
-                { 5, new[] { NEED_INDEX_CURIOSITY, NEED_INDEX_IDLE } },
-            };
-
-        // ============================================================
-        // Validator limits
-        // ============================================================
-
-        public const float MIN_NEED         =   0.0f;
-        public const float MAX_NEED         = 100.0f;
-        public const float MIN_EXPONENT     =   0.1f;
-        public const float MAX_EXPONENT     =   5.0f;
-        public const float MIN_COEFFICIENT  =  -1.0f;
-        public const float MAX_COEFFICIENT  =   1.0f;
-        public const float MIN_SUPPRESSION  =   0.0f;
-        public const float MAX_SUPPRESSION  =   1.0f;
-        public const int   MIN_TIER         =   1;
-        public const int   MAX_TIER         =   5;
-        public const int   MAX_ID_LENGTH    = 128;
-        public const int   IDLE_TIER        =   5;
-
-        // ============================================================
-        // Threshold hysteresis (trigger / reset two-stage) defaults
-        // ============================================================
-
-        public const float DEFAULT_RESET_OFFSET = 5.0f;
-
-        // ============================================================
-        // Commitment defaults & validation thresholds (v0.1.3)
-        // ============================================================
-
-        /// <summary>Commitment bonus default when omitted in JSON.</summary>
-        public const float DEFAULT_COMMITMENT_BONUS = 0.0f;
-
-        /// <summary>A028: warn when commitment.bonus exceeds this value.</summary>
-        public const float COMMITMENT_BONUS_WARN_THRESHOLD = 30.0f;
-
-        // ============================================================
-        // Lock mechanism (v0.1.4 — Behavior locking for animation sync)
-        // ============================================================
-
-        /// <summary>A031: warn when Lock duration exceeds this value (seconds).</summary>
-        public const float LOCK_DURATION_WARN_THRESHOLD = 30.0f;
-
-        /// <summary>Hard cap to prevent runaway lock state. -1 means no max.</summary>
-        public const float LOCK_DURATION_MAX = 600.0f; // 10 minutes
-
-        // ============================================================
-        // Influence cascade
-        // ============================================================
-        // v0.1.2: cycles are now Errors, so the iteration constant
-        // from v0.1.1 (INFLUENCE_ITERATION_COUNT) was removed.
-
-        // ============================================================
-        // Schema version support
-        // ============================================================
-
-        /// <summary>Supported schema versions (v0.1.4 keeps backward-compat with v0.1.3).</summary>
-        public static readonly string[] SUPPORTED_SCHEMA_VERSIONS = { "1.3", "1.4" };
-        public const string CURRENT_SCHEMA_VERSION = "1.4";
-
-        // ============================================================
-        // Template placeholders
-        // ============================================================
-
-        public static readonly string[] TEMPLATE_PLACEHOLDERS_ACTION = {
-            "agent_id", "behavior"
-        };
-        public static readonly string[] TEMPLATE_PLACEHOLDERS_THRESHOLD = {
-            "agent_id"
-        };
-
-        // ============================================================
-        // Default Germio binding template
-        // ============================================================
-
-        public const string DEFAULT_ON_ACTION_CHANGE = "animo_{agent_id}_{behavior}";
-    }
-}
-```
+The v0.1.1 constant for running through a cycle, again and again
+(`INFLUENCE_ITERATION_COUNT`), was taken out in v0.1.2, once a
+cycle turned into an Error, and running through it was no longer done
+at all.
 
 ### 13.3 The Standard Need → Tier Table
 
@@ -2845,47 +2199,13 @@ flowchart TB
 
 ### 14.2 File Header Template
 
-```csharp
-// Copyright (c) STUDIO MeowToon. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
-#nullable enable
-
-using System.Collections.Generic;
-
-namespace Animo.Core {
-    /// <summary>
-    /// Brief description of the class.
-    ///
-    /// More detailed explanation. Reference G16/G17/G18 if relevant.
-    /// </summary>
-    /// <author>h.adachi (STUDIO MeowToon)</author>
-    public class Engine {
-#nullable enable
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-        // Fields
-
-        readonly Persona _persona;
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-        // Constructor
-
-        /// <summary>
-        /// Constructs an Engine for the given fully-composed Persona.
-        /// </summary>
-        /// <param name="persona">The fully-composed Persona produced by Composer.</param>
-        public Engine(Persona persona) {
-            _persona = persona;
-        }
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-        // public Methods [verb]
-
-        // ...
-    }
-}
-```
+Every file's own header holds, in order: the copyright line, the
+MIT License line, `#nullable enable`, a `using` line for what it
+needs, and a `namespace` — say, `Animo.Core`. Inside the class, a
+short summary, then an `<author>` tag, then the class's own body,
+with its sections marked off: `Fields`, then `Constructor`, then
+`public Methods [verb]`. Each constructor holds its own summary,
+and a `<param>` tag, for each argument.
 
 ### 14.3 Required Items Checklist
 
@@ -2901,20 +2221,13 @@ namespace Animo.Core {
 
 ### 14.4 Named Parameters Examples
 
-```csharp
-// ✅ right — our own APIs give a name to each argument
-Store.Instance.Affect(agent_id: "goblin_01", need: "fear", delta: +30f);
-AnimoLog.Write(message: "[Animo Engine] behavior changed");
-new Engine(persona: composed_persona);
-
-// ✅ BCL / Unity API: positional is fine
-Mathf.Clamp(value, 0f, 1f);
-Time.deltaTime;
-GetComponent<Rigidbody>();
-
-// ✅ Newtonsoft: positional is fine
-JsonConvert.DeserializeObject<Root>(json);
-```
+| Kind of call | Example | The rule |
+| --- | --- | --- |
+| Our own API | `Store.Instance.Affect(agent_id: "goblin_01", need: "fear", delta: +30f)` | a name is given, for each argument |
+| Our own API | `AnimoLog.Write(message: "[Animo Engine] behavior changed")` | a name is given |
+| Our own API | `new Engine(persona: composed_persona)` | a name is given |
+| BCL / Unity API | `Mathf.Clamp(value, 0f, 1f)`, `Time.deltaTime`, `GetComponent<Rigidbody>()` | no name needed; these stand apart, as exceptions |
+| Newtonsoft | `JsonConvert.DeserializeObject<Root>(json)` | no name needed; stands apart, as an exception |
 
 ---
 
@@ -2959,25 +2272,14 @@ flowchart TB
 
 The Q-S9 declaration-order tie-break is implemented as a single forward for-loop over `actions[]`, not LINQ:
 
-```csharp
-// Step 5 tie-break — zero alloc, declaration order (Q-S9 + Q-S52).
-// Forbidden: `actions.First(a => a.score == max_score)` — LINQ
-// allocates an IEnumerator every call. With 100 agents at 60 fps
-// that is 6000 alloc/sec from a single line — the very pattern
-// §15.1 forbids.
-float max_score = float.NegativeInfinity;
-int   selected_index = -1;
-for (int i = 0; i < actions.Count; i++) {
-    float s = _action_scores[i];
-    if (s > max_score) {                  // strict `>` keeps first-seen on ties
-        max_score = s;
-        selected_index = i;               // declaration-order tie-break (Q-S9)
-    }
-}
-// `selected_index` is now the first action whose score equals the maximum.
-// On a fully tied frame (e.g. spawn frame with all needs at 0), this is
-// `actions[0]`, which is exactly what Q-S9 promises.
-```
+| Step | What it does |
+| --- | --- |
+| 1 | Start `max_score` at negative infinity, and `selected_index` at `-1`. |
+| 2 | Go through each act, IN ORDER, by a plain, whole-number index. |
+| 3 | Should this act's own score be truly above `max_score`, with no doubt, set `max_score` to it, and `selected_index` to this act's own index. |
+| 4 | `selected_index` now names the FIRST act whose own score equals the top score. On a frame where every score ties (say, at spawn, with every Need at 0), this gives `actions[0]`, exactly as Q-S9 promises. |
+
+Note that `LINQ`, such as `actions.First(a => a.score == max_score)`, is not used — each call would make room for its own kind of loop-holder, on the hot path; with 100 agents, at 60 fps, that is 6,000 such rooms made, each second, from a single line — the very thing §15.1 forbids.
 
 The strict `>` comparison naturally implements Q-S9's "first declared wins" rule: any later action whose score equals the current max does not update `selected_index`, so the **first index reaching the max value** is preserved. No LINQ, no allocation, no Dictionary, no closure. Phase 3 implementation MUST use this pattern (see test `Step5TieBreakZeroAllocTests`).
 
@@ -3022,35 +2324,11 @@ Q-S27 sets aside **fixed slots `0..STANDARD_NEEDS.Count-1` (= 0..7), for the eig
 
 > **A sketch, only to show the idea.** The lines below show the slot-holding rule, on its own, apart from the rest. The **true, canonical build lives in the Engine's own constructor, at §8.10 PHASE A**, and joins with PHASE A.2 (giving a slot to a Need known only through needs_meta), PHASE B (baking need_index into Action / Threshold), PHASE C (building `_need_tier_indices`), and PHASE D (seeding a Threshold). Before Q-S88, a reader had two, side-by-side `_effective_needs = new float[...]` declarations to bring together (this sketch, and §8.10 PHASE A); Q-S88 marks these lines as only-to-show-the-idea, so there is no doubt at all about the one, true source.
 
-```csharp
-// Engine ctor — CONCEPTUAL SKETCH for Q-S27 fixed-slot rule.
-// CANONICAL implementation: §8.10 PHASE A.
-_need_index = new Dictionary<string, int>();
-_effective_needs = new float[Const.STANDARD_NEEDS.Count + extra];
-
-// Step 1: reserve standard slots
-for (int i = 0; i < Const.STANDARD_NEEDS.Count; i++) {
-    _need_index[Const.STANDARD_NEEDS[i]] = i;     // hunger=0..frustration=7
-    // Persona may or may not have a value for this Need.
-    // Default 0.0f; Persona.needs entries overwrite below.
-}
-
-// Step 2: append non-standard Persona Needs
-int next = Const.STANDARD_NEEDS.Count;
-foreach (var kv in _persona.needs) {
-    if (!_need_index.ContainsKey(kv.Key)) {
-        _need_index[kv.Key] = next++;
-        // Array grows in a second pass; or pre-count non-standard
-        // entries before allocation.
-    }
-}
-
-// Step 3: fill values from Persona.needs (overwrites the 0.0
-// default for any standard Need the Persona did declare).
-foreach (var kv in _persona.needs) {
-    _needs[_need_index[kv.Key]] = kv.Value;
-}
-```
+| Step | What it does |
+| --- | --- |
+| 1 | Set aside a standard slot, for each of the eight standard Needs: `_need_index[Const.STANDARD_NEEDS[i]] = i`, so `hunger=0` through `frustration=7`. Each starts at a default of `0.0f`. |
+| 2 | Add any Need outside the standard set (named by the Persona), from slot `8` on. |
+| 3 | Fill in the true value, for each Need the Persona gives, writing over the `0.0` default, where the Persona names a standard Need too. |
 
 After this:
 
@@ -3081,78 +2359,48 @@ This is Animo's own, guiding rule, for speed. Every line, in `Live(delta_time)`,
 
 In v0.1.2, `_needs` was made a `float[]`, but `Action.need` was still a string:
 
-```csharp
-// v0.1.2 hot path (Gemini's own trap)
-foreach (var action in _actions) {
-    float intensity = _effective_needs[_need_index[action.need]];
-    //                                ^^^^^^^^^^^^^^^^^^^^^^^^^
-    //                                ↑ a Dictionary lookup, back again!
-}
-```
+In v0.1.2, `_needs` was made a `float[]`, but `Action.need` was
+still a string — Gemini's own trap: reading a Need's own value
+would look like
+`_effective_needs[_need_index[action.need]]`, which is a
+Dictionary lookup, right back again, on the hot path.
 
 #### 15.3.3 The v0.1.3 Fix: a need_index Cache (Q-S37 made clear, where it lives)
 
 Add `internal int need_index` to both `Action` and `Threshold`.
 
-```csharp
-// Action.cs
-public class Action {
-    public string id { get; set; }
-    public string need { get; set; }
-    public int tier { get; set; }
-    public float exponent { get; set; }
-    internal int need_index { get; set; } // v0.1.3 added: hot path
-}
+**`Action`** holds `id`, `need`, `tier`, `exponent` (all set from
+the JSON), plus `internal int need_index` (added in v0.1.3, for
+the hot path).
 
-// (v0.1.5, Q-S37): need_index resolution happens in ENGINE CTOR
-// (after Q-S29 DeepCopy from PersonaCache), NOT in Composer.
-//
-// Why not Composer:
-//   PersonaCache.GetComposed (Q-S29) returns a SHARED template
-//   Persona. If Composer wrote need_index values into that
-//   template, those values would reflect a particular Engine
-//   instance's array layout — but Q-S27 reserves standard slots
-//   0..7 in EVERY Engine, with non-standard Needs appended in
-//   Persona-Need-declaration order. Two Personas declaring the
-//   same custom Needs in different orders would have different
-//   indices for those Needs. Pre-Q-S37 a Composer-side index
-//   bake risked sharing one template's indices across Engines
-//   with different layouts → IndexOutOfRange or cross-Need
-//   misread.
-// Why Engine ctor (post-DeepCopy):
-//   The DeepCopy in Agent.Awake step (2) gives this Engine its
-//   own mutable Action / Threshold instances. Engine ctor's
-//   §15.2.2.1 standard-slot reservation has just finished
-//   computing the per-Persona _need_index Dictionary. Resolving
-//   need_index there is local to this Engine and trivially
-//   correct.
+**(v0.1.5, Q-S37) Where `need_index` is worked out: the Engine's own
+constructor, never Composer.** Why not Composer: `PersonaCache.GetComposed`
+(Q-S29) gives back one, shared template Persona. Had Composer
+written `need_index` values into that shared template, those
+values would match only ONE Engine's own array layout — but Q-S27
+sets aside standard slots `0..7`, in EVERY Engine, with a Need
+outside the standard set added, in the order the Persona names it.
+Two Personas naming the same, outside-the-standard-set Needs, in a
+different order, would need different indices, for those same
+Needs. Baking the index in, at Composer's own side, before this
+was fixed, risked one template's own indices being shared across
+Engines with different layouts — a wrong-index read, or a read
+past the array's own end. Why the Engine's own constructor, right
+after the deep copy: the deep copy, in `Agent.Awake`'s own step
+(2), gives this Engine its own Action and Threshold, free to change,
+instances; the constructor's own standard-slot work has, by then,
+just finished building the per-Persona `_need_index`. Working out
+`need_index` there is true only to this one Engine, and simply
+right.
 
-// Engine ctor (Q-S37 + Q-S125)
-// (v0.1.5, Q-S125) `_composed_persona.actions ?? new List<Action>()`
-// — defense-in-depth consistency with the threshold loop below
-// (which has used `?? Array.Empty<Threshold>()` since Q-S12 / Q-S53 /
-// Q-S107). Pre-Q-S125 the actions loop dereferenced unconditionally
-// while thresholds had defended for three rounds. That asymmetry
-// surfaced when Q-S103 wrote down the GetComposed empty-fallback
-// crash path — Composer-bypassing test fixtures or hand-built
-// Personas that forgot to set `actions = new List<Action>()` would
-// NRE here even after Q-S103 closed the GetComposed surface.
-// Q-S125 unifies the actions and thresholds loops on the same
-// null-coalesce defense form.
-foreach (var action in _composed_persona.actions ?? new List<Action>()) {
-    action.need_index = _need_index[action.need];
-}
-foreach (var threshold in _composed_persona.binding?.thresholds ?? Array.Empty<Threshold>()) {
-    threshold.need_index = _need_index[threshold.need];
-}
-
-// hot path (unchanged from v0.1.3)
-foreach (var action in _actions) {
-    float intensity = _effective_needs[action.need_index];
-    //                                ^^^^^^^^^^^^^^^^^
-    //                                ↑ pure array index access
-}
-```
+The constructor's own step (Q-S37 + Q-S125): for each act, in
+`_composed_persona.actions` (never null — an empty list, at its
+least, matching the same, null-safe form thresholds already use,
+since Q-S12/Q-S53/Q-S107), set `action.need_index` from
+`_need_index[action.need]`. Do the same, for each threshold, in
+`_composed_persona.binding?.thresholds`. The hot path, unchanged
+since v0.1.3, then reads `_effective_needs[action.need_index]` —
+a plain, direct read, by index, into the array.
 
 The Composer's job is reduced to **shape composition** (Persona-first order, last-wins values, `(need, trigger_threshold)` compound key for thresholds, and the rest.); index baking is the Engine ctor's job. This split is what makes Q-S29's per-template Flyweight cache **safe across Engines that compute their own per-Persona array layouts**.
 
@@ -3185,158 +2433,61 @@ sequenceDiagram
 
 ### 15.5 String Cache (since v0.1.1; ownership pinned in v0.1.5 by Q-S46 + Q-S53)
 
-```csharp
-// Once in Engine ctor — NOT in Agent.Awake (v0.1.5, Q-S46 + Q-S53).
-// Pre-Q-S46 §15.6 listed `_cached_action_triggers` as belonging to
-// `Agent`; pre-Q-S53 the per-Threshold `expanded_trigger` was also
-// set inside `Agent.Awake`. Both placements broke ScenarioRunner,
-// which constructs `Engine` directly without going through Agent —
-// the runner's Threshold.expanded_trigger was perpetually `""` so
-// every fired signal was empty. Q-S46 + Q-S53 together: ALL string-
-// cache initialization happens inside Engine ctor (after Q-S28
-// agent_id override is applied to `_composed_persona.agent_id`).
-// Both Unity Agent and ScenarioRunner — and any future host —
-// inherit a fully-populated cache.
-public Engine(Persona persona) {
-    _composed_persona = persona;
-    // (... index resolution per Q-S37 PHASE B, and the rest ...)
+**Where each string is spelled out early (v0.1.5, Q-S46 + Q-S53):**
+all string-cache work happens once, inside the Engine's own
+constructor, never in `Agent.Awake`. Before Q-S46 and Q-S53, this
+work sat in `Agent.Awake`, which broke `ScenarioRunner` (it builds
+`Engine` straight, never through `Agent`) — the runner's own
+`Threshold.expanded_trigger` stayed `""`, so every signal fired came
+out empty. With the work moved into the constructor, both Unity's
+own `Agent` and `ScenarioRunner` — and any future host — take up a
+cache already filled.
 
-    _cached_action_triggers = new Dictionary<string, string>();
-    // (v0.1.5, Q-S14): no _cached_threshold_triggers Dictionary keyed by
-    // Need. Per-Threshold expanded strings live on each Threshold
-    // instance (`internal string expanded_trigger`) so multiple thresholds
-    // on the same Need do not overwrite each other.
+The constructor's own steps:
 
-    // v0.1.5 (Q-S7): null-safe defense even though Composer fills `binding`
-    // with the engine's own defaults, where the JSON leaves it out. A Persona, built by hand,
-    // (e.g. tests) may still bypass Composer.
-    string template = _composed_persona.binding?.on_action_change
-                      ?? Const.DEFAULT_ON_ACTION_CHANGE;
+| Step | What it does |
+| --- | --- |
+| 1 | Set `_cached_action_triggers` to a new, empty Dictionary. (Q-S14: no Dictionary, by Need, for thresholds — each Threshold keeps its own `expanded_trigger`, so more than one threshold, on the same Need, never write over each other.) |
+| 2 | Read `template` from `_composed_persona.binding?.on_action_change`, falling back to `Const.DEFAULT_ON_ACTION_CHANGE` (Q-S7 — a Persona built by hand may still go around Composer). |
+| 3 | For each act, spell out the template, with `{agent_id}` and `{behavior}` set in, and keep it in `_cached_action_triggers[action.id]` (Q-S125 — this null-safe form matches the one used for thresholds, below). |
+| 4 | For each threshold, in `_composed_persona.binding?.thresholds` (never null; an empty list, at its least — Q-S12 + Q-S53), spell out its own `expanded_trigger`, with `{agent_id}` set in. |
 
-    foreach (var action in _composed_persona.actions ?? new List<Action>()) {  // (Q-S125) defense-in-depth, consistent with thresholds below
-        var expanded = template
-            .Replace("{agent_id}", _composed_persona.agent_id)
-            .Replace("{behavior}", action.id);
-        _cached_action_triggers[action.id] = expanded;
-    }
+**`OnBehaviorChanged(previous_behavior, new_behavior)`** — makes no
+room for a string, at all, each frame. Gives word, through
+`OnSignal` (Q-S26), never through `_bus` (the Engine holds no such
+field). **(Q-S31)** The FIRST behavior, ever given, in the Engine's
+whole life (the change from `""` to the first act, by Q-S9's own
+tie-break) does NOT raise `OnSignal` — with no such rule, 100 NPCs,
+spawning into a scene, would all, at once, send out 100
+`animo_*_idle` signals, on frame 1, a storm right at the start. A
+change AFTER the first frame still fires, as always.
 
-    // v0.1.5 (Q-S12 + Q-S14 + Q-S53): each Threshold's own string is
-    // spelled out early, in the Engine's own constructor. The Q-S53
-    // fix: before Q-S53, this loop ran in Agent.Awake, so an Engine
-    // driven by ScenarioRunner (which never runs Agent.Awake) had
-    // Threshold.expanded_trigger = "" for every Threshold at all —
-    // every signal fired came out as an empty string. Composer
-    // makes sure `_composed_persona.binding.thresholds` is never
-    // null (an empty list, at worst), but a hand-built Persona,
-    // going around Composer, may still leave it null. Treat null
-    // the same as "no thresholds given at all," the same, in every
-    // way, as an empty list. Each Threshold's own `expanded_trigger`
-    // is set right on the instance itself — no Dictionary keying at
-    // all — so more than one threshold, on the same Need (say,
-    // fear=50 alerted / fear=80 panic), each keep their own, worked-
-    // out string.
-    var thresholds = _composed_persona.binding?.thresholds
-                     ?? Array.Empty<Threshold>() as IReadOnlyList<Threshold>;
-    foreach (var t in thresholds) {
-        t.expanded_trigger = t.trigger.Replace("{agent_id}", _composed_persona.agent_id);
-    }
-}
+**`GetExpandedActionTrigger(behavior)`** (Q-S44, a cold-path
+reader) — gives back the same, spelled-out string
+`OnBehaviorChanged` would send to Bus, for the named behavior. Used
+by `Agent.Awake`'s own step (6), so the host's Animator state
+matches every later change sent through the Bus. Falls back to the
+plain behavior id, should the cache hold no entry.
 
-// For each frame — makes no room for a string, at all
-// (v0.1.5, Q-S26): give word, through OnSignal, never through _bus.
-// (v0.1.5, Q-S31): a quiet promise — the FIRST behavior, ever
-// given, in the Engine's whole life (a change from "" to
-// actions[0], by Q-S9's own tie-break, in Step 5) does NOT raise
-// OnSignal. With no such promise, 100 NPCs, spawning into a
-// scene, would all, at the same time, send out 100
-// `animo_*_idle` signals, on frame 1 — a storm, right at the
-// start, that a Bus listener, held back by a rate limit, cannot
-// take in. A behavior change AFTER the first frame still fires,
-// as it always did.
-void OnBehaviorChanged(string previous_behavior, string new_behavior) {
-    if (previous_behavior == "") return;   // Q-S31: a quiet, first change
-    var trigger = _cached_action_triggers[new_behavior];
-    RaiseSignal(signal_id: trigger);
-}
+**`Step3_Thresholds()`** — fires a Threshold, walking a list, never
+a Dictionary (v0.1.5, Q-S23 + Q-S25 + Q-S26 + Q-S86 + Q-S107):
 
-// (v0.1.5, Q-S44): a cold-path reader — gives back the same,
-// template-spelled-out trigger string OnBehaviorChanged would send
-// to Bus, for the named behavior. Used by Agent.Awake step (6), to
-// set the host's own Animator state to a payload that matches, in
-// its own shape, every later change sent through the Bus. Falls
-// back to the plain behavior id, should the cache hold no entry
-// (say, a binding built wrong).
-internal string GetExpandedActionTrigger(string behavior) {
-    if (_cached_action_triggers.TryGetValue(behavior, out var trigger)) {
-        return trigger;
-    }
-    return behavior;   // graceful fallback; binding.on_action_change unset
-}
+| Point | What it does |
+| --- | --- |
+| Q-S23 | Reads the evened-out Need, never the base Need — so a rise, driven by an Influence, is seen too. |
+| Q-S25 | Runs a true Below/Above change of states, on each Threshold (§11.3.2); with no `is_above`, a plain crossing check chatters, right at `trigger`, and `reset_threshold` never runs at all. |
+| Q-S26 | Fires through `OnSignal`, never through a `_bus` that does not exist, on the Engine. `Agent` sends it on to Bus. |
+| Q-S86 | No waste, on the hot path: since Composer always fills `reset_threshold` (Q-S11), it is never null, by the time Step 3 runs; `t.reset_threshold!.Value` is read straight, with no null check thrown away, each frame. |
+| Q-S107 | Reads `_persona.binding?.thresholds ?? Array.Empty<Threshold>()`, matching the same, null-safe form the constructor uses — a Persona built by hand, with no `binding` at all, can never crash `Live(delta_time)`. |
 
-// Inside Live(delta_time) Step 3, Threshold firing — walks the list, not a Dict
-// (v0.1.5, Q-S23 + Q-S25 + Q-S26 + Q-S86):
-//   - Q-S23: read effective Needs, not base Needs (cascade visibility)
-//   - Q-S25: real Below/Above hysteresis state machine on each Threshold
-//            (the §11.3.2 mermaid). Without `is_above`, prev<trig &&
-//            curr>=trig cross detection chatters around `trigger` and
-//            `reset_threshold` becomes dead code.
-//   - Q-S26: emit fires through `OnSignal` (Engine's external event),
-//            not through a non-existent `_bus`. Agent forwards to Bus.
-//   - Q-S86: Hot-path zero-overhead. Q-S11 contracts that
-//            Composer.Compose ALWAYS fills `reset_threshold` (with
-//            `Math.Max(0f, trigger_threshold - 5f)` if author omitted
-//            it), so by the time we reach Engine.ctor + Hot Path it
-//            is **never null**. Pre-Q-S86 Step3 still ran a per-frame
-//            `?? Math.Max(...)` null-coalesce — pure dead code that
-//            wasted CPU cycles in a Hot Path declared §15.1 zero-
-//            overhead. Q-S86 removes the coalesce and reads
-//            `t.reset_threshold!.Value` directly. The null-forgiving
-//            operator (`!`) is safe because the Q-S11 Composer
-//            contract guarantees non-null at this point; a violation
-//            would surface as NullReferenceException at the FIRST
-//            frame, not silently as the wrong reset value.
-void Step3_Thresholds() {
-    // (v0.1.5, Q-S107) Pre-Q-S107 the loop wrote
-    // `foreach (var t in _persona.binding.thresholds)` — direct
-    // dereference. Engine ctor already used the
-    // `_persona.binding?.thresholds ?? Array.Empty<Threshold>()`
-    // defensive form (Q-S12 + Q-S53), but Hot Path Step 3 did not
-    // — defense in depth was inconsistent, and a hand-built
-    // Persona that bypassed Composer (binding == null) would NRE
-    // every frame in `Live(delta_time)`. Q-S107 mirrors the ctor's null-
-    // coalesce form here, so all binding-touching code paths now
-    // share the same defense. The cost is one nullable check per
-    // frame per Engine — measurable but well below the noise of
-    // the Influence cascade and Action scoring; the alternative
-    // (NRE on a wrong-shape Persona) is worse than the per-frame
-    // ?-check.
-    var thresholds = _persona.binding?.thresholds
-                     ?? Array.Empty<Threshold>() as IReadOnlyList<Threshold>;
-    foreach (var t in thresholds) {
-        float curr  = _effective_needs[t.need_index];
-        float reset = t.reset_threshold!.Value;   // (Q-S86) Composer-filled, never null
-        if (!t.is_above) {
-            // Below state: arm the trigger when curr crosses up
-            if (curr >= t.trigger_threshold) {
-                t.is_above = true;
-                RaiseSignal(signal_id: t.expanded_trigger);   // Q-S26
-            }
-        } else {
-            // Above state: re-arm only when curr drops to or below reset
-            if (curr <= reset) {
-                t.is_above = false;
-            }
-            // Note: while in Above, no fires happen even if curr crosses
-            // up again — that's the entire point of the hysteresis.
-        }
-    }
-    // After Step 3, Step 2's just-computed _effective_needs becomes
-    // the snapshot for next frame's Step 4 / Step 5 (the snapshot is
-    // separate from the Threshold state machine; Q-S23 changed which
-    // array is snapshotted, Q-S25 added the state machine alongside).
-    Array.Copy(_effective_needs, _previous_effective_needs, _effective_needs.Length);
-}
-```
+For each threshold: read the evened-out Need's own value
+(`curr`), and the true `reset` (never null). Should the threshold
+sit Below, and `curr` climb to, or past, `trigger_threshold`, turn
+it to Above, and fire the signal. Should it sit Above, and `curr`
+fall to, or below, `reset`, turn it back to Below (no fire, on the
+way back — that is the whole point of hysteresis). After every
+threshold is checked, copy `_effective_needs` into
+`_previous_effective_needs`, ready for the next frame.
 
 The one, true path is: the JSON leaves out `binding` → Composer fills a default `Binding` with both `on_action_change` and an empty `thresholds` list (Q-S7 + Q-S12) → `_persona.binding` and `_persona.binding.thresholds` are both non-null → the `??` stand-ins never fire. The `??` guards give a second layer of defense, so a Persona, built by hand, going around Composer, cannot crash `Awake`, on either the binding's own root, or the `thresholds` foreach.
 
@@ -3411,7 +2562,7 @@ animo/
 │  ├─ Const.cs                       ← Animo.Const (idle and frustration Need)
 │  └─ Tools/                         ← 🆕 v0.1.4 (now under Scripts/ per Q-S82)
 │     ├─ Animo.Tools.asmdef          ← 🆕 v0.1.5 (Q-S82) references Animo
-│     ├─ ScenarioRunner.cs           ← 🆕 v0.1.5 (Q-S82 + Q-S84 integer step counter)
+│     ├─ ScenarioRunner.cs           ← 🆕 v0.1.5 (Q-S82 + Q-S84 whole-number step count)
 │     └─ TraceResult.cs              ← 🆕 v0.1.5 (Q-S82) TraceFrame + TraceResult
 ├─ Editor/
 │  └─ Animo.Editor.asmdef
@@ -4073,13 +3224,12 @@ Up to v0.1.3, Animo had no answer for this.
 
 Add a **behavior lock mechanism** to `Engine`.
 
-```csharp
-// new API
-public void Lock(float duration, LockMode mode = LockMode.Hard);
-public void Unlock();
-public bool is_locked { get; }
-public string locked_behavior { get; }
-```
+| New member | What it does |
+| --- | --- |
+| `Lock(float duration, LockMode mode = LockMode.Hard)` | locks the behavior, for the given time |
+| `Unlock()` | lets go of the lock |
+| `is_locked` (bool) | whether a lock is now held |
+| `locked_behavior` (string) | the act held, while locked |
 
 #### 23.2.1 LockMode
 
@@ -4157,12 +3307,7 @@ Based on time, through `duration`. A timer lets go, on its own. Calling `Unlock(
 
 How this is used, in real use, during a lock:
 
-```csharp
-// Part way through an attack, the player strikes, all at once
-engine.Affect(need: "fear", delta: +50, force_reset: true);
-// → the flag lives on, past the lock; the Need's own value updates, at once
-// → on unlocking, the first Step 5 sees no cushion, from commitment → Flee can win, plainly
-```
+Say, part way through an attack, the player strikes, all at once: `engine.Affect(need: "fear", delta: +50, force_reset: true)` — the flag lives on, past the lock, and the Need's own value updates, at once; on unlocking, the first Step 5 sees no cushion, from commitment, so Flee can win, plainly.
 
 ### 23.4.1 commitment.bonus during Lock (v0.1.5, Q-S1)
 
@@ -4184,19 +3329,10 @@ flag stood at `false`, for the whole time locked; only the flag
 itself (a `bool`) is kept, from frame to frame. The flag is honored,
 on the first Step 4, right after unlocking:
 
-```csharp
-// Inside Live(delta_time), at Step 4:
-if (_force_reset_pending && !is_locked) {
-    // skip commitment_bonus for the current action (only when unlocked)
-} else {
-    // normal commitment_bonus add (covers locked-and-latched too)
-}
-
-// At end of Step 4:
-if (!is_locked) {
-    _force_reset_pending = false;   // ✅ clear only outside Lock
-}
-```
+| Step | What it does |
+| --- | --- |
+| Inside Step 4 | Should the flag be `true`, AND the engine be unlocked, skip `commitment_bonus`, for the act right now. In every other case (locked, or the flag `false`), add `commitment_bonus`, as always. |
+| At the end of Step 4 | Should the engine be unlocked, clear the flag, back to `false`. Should it be locked, leave the flag as it stands. |
 
 | State sequence         | Frame N (Affect+Lock)                                              | Frame N+1 .. unlock-1                 | First post-unlock frame                     |
 | ---------------------- | ------------------------------------------------------------------ | ------------------------------------- | ------------------------------------------- |
@@ -4271,14 +3407,10 @@ while locked.
 
 `Lock(duration: 30.0)`, past the point where a Warning fires, gets a Warning. 30 seconds, or more, locked, is, in most cases, a bug.
 
-```csharp
-if (duration > Const.LOCK_DURATION_WARN_THRESHOLD) {
-    AnimoLog.Write(message: $"[A031] Lock duration {duration}s exceeds warning threshold");
-}
-if (duration > Const.LOCK_DURATION_MAX) {
-    duration = Const.LOCK_DURATION_MAX; // hard cap
-}
-```
+Should `duration` climb past `Const.LOCK_DURATION_WARN_THRESHOLD`,
+`AnimoLog.Write` gives a Warning, marked `[A031]`, naming the
+duration given. Should `duration` climb past
+`Const.LOCK_DURATION_MAX`, it is held down, to that top limit.
 
 #### 23.6.2 Auto-Release on Scene Unload
 
@@ -4321,17 +3453,10 @@ flowchart LR
 
 The simplest. Apply the result directly to the matching Need.
 
-```csharp
-// action succeeded → satisfy Need
-if (action == "SearchFood" && found_food) {
-    Store.Instance.Affect(agent_id, "hunger", -50f);
-}
-
-// action failed → push Need higher (will switch to other action naturally)
-if (action == "SearchFood" && search_failed) {
-    Store.Instance.Affect(agent_id, "hunger", +10f);
-}
-```
+| The game's own happening | The call made |
+| --- | --- |
+| The act succeeds (`SearchFood` finds food) | `Store.Instance.Affect(agent_id, "hunger", -50f)` — the Need is met |
+| The act fails (`SearchFood` finds none) | `Store.Instance.Affect(agent_id, "hunger", +10f)` — the Need climbs, so a different act may be picked, on its own |
 
 | For it                 | Against it                                                              |
 | ---------------------- | ----------------------------------------------------------------------- |
@@ -4343,17 +3468,10 @@ if (action == "SearchFood" && search_failed) {
 
 Use `frustration` (the standard Need) as a buffer.
 
-```csharp
-// action failed → frustration accumulates
-if (action == "SearchFood" && search_failed) {
-    Store.Instance.Affect(agent_id, "frustration", +15f);
-}
-
-// action succeeded → frustration eases
-if (action == "SearchFood" && found_food) {
-    Store.Instance.Affect(agent_id, "frustration", -10f);
-}
-```
+| The game's own happening | The call made |
+| --- | --- |
+| The act fails (`SearchFood` finds none) | `Store.Instance.Affect(agent_id, "frustration", +15f)` — frustration grows |
+| The act succeeds (`SearchFood` finds food) | `Store.Instance.Affect(agent_id, "frustration", -10f)` — frustration eases |
 
 In `animo.json`, frustration spreads to other Needs via influences:
 
@@ -4375,10 +3493,7 @@ In `animo.json`, frustration spreads to other Needs via influences:
 
 Take an act out of the score, for a while. Needs a new API:
 
-```csharp
-// hold back the failed act, for a while
-engine.SuppressAction(action_id: "SearchFood", duration: 30.0f);
-```
+A new call, `engine.SuppressAction(action_id: "SearchFood", duration: 30.0f)`, would hold back the failed act, for the given time.
 
 | For it                             | Against it                                     |
 | ---------------------------------- | ---------------------------------------------- |
@@ -4416,61 +3531,30 @@ flowchart TB
 
 #### 24.5.1 Zelda-Style (Monster)
 
-```csharp
-// SearchFood success
-Affect("hunger", -40);
-
-// Hunt failure (got countered by player)
-Affect("frustration", +20);
-Affect("fear", +10);
-
-// Flee success (escaped from player)
-Affect("fear", -50);
-Affect("confidence", +15);
-
-// Flee failure (got chased down)
-Affect("frustration", +10);
-Affect("fear", +20, force_reset: true); // panic
-```
+| Happening | Calls made |
+| --- | --- |
+| SearchFood succeeds | `Affect("hunger", -40)` |
+| Hunt fails (the player turns it back) | `Affect("frustration", +20)`; `Affect("fear", +10)` |
+| Flee succeeds (got away from the player) | `Affect("fear", -50)`; `Affect("confidence", +15)` |
+| Flee fails (was run down) | `Affect("frustration", +10)`; `Affect("fear", +20, force_reset: true)` — a true panic |
 
 #### 24.5.2 Animal Crossing-Style (NPC)
 
-```csharp
-// Socialize success (player responded)
-Affect("loneliness", -30);
-Affect("confidence", +5);
-
-// Socialize failure (player ignored)
-Affect("frustration", +10);
-Affect("confidence", -5);
-
-// Craft completed
-Affect("curiosity", -20);
-Affect("idle", +15); // small satisfaction
-
-// Stroll (idle satisfied)
-Affect("idle", -10);
-```
+| Happening | Calls made |
+| --- | --- |
+| Socialize succeeds (the player answers) | `Affect("loneliness", -30)`; `Affect("confidence", +5)` |
+| Socialize fails (the player pays no mind) | `Affect("frustration", +10)`; `Affect("confidence", -5)` |
+| Craft finishes | `Affect("curiosity", -20)`; `Affect("idle", +15)` — a small, true content |
+| Stroll (idle is met) | `Affect("idle", -10)` |
 
 #### 24.5.3 Tokimeki-Style (Heroine)
 
-```csharp
-// Player favored this Persona
-Affect("loneliness", -20);
-Affect("longing", -15);
-
-// Player favored another heroine
-Affect("frustration", +30);
-Affect("jealousy", +25);
-
-// Date succeeded
-Affect("loneliness", -50);
-Affect("confidence", +20);
-
-// Promise broken
-Affect("frustration", +40, force_reset: true); // immediate emotional burst
-Affect("anger", +30);
-```
+| Happening | Calls made |
+| --- | --- |
+| The player favors this Persona | `Affect("loneliness", -20)`; `Affect("longing", -15)` |
+| The player favors another heroine | `Affect("frustration", +30)`; `Affect("jealousy", +25)` |
+| A date succeeds | `Affect("loneliness", -50)`; `Affect("confidence", +20)` |
+| A promise is broken | `Affect("frustration", +40, force_reset: true)` — a true, right-now burst of feeling; `Affect("anger", +30)` |
 
 ### 24.6 Validator A030's Role
 
@@ -4551,13 +3635,12 @@ Open it in Excel or a chart tool. **You see at a glance "what action fired at wh
 
 A debug mode that logs every step of `Engine.Live(delta_time)`.
 
-```csharp
-engine.SetTraceMode(TraceMode.Verbose);
-// → AnimoLog logs per frame:
-// [Trace] t=12.3s effective_needs={hunger:62, fear:18, ...}
-// [Trace]         scores={Patrol:45, SearchFood:62, Flee:14}
-// [Trace]         selected="SearchFood" (was "Patrol")
-```
+Turning on `engine.SetTraceMode(TraceMode.Verbose)` makes
+`AnimoLog` write a record, each frame, of the time, the
+effective-Need values, each act's own score, and which act was
+picked (say, at `t=12.3s`: `effective_needs={hunger:62, fear:18,
+...}`, `scores={Patrol:45, SearchFood:62, Flee:14}`,
+`selected="SearchFood"`, in place of `"Patrol"`).
 
 Use this, while the game runs, to find the cause of an act that feels wrong.
 
@@ -4567,79 +3650,37 @@ A tool, showing how often an act fires change, as one, single value moves, paint
 
 ### 25.3 ScenarioRunner API
 
-```csharp
-namespace Animo.Tools {
-    /// <summary>
-    /// (v0.1.5, Q-S67) Affect payload for ScenarioRunner injection.
-    /// Pre-Q-S67 the type was referenced from `TimedAffectEvent.ev`
-    /// but never declared — confirmed compile error. Mirrors the
-    /// argument tuple of `Engine.Affect(need, delta, force_reset)`.
-    /// `need` is the target Need name; `delta` is the additive change
-    /// (negative pushes toward 0, positive toward 100, clamped per
-    /// §5.5 to [0, 100]); `force_reset` mirrors §11.3.4's emergency
-    /// fire-and-clear semantics — when `true` the matching Threshold
-    /// is forced to publish on the same frame even if Need value
-    /// stays in the Below band.
-    /// </summary>
-    public readonly struct AffectEvent {
-        public string need         { get; }
-        public float  delta        { get; }
-        public bool   force_reset  { get; }
-        public AffectEvent(string need, float delta, bool force_reset = false) {
-            this.need = need;
-            this.delta = delta;
-            this.force_reset = force_reset;
-        }
-    }
+**`AffectEvent`** (v0.1.5, Q-S67) — mirrors the same set of arguments as
+`Engine.Affect(need, delta, force_reset)`:
 
-    /// <summary>Timed Affect injection for ScenarioRunner. (v0.1.5, Q-S4.)</summary>
-    public readonly struct TimedAffectEvent {
-        public float       time { get; }
-        public AffectEvent ev   { get; }
-        public TimedAffectEvent(float time, AffectEvent ev) { ... }
-    }
+| Field | What it holds |
+| --- | --- |
+| `need` | the target Need's own name |
+| `delta` | the added change (a value below zero pushes toward 0, above zero toward 100, held within `[0, 100]`, per §5.5) |
+| `force_reset` | mirrors §11.3.4's own true, right-now fire-and-clear promise — where `true`, the matching Threshold is made to fire, this same frame, even where the Need's own value stays in the Below band |
 
-    public class ScenarioRunner {
-        public ScenarioRunner(Root root);
+**`TimedAffectEvent`** (v0.1.5, Q-S4) — a timed way to send an
+Affect into `ScenarioRunner`: holds `time` (a `float`) and `ev`
+(an `AffectEvent`).
 
-        public TraceResult Run(
-            string                            agent_id,                // template id from JSON
-            float                             duration,
-            float                             delta_time = 0.1f,
-            IReadOnlyList<TimedAffectEvent>?  events = null,            // timed Affect injection (v0.1.5)
-            string?                           agent_id_override = null  // (Q-S42) a running-time, one-of-a-kind id
-            // (v0.1.5, Q-S114) the C# way, of putting a value straight into a string. Before Q-S114
-            // this comment wrote `${agent_id}_run_${_sequence++}` (the Bash/JS
-            // way, with a value inside `${...}`) — Q-S109's own, wide search-and-replace, by mistake,
-            // had turned both the words, and the code block, into the
-            // word form alone. C# writes it as `$"{var}"` (the dollar sign, BEFORE the marked-off
-            // string, NOT inside `${...}`). What is spelled out, while running, and what it means, stay the same.
-            // Should this be null, the runner makes `$"{agent_id}_run_{_sequence++}"`, so
-            // many agents, run from the same template, do not clash,
-            // at Store.Register (Q-S6). Whoever calls this may give a plain,
-            // fixed value, for a test that gives the same name each time; with no value given, it makes its own,
-            // one-of-a-kind name, for each call.
-        );
-    }
+**`ScenarioRunner`**:
 
-    public class TraceResult {
-        public List<TraceFrame> frames { get; }
-        public Dictionary<string, int> behavior_count { get; }
-        public Dictionary<string, float> behavior_total_time { get; }
+| Member | What it does |
+| --- | --- |
+| `ScenarioRunner(Root root)` | builds a runner from the given Root |
+| `Run(agent_id, duration, delta_time = 0.1f, events = null, agent_id_override = null)` | gives back a `TraceResult`. `agent_id` is the template id, from the JSON. `events` is the list of timed Affects (v0.1.5). `agent_id_override` (Q-S42) gives a running-time, one-of-a-kind id; should this be left out, the runner makes its own, `$"{agent_id}_run_{_sequence++}"`, so many agents, run from the same template, never clash, at Store.Register (Q-S6). |
 
-        public string ToCsv();
-        public string ToJson();
-    }
+**`TraceResult`**:
 
-    public class TraceFrame {
-        public float time;
-        public Dictionary<string, float> needs;
-        public Dictionary<string, float> effective_needs;
-        public Dictionary<string, float> action_scores;
-        public string behavior;
-    }
-}
-```
+| Member | What it holds |
+| --- | --- |
+| `frames` | a list of `TraceFrame` |
+| `behavior_count` | how many times each behavior showed |
+| `behavior_total_time` | how long, in all, each behavior held |
+| `ToCsv()` / `ToJson()` | give back the trace, in that form |
+
+**`TraceFrame`**: holds `time`, `needs`, `effective_needs`,
+`action_scores`, and `behavior`, for one, single frame.
 
 #### 25.3.1 Why a list, not a `Dictionary<float, _>` (v0.1.5, Q-S4 + Q-S33)
 
@@ -4652,146 +3693,20 @@ This is a known, ill-fitting way to build, in C#.
 The list is sorted, by `time`, once, and the runner takes up its events
 through a pointer, moving forward. Q-S33's own, first try used `<= duration + EPSILON`, with a small, allowed gap, but Q-S35 caught a fine point, where it ran past: when `duration` is a true, whole multiple of `delta_time`, the loop, widened by EPSILON, ran **one, extra `Live(delta_time)`**, past `duration`. The true, right form uses a strict `<`, on the outside, a check for the `delta_time`-wide window, on the inside, and one, last sweep, after the loop:
 
-```csharp
-// (v0.1.5, Q-S33 + Q-S35 final + Q-S40 observability + Q-S51 spawn-state):
-// outer is strict `<`; inner is `events[next].time < current_time + delta_time`
-// (the upcoming-frame window); pre-loop initial-frame record (Q-S51) so
-// the t=0 spawn state is observable in the trace, parallel to how
-// Agent.Awake's Q-S34 step seeds the initial behavior; plus a post-loop
-// sweep for time == duration events; plus a final no-time-advance
-// Live(0.0f) + TraceFrame record so boundary events are observable.
-// Total time-advancing Live(delta_time) calls: exactly floor(duration/delta_time).
+The runner's own `Run` method moves through five stages, in order
+(v0.1.5, Q-S33 + Q-S35 + Q-S40 + Q-S51):
 
-// (Q-S51 + Q-S55) Spawn-state observation, with t=0 event sweep.
-// Pre-Q-S51 the runner's first recorded frame was at time = delta_time —
-// the t = 0 spawn state (initial Need values, Q-S9 tie-break
-// initial behavior) was invisible in TraceResult.frames. This
-// caused trace consumers to see simulations that "started at delta_time
-// seconds" instead of from the spawn moment. Q-S34 fixed the
-// equivalent gap on the Unity side (Agent.Awake calls Live(0.0f)
-// + Animator.Play); Q-S51 brings ScenarioRunner into parity.
-//
-// Q-S55 fix: Pre-Q-S55 a TimedAffectEvent scheduled at exactly
-// time = 0.0f was deferred to the FIRST main-loop iteration,
-// where it would be consumed in the delta_time-window inner sweep before
-// `engine.Live(delta_time)`. Result: the spawn-state TraceFrame at
-// time = 0.0f was recorded BEFORE the t=0 event was applied,
-// even though the event "happened at" t=0. The trace frame at
-// 0.0 then disagreed with the player's authored initial state.
-// Q-S55 sweeps `events[next].time <= 0.0f` BEFORE the spawn
-// Live + record so the t=0 frame reflects any t=0 Affects.
-//
-// Live(0.0f) does nothing at all for time advancement (Step 1 decay is
-// multiplicative-by-delta_time) but runs Steps 2-5 over the spawn (post-
-// t=0-event) Needs, producing the initial scoring decision (same
-// contract as Q-S34's Awake step (6)).
-// (v0.1.5, Q-S117) Validate delta_time before any time-based math runs.
-// `delta_time <= 0.0f` would silently corrupt the simulator: Q-S98's
-// `(int)Math.Round((double)duration / (double)delta_time)` does the
-// IEEE-754-correct division (good!) but on `delta_time = 0.0f` it produces
-// `duration / 0 = +Infinity`. CLI ECMA-335 §III.1.5 specifies
-// `(int)Infinity = int.MinValue` for unchecked conversion (the
-// default in C#). Then the main loop `for (int i = 0; i < int.MinValue; i++)`
-// has predicate `0 < -2147483648 = false`, so the body never runs —
-// `Run()` returns an empty TraceResult with no diagnostic, no
-// exception, no log. Worst kind of silent failure: the test
-// "passes" because nothing visibly broke, but the simulator did
-// nothing. `delta_time < 0` follows the same path through Math.Round, with
-// the additional sin of contradicting the simulation contract
-// (time runs forward). Both throw at Run entry.
-if (delta_time <= 0.0f) {
-    throw new System.ArgumentException(
-        $"ScenarioRunner.Run: delta_time must be strictly positive (was {delta_time}). " +
-        $"Negative or zero delta_time would silently produce an empty TraceResult " +
-        $"due to (int)Infinity = int.MinValue. Use a positive timestep, " +
-        $"e.g. the default delta_time = 0.1f.",
-        nameof(delta_time));
-}
-int next = 0;
-// (v0.1.5, Q-S104) Pre-Q-S104 the Run signature defaulted
-// `events = null` but every loop body wrote `events.Count` or
-// `events[next]` directly — calling Run() with the default
-// (no events) would NRE on the very first iteration. Q-S104
-// normalizes here once: if the caller didn't supply events,
-// we substitute an empty array. All later loops iterate
-// safely without per-loop null guards.
-events ??= System.Array.Empty<TimedAffectEvent>();
-while (next < events.Count && events[next].time <= 0.0f) {
-    // (Q-S55) Consume any events scheduled at exactly t = 0.0f
-    // (or, by the `<= 0.0f` window, any negative-time events
-    // that a hand-built test might inject — IEEE-754 epsilon
-    // around zero is meaningless; clamp to "<=0" semantically).
-    engine.Affect(events[next].ev.need, events[next].ev.delta, events[next].ev.force_reset);
-    next++;
-}
-engine.Live(delta_time: 0.0f);                       // seed initial behavior (parallel to Q-S34)
-RecordTraceFrame(time: 0.0f);                // observable spawn-state frame, post-t=0-events
+| Stage | What it does |
+| --- | --- |
+| 1. Check `delta_time` | (Q-S117) Should `delta_time <= 0.0f`, throw `ArgumentException`, right at the start. A `delta_time` of `0` or below would work out `duration / 0 = +Infinity`; turning that into an `int` gives `int.MinValue`, and the main loop's own count (`0 < int.MinValue`) would never run at all — `Run()` would give back an empty result, with no word given, at all, of what went wrong. |
+| 2. Make `events` safe | (Q-S104) Should the caller give no `events` (a `null`), set it to an empty array, once, at the very start — every later step can then read `events.Count` or `events[next]`, with no risk of a null-reference error. |
+| 3. Sweep events at, or before, `t = 0` | (Q-S55) Take up every event whose own `time` is `<= 0.0f`, before the Engine's own first `Live` call. Then call `engine.Live(delta_time: 0.0f)`, to seed the very first behavior (this matches Q-S34's own step, on the Unity side), and keep a trace frame, at `time: 0.0f` — the spawn state, now seen, after any t=0 event has been taken up. |
+| 4. The main loop, with a whole-number count | (Q-S84 + Q-S98) The total number of steps is worked out ONCE, as `(int)System.Math.Round((double)duration / (double)delta_time)` (Q-S98: using `double`, not `float`, and `Math.Round`, not `Math.Floor`, since `float` division alone can drift below the true value by one whole step — say, `10.0f / 0.1f` gives `99.9999985...` in `float32`, which `Floor` would wrongly read as `99`, not `100`). The loop runs that many times; each step takes up any event due before the frame's own end, then calls `engine.Live(delta_time)`, and keeps a trace frame. |
+| 5. Sweep events at `time == duration`, then a last frame | (Q-S40) Take up any event still waiting, whose own `time` is `<= duration`. Should at least one such event be taken up, call `engine.Live(delta_time: 0.0f)` once more (this moves no time forward, but still works out Steps 2-5, over the Needs just touched), and keep one, last trace frame, at `time: duration` — with no this step, a boundary event would change `_needs`, but never show in the trace at all (the mistake Gemini caught, at Q-S40). |
 
-// (v0.1.5, Q-S84 + Q-S98) Use an INTEGER step counter for the main loop.
-// Pre-Q-S84 the loop wrote `while (current_time < duration) { ...
-// current_time += delta_time; }` — repeated float += delta_time accumulates
-// IEEE-754 round-off; over thousands of iterations `current_time`
-// can drift by ~1e-5 from the mathematical truth, occasionally
-// causing the predicate to evaluate true (or false) one iteration
-// off the Q-S35-promised `floor(duration / delta_time)` total. The fix
-// pins iteration count at integer time: compute `total_steps`
-// once from the inputs and iterate that many times.
-//
-// (v0.1.5, Q-S98) Q-S84 originally wrote
-//   int total_steps = (int)Math.Floor(duration / delta_time);
-// but `duration / delta_time` is FLOAT division — and float32 has only
-// ~7 decimal digits of precision. Concrete IEEE-754 values:
-//   float32 (10.0f / 0.1f) = 99.9999985... → Floor = 99 (NOT 100)
-//   float32 (30.0f / 0.1f) = 299.9999955... → Floor = 299 (NOT 300)
-//   float32 (100.0f / 0.1f) = 999.9999850... → Floor = 999 (NOT 1000)
-// Floor on slightly-under values systematically under-shoots by
-// one step. Q-S98 fixes by promoting to double precision then
-// using Math.Round (which corrects for the sub-LSB drift):
-//   int total_steps = (int)Math.Round((double)duration / (double)delta_time);
-// double has ~15 decimal digits, so `(double)10.0f / (double)0.1f`
-// produces 100.000000596... which rounds correctly to 100.
-// Math.Round handles both directions of drift: 99.99999 → 100,
-// 100.00001 → 100. ScenarioRunner consumers pass `duration` as
-// a multiple of `delta_time` (the standard simulation contract), so
-// Round (banker's) === intended floor for that input class.
-int total_steps = (int)System.Math.Round((double)duration / (double)delta_time);
-for (int i = 0; i < total_steps; i++) {
-    float frame_end = (i + 1) * delta_time;
-    while (next < events.Count && events[next].time < frame_end) {
-        engine.Affect(events[next].ev.need, events[next].ev.delta, events[next].ev.force_reset);
-        next++;
-    }
-    engine.Live(delta_time);
-    RecordTraceFrame(time: frame_end);   // standard per-frame trace record
-}
-// (v0.1.5, Q-S123) Pre-Q-S123 this block declared
-// `float current_time = total_steps * delta_time;` here — but no
-// downstream code in the post-loop sweep ever reads it. The
-// post-loop while uses `events[next].time <= duration` (the
-// `duration` argument, not a derived current_time). C# compiler
-// emits CS0219 ("variable assigned but never used"). Q-S123
-// removes the dead line. The post-loop sweep semantics are
-// unchanged.
-// (Q-S40) Post-loop sweep + final observation. Any events queued
-// at time == duration are consumed here, then a Live(delta_time: 0.0f)
-// pass + final TraceFrame record makes their effect visible in
-// TraceResult.frames. Live(0.0f) does nothing at all for time advancement
-// (Step 1 decay is multiplicative-by-delta_time) but still runs Steps
-// 2-5 over the just-Affected Needs, producing the post-boundary
-// scoring snapshot. Without this, the boundary event would
-// modify _needs and be lost from the trace — the bug Gemini
-// caught in Q-S40.
-bool sweep_consumed_any = false;
-while (next < events.Count && events[next].time <= duration) {
-    engine.Affect(events[next].ev.need, events[next].ev.delta, events[next].ev.force_reset);
-    next++;
-    sweep_consumed_any = true;
-}
-if (sweep_consumed_any) {
-    engine.Live(delta_time: 0.0f);                       // produce post-Affect scoring
-    RecordTraceFrame(time: duration);            // observable boundary frame
-}
-```
+The count of time-moving `Live(delta_time)` calls, across the whole
+run, is always exactly `floor(duration / delta_time)` — proven by
+Q-S35, and made sound against `float`'s own drift by Q-S98.
 
 Properties of the Q-S35/Q-S40 final form:
 
@@ -4837,36 +3752,20 @@ Comparisons:
 
 #### 25.4.1 "Goblin Flees When Scared" Test
 
-```csharp
-var events = new List<TimedAffectEvent> {
-    new TimedAffectEvent(time: 10.0f, ev: new AffectEvent(need: "fear", delta: +50f, force_reset: true))
-};
-
-var runner = new ScenarioRunner(root);
-var result = runner.Run(
-    agent_id: "goblin_scout_01",
-    duration: 30.0f,
-    events: events
-);
-
-// expected behavior
-Assert.Equal("Flee", result.frames[100].behavior);  // right after t=10s
-Assert.True(result.behavior_total_time["Flee"] > 5.0f);  // flees for 5+ sec
-```
+| Step | What it does |
+| --- | --- |
+| 1 | Build one event: at `time: 10.0f`, `Affect("fear", +50f, force_reset: true)`. |
+| 2 | Run a `ScenarioRunner`, over a `goblin_scout_01`, for `duration: 30.0f`, with that event. |
+| 3 | Check `result.frames[100].behavior` equals `"Flee"` (right after t=10s). |
+| 4 | Check `result.behavior_total_time["Flee"]` is above `5.0f` (runs away for five seconds, or more). |
 
 #### 25.4.2 "Maslow Suppression Works" Test
 
-```csharp
-var events = new List<TimedAffectEvent> {
-    new TimedAffectEvent(time: 5.0f, ev: new AffectEvent(need: "hunger", delta: +80f))  // sudden hunger
-};
-
-var result = runner.Run(agent_id: "goblin_scout_01", duration: 20.0f, events: events);
-
-// after hunger=80, Patrol (tier5) → SearchFood (tier1) switch must happen
-var post_event_frames = result.frames.Where(f => f.time > 5.0f);
-Assert.Contains("SearchFood", post_event_frames.Select(f => f.behavior));
-```
+| Step | What it does |
+| --- | --- |
+| 1 | Build one event: at `time: 5.0f`, `Affect("hunger", +80f)` (a sudden hunger). |
+| 2 | Run a `ScenarioRunner`, over a `goblin_scout_01`, for `duration: 20.0f`, with that event. |
+| 3 | Check that, once hunger reaches 80, the behavior switches from `Patrol` (tier5) to `SearchFood` (tier1) — any frame past `time: 5.0f` should show `"SearchFood"` among its own acts. |
 
 ### 25.5 LLM Tuning Support
 
@@ -4950,17 +3849,12 @@ Should your game's own code work something out, on a worker (say, a
 `Job.Execute`, or `await Task.Run`), carry the result back, to the main
 thread, before calling Animo:
 
-```csharp
-// ❌ wrong — Affect on a worker
-Task.Run(() => {
-    float damage = ExpensiveDamageCalc();
-    Animo.Store.Instance.Affect(agent_id: "goblin_01", need: "fear", delta: +damage);
-});
-
-// ✅ right — compute on a worker, apply on the main thread
-float damage = await Task.Run(() => ExpensiveDamageCalc());
-Animo.Store.Instance.Affect(agent_id: "goblin_01", need: "fear", delta: +damage);
-```
+A common mistake: calling `Animo.Store.Instance.Affect(...)` right
+inside `Task.Run`'s own work, on the worker thread itself — wrong,
+since Affect must run on the main thread. The right way: work out
+the value (say, `damage`) inside `Task.Run`, `await` its own
+result, and only then call `Animo.Store.Instance.Affect(...)`, back
+on the main thread.
 
 In Unity, `await`, on a context that knows `UnityEngine`,
 comes back to the main thread; in a context built by hand, use whatever

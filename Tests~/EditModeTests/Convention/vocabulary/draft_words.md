@@ -543,3 +543,9 @@ form — a short form is put right in the code, and not kept here.
 + underneath
 + infinite
 + bear bears bore bearing
++ flee flees fled fleeing
++ socialize socializes socialized socializing
++ stroll strolls
++ mit
++ bcl
++ newtonsoft

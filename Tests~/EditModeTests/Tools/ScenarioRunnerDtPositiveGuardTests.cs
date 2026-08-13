@@ -31,9 +31,9 @@ namespace Animo.Tests.EditMode.ToolsTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S117: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("if (delta_time <= 0.0f) {"),
+            Assert.That(text, Does.Contain("Should `delta_time <= 0.0f`, throw `ArgumentException`"),
                 "Q-S117: spec EN must guard delta_time at Run entry.");
-            Assert.That(text, Does.Contain("System.ArgumentException"),
+            Assert.That(text, Does.Contain("ArgumentException"),
                 "Q-S117: spec EN must throw ArgumentException for non-positive delta_time.");
         }
 

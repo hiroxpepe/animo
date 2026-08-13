@@ -29,7 +29,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
             var text = File.ReadAllText(found!);
             Assert.That(text, Does.Contain("A sketch, only to show the idea"),
                 "Q-S88: §16.2.2.1 must contain 'A sketch, only to show the idea' marker.");
-            Assert.That(text, Does.Contain("CANONICAL implementation: §8.10 PHASE A"),
+            Assert.That(text, Does.Contain("true, canonical build lives in the Engine's own constructor, at §8.10 PHASE A"),
                 "Q-S88: §16.2.2.1 must point to §8.10 PHASE A as canonical.");
         }
     }

@@ -30,9 +30,9 @@ namespace Animo.Tests.EditMode.EngineTests {
             { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) found = p; }
             Assert.That(found, Is.Not.Null, "Q-S96: spec EN must exist.");
             var text = File.ReadAllText(found!);
-            Assert.That(text, Does.Contain("_composed_persona?.agent_id ?? \"<uninitialized>\""),
+            Assert.That(text, Does.Contain("falling back to a `\"<uninitialized>\"` mark"),
                 "Q-S96: spec EN agent_id getter must be null-safe.");
-            Assert.That(text, Does.Contain("if (_composed_persona == null) return;"),
+            Assert.That(text, Does.Contain("should `_composed_persona` be"),
                 "Q-S96: spec EN OnDestroy must early-return when _composed_persona is null.");
         }
     }
