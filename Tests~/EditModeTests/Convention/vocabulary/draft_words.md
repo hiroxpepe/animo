@@ -6,7 +6,6 @@ GO to are put into the shared word lists, and then taken out from here.
 A word here has to be a real word, said out in full, and not a short
 form — a short form is put right in the code, and not kept here.
 
-+ adjacency
 + adjective
 + adjectives
 + adverb
@@ -51,7 +50,6 @@ form — a short form is put right in the code, and not kept here.
 + dashboard
 + decay
 + declarations
-+ deduplicated
 + default
 + defaultfor
 + delegate
@@ -88,7 +86,6 @@ form — a short form is put right in the code, and not kept here.
 + identifiers
 + idle
 + ids
-+ incoming
 + indent
 + indexer
 + indexers
@@ -111,17 +108,7 @@ form — a short form is put right in the code, and not kept here.
 + mend
 + mended
 + merge
-+ mergeactions
-+ mergebinding
-+ mergecommitment
 + merged
-+ mergeinfluences
-+ mergekind
-+ mergeneeds
-+ mergeneedsmeta
-+ mergepersonaown
-+ mergerates
-+ mergesuppression
 + mergethresholds
 + mermaid
 + meta
@@ -170,7 +157,6 @@ form — a short form is put right in the code, and not kept here.
 + repo
 + reset
 + resets
-+ resolvekindids
 + restyle
 + runner
 + runtime
@@ -194,7 +180,6 @@ form — a short form is put right in the code, and not kept here.
 + syllable
 + syllables
 + tab
-+ tabstate
 + tag
 + tags
 + tense
@@ -221,18 +206,13 @@ form — a short form is put right in the code, and not kept here.
 + untouched
 + usings
 + v
-+ vertex
 + vowel
-+ watcher
 + whichever
 + whose
 + zero
-+ applypending
 + cached
 + clamp
-+ clampdeltatime
 + coefficient
-+ converter
 + delta
 + deltatime
 + duration
@@ -245,16 +225,11 @@ form — a short form is put right in the code, and not kept here.
 + needsconverter
 + parse
 + pending
-+ provider
 + ratesconverter
 + scratch
 + serialize
-+ step2
 + step3
-+ step3thresholds
 + step4
-+ step5
-+ step5switch
 + template
 + tick
 + tier2
@@ -269,33 +244,20 @@ form — a short form is put right in the code, and not kept here.
 + emit
 + fallback
 + frustration
-+ handleasync
 + initialize
 + initialized
 + invariant
 + loops
-+ readloopasync
-+ recordings
 + resume
-+ runasync
 + severity
 + stage2
 + unregister
 + validate
-+ validateactions
-+ validateinfluences
-+ validatekindfields
-+ validateneeds
-+ validaterates
-+ validatesuppression
 + validation
-+ checkplaceholders
 + infos
 + placeholders
 + warnings
-+ crown crowns
 + md
-+ capitalize capitalizes capitalized capitalizing
 + adachi
 + ajv
 + alert alerts
@@ -304,7 +266,6 @@ form — a short form is put right in the code, and not kept here.
 + animobootstrapper
 + animolog
 + applynontiermetadata
-+ architecturally
 + array arrays
 + assemblyinfo
 + asmdef
@@ -318,7 +279,6 @@ form — a short form is put right in the code, and not kept here.
 + bleed bleeds bled bleeding
 + bool
 + bootstrap bootstraps
-+ bear bears bore born bearing
 + bug bugs
 + bullet bullets
 + byte bytes
@@ -382,12 +342,10 @@ form — a short form is put right in the code, and not kept here.
 + hungry
 + hysteresis
 + inclusive
-+ infinite
 + infinity
 + ins
 + inspect inspects inspected inspecting inspector
 + intent
-+ knob knobs
 + latch latches
 + layout layouts
 + lifecycle
@@ -397,10 +355,8 @@ form — a short form is put right in the code, and not kept here.
 + mean means meant meaning
 + milestone milestones
 + mismatch mismatches mismatched
-+ misspell misspells misspelled misspelling
 + monster monsters
 + mutable
-+ nd
 + needtiermaptests
 + network networks networked networking
 + nine
@@ -408,11 +364,9 @@ form — a short form is put right in the code, and not kept here.
 + node nodes
 + notimplementedexception
 + null
-+ odds
 + open opens opened opening
 + orphan orphans
 + outer
-+ outright
 + overwrite overwrites overwrote overwriting
 + partial
 + peaceful
@@ -425,21 +379,17 @@ form — a short form is put right in the code, and not kept here.
 + protocol protocols
 + prove proves proved proven proving
 + pseudocode
-+ purely
 + python
 + q
-+ rd
 + read reads readable
 + registry registries
 + reject rejects rejected rejecting rejection
-+ remake remakes remade remaking
 + remove removes removed removing removal
 + repeat repeats repeated repeating repeatable
 + reuse reuses reused reusing
 + rewrite rewrites rewrote rewritten
-+ right rightly
++ right
 + risk risks risked risking
-+ roundabout
 + scout scouts
 + script scripts
 + seam seams
@@ -447,9 +397,7 @@ form — a short form is put right in the code, and not kept here.
 + seven
 + seventeenth
 + shape shapes shaped shaping
-+ shorthand
 + sibling siblings
-+ silently
 + simulate simulates simulated simulating simulation
 + singleton singletons
 + six
@@ -457,12 +405,10 @@ form — a short form is put right in the code, and not kept here.
 + sixty
 + sketch sketches
 + skip skips skipped skipping
-+ sleight sleights
 + slot slots
 + spawn spawns spawned spawning
 + specification specifications
 + spill spills spilled spilling spillover
-+ st
 + stale
 + starve starves starved starving
 + state states stated stating
@@ -470,7 +416,6 @@ form — a short form is put right in the code, and not kept here.
 + suite suites
 + surface surfaces surfaced surfacing
 + syntax
-+ th
 + thousand thousands
 + topo
 + trap traps trapped trapping
@@ -483,7 +428,6 @@ form — a short form is put right in the code, and not kept here.
 + change changes changed changing unchanged
 + condition conditions conditioned conditioning unconditional
 + cover covers covered covering uncovered
-+ underneath
 + do does did done doing undo undid
 + load loads loaded loading unload
 + lock locks locked locking unlocked unlocking
@@ -503,3 +447,59 @@ form — a short form is put right in the code, and not kept here.
 + miniunity
 + thirty
 + traceframe
++ use uses used using unused
++ domain domains
++ sync syncs
++ feedback
++ simulator simulators
++ cheat cheats
++ todo
++ passive
++ github
++ hiroxpepe
++ tokimeki
++ zelda
++ searchfood
++ patrol patrols
++ lockmode
++ monobehaviour
++ serializefield
++ linq
++ ieee
++ int
++ char chars
++ d
++ m
++ ns
++ sec
++ ctor
++ exp
++ di
++ fatigue
++ loneliness
++ curiosity
++ oxygen
++ effectiveneeds
++ daydream
++ g
++ inherit inherits inherited inheriting
++ dynamic
++ diff diffs
++ override overrides overridden overriding
++ calc
++ even evens evened evening
++ iterate iterates iterated iterating iteration
++ vs
++ relay relays
++ compile compiles compiled compiling
++ author authors authored authoring
++ s
++ utilo
++ jealousy
++ critique critiques
++ nd
++ rd
++ st
++ th
++ provider providers
++ step5
