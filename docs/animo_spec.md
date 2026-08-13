@@ -145,23 +145,23 @@ Animo holds to the same rules as Germio and Briko.
 
 ```mermaid
 mindmap
-  root((Animo<br/>core philosophy))
-    Pure Need-driven
-      every action comes from a need
+  root((Animo<br/>its own, core way of thought))
+    Driven only by Need
+      every act comes from a Need
       base_score is gone
-      idle Need handles passive actions
-    Maslow dynamic suppression
-      lower needs suppress higher ones
-      not a fixed value but a dynamic one
-      biologically natural
-    LLM native
-      flat JSON structure
-      kind_ids array for cascade
+      the idle Need holds a passive act
+    Maslow, worked out live
+      a lower Need holds a higher one back
+      not a fixed value, but one worked out live
+      true, to how a living thing works
+    Made first for an LLM
+      a flat JSON build
+      kind_ids array, for the cascade
       each number's own sense is written down
-    Separation of concerns
-      Animo only handles WHY
-      Germio handles WHAT
-      Briko handles WHERE
+    Each its own, one job
+      Animo only holds WHY
+      Germio holds WHAT
+      Briko holds WHERE
 ```
 
 ---
@@ -192,7 +192,7 @@ flowchart TB
   subgraph Core["⚙️ Animo.Core"]
     direction LR
     CC["Composer<br/>(internal)<br/>deep copy"]
-    CE["Engine<br/>dynamic suppression"]
+    CE["Engine<br/>holding back, worked out live"]
     CV["Validator<br/>A000-A032"]
   end
 
@@ -679,8 +679,8 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  K1["kind: japanese<br/>cooperative<br/>group-minded"]
-  K2["kind: a_type<br/>careful<br/>cautious"]
+  K1["kind: japanese<br/>works well with others<br/>group-minded"]
+  K2["kind: a_type<br/>careful<br/>slow to act"]
   K3["kind: male<br/>self-asserting"]
   P["persona: yamada_taro<br/>individual override"]
   Result(["composed Persona<br/>full merge<br/>(deep copy)"])
@@ -698,7 +698,7 @@ The LLM only writes the order of the `kind_ids` array. The real cascade math run
 ```mermaid
 flowchart LR
   LLM(["LLM<br/>inference"]) -->|"writes kind_ids"| JSON["animo.json"]
-  JSON --> Comp["Composer<br/>computation<br/>(deep copy)"]
+  JSON --> Comp["Composer<br/>working it out<br/>(a deep copy)"]
   Comp -->|"composed Persona"| Engine
   style LLM fill:#fff4cc,stroke:#ca8a04
   style Comp fill:#e8f4f8,stroke:#0369a1
@@ -956,7 +956,7 @@ flowchart LR
   Bad["influences:<br/>[B→C, A→B]"]
   P1["pass 1: B→C applied<br/>(A→B not yet)"]
   P2["pass 2: A→B applied<br/>(C is no longer updated)"]
-  R1["incomplete result"]
+  R1["a result, not yet whole"]
   Bad --> P1 --> P2 --> R1
   style R1 fill:#fecaca,stroke:#dc2626
 ```
@@ -979,7 +979,7 @@ flowchart TB
   Build["build EDGE dependency graph<br/>(Q-S24): e1 ≺ e2 if e1.target == e2.source"]
   Check{"cycle?"}
   Reject["❌ Validator Error<br/>A025"]
-  Topo["stable topological sort<br/>over EDGES<br/>(tiebreak: composed influences[] order)"]
+  Topo["a steady sort, by depending-on,<br/>over EDGES<br/>(a tie broken by: composed influences[] order)"]
   Loop["apply each Edge in order<br/>→ Clamp after each one"]
   End(["EffectiveNeeds ready<br/>always [0, 100]"])
   Start --> Build --> Check
@@ -1210,7 +1210,7 @@ flowchart TB
   Source --> P3["Composer composition"]
   Source --> P4["Influence: after each Edge<br/>(made explicit in v0.1.2)"]
   P1 & P2 & P3 & P4 --> C["System.Math.Clamp(value, 0, 100)"]
-  C --> R(["Need value finalized"])
+  C --> R(["Need value given, at last"])
   style C fill:#fef3c7,stroke:#ca8a04
   style P4 fill:#fecaca,stroke:#dc2626
 ```
@@ -1902,7 +1902,7 @@ flowchart TB
   P1{"A000: schema_version?"}
   P2{"A021: version 1.3 / 1.4 / 1.5?"}
   P3["Stage 1: A001-A012 structure / range<br/>(raw Root)"]
-  P4["A013-A018 consistency / format<br/>(A019 moved to Stage 2: Q-S39)"]
+  P4["A013-A018 matching, in form<br/>(A019 moved to Stage 2: Q-S39)"]
   P5["A020a/b/c cross-field<br/>(Kind × Persona)"]
   P6["A022-A029 action / commitment / threshold (raw)"]
   P7["A025 cycle (raw, early-warning)"]
@@ -1910,11 +1910,11 @@ flowchart TB
   Compose["Composer.Compose(...)<br/>(per Persona)"]
   P9a["Stage 2: A025 cycle (composed influences)<br/>(v0.1.5, Q-S17)"]
   P9b["Stage 2: A036 composed actions[] non-empty<br/>(v0.1.5, Q-S18)"]
-  P9c["Stage 2: A035 trigger > reset<br/>after omit-fill (v0.1.5, Q-S15)"]
+  P9c["Stage 2: A035 trigger > reset<br/>after a left-out default is filled (v0.1.5, Q-S15)"]
   P9d["Stage 2: A019 typo check on composed Needs<br/>(v0.1.5, Q-S39 — sees needs_meta)"]
   P9e["Stage 2: A037 more-than-one-edge, same target<br/>(v0.1.5, Q-S20 — Warning)"]
   P9f["Stage 2: A038 needs_meta orphan check<br/>(v0.1.5, Q-S41 + Q-S49 + Q-S57 — sees actions/influences/thresholds/rates)"]
-  P9g["Stage 2: A039 sibling threshold proximity<br/>(v0.1.5, Q-S47 — Warning at <= 1.0f apart, Q-S122 inclusive)"]
+  P9g["Stage 2: A039, two thresholds sitting close<br/>(v0.1.5, Q-S47 — Warning at <= 1.0f apart, Q-S122 inclusive)"]
   Result(["ValidationResult<br/>(errors + warnings + info)"])
   Start --> P1
   P1 -->|"No"| Err(["fail fast"])
@@ -2057,7 +2057,7 @@ flowchart LR
   Schema["animo.schema.json<br/><b>type + structure + range</b><br/>minimum / maximum / pattern"]
   Validator["Animo.Core.Validator<br/><b>checks on true sense</b><br/>cross-field<br/>a check for a cycle"]
   JSON -->|"type / structure / range<br/>(LLM reads this)"| Schema
-  JSON -->|"runtime semantic check"| Validator
+  JSON -->|"a check of true sense, while running"| Validator
   style Schema fill:#e8f4f8,stroke:#0369a1
   style Validator fill:#fef3c7,stroke:#ca8a04
 ```
@@ -2246,10 +2246,10 @@ flowchart TB
   Bad1["❌ bad design 1<br/>new every frame"]
   Bad2["❌ bad design 2<br/>Dictionary string key"]
   Bad3["❌ bad design 3 (Q-S52)<br/>LINQ in Live (e.g. actions.First)"]
-  Good1["✅ good design 1<br/>pre-allocated buffer"]
+  Good1["✅ good design 1<br/>room, given ahead of time"]
   Good2["✅ good design 2<br/>float[] + int index"]
   Good3["✅ good design 3 (Q-S52)<br/>for-loop with int index"]
-  Bad1 --> GC["GC spike"]
+  Bad1 --> GC["a sudden jump in the GC's own work"]
   Bad2 --> Cache["CPU cache miss<br/>~30ns/lookup"]
   Bad3 --> EnumAlloc["IEnumerator alloc<br/>+ closure capture"]
   Good1 --> Stable1["GC stable"]
@@ -2416,7 +2416,7 @@ The Composer's job is reduced to **shape composition** (Persona-first order, las
 
 Any new class that touches Needs in the hot path **must** follow Pre-cache Principle and cache `internal int need_index`. This applies to future `GroupMind` and the rest.
 
-### 15.4 EffectiveNeeds Buffer Pre-Allocated (since v0.1.1)
+### 15.4 EffectiveNeeds, Given Its Own Room, Ahead of Time (since v0.1.1)
 
 ```mermaid
 sequenceDiagram
@@ -2842,23 +2842,23 @@ Frustration spreads into "fear", "a fall in confidence", and "give up, and rest"
 
 ```mermaid
 mindmap
-  root((Animo<br/>flexibility))
-    Action.id is string
-      Zelda Hunt/Ambush
-      Animal Crossing Socialize/Craft
-      Tokimeki Confront/Withdraw
-    needs keys are free
-      8 standard (idle and frustration included)
-      genre custom: longing/jealousy
-    kind_ids many-merge
+  root((Animo<br/>bends to fit))
+    Action.id is a string
+      Zelda's own Hunt/Ambush
+      Animal Crossing's own Socialize/Craft
+      Tokimeki's own Confront/Withdraw
+    a Need's own key is free
+      8 standard (idle and frustration held in)
+      made for one game: longing/jealousy
+    kind_ids joins many
       monster × predator × boss
-      heroine × anxious × a_type
-    Dynamic suppression = biological feel
-      hungry agent ignores curiosity
-      patrol only when peaceful and full
-    Animo knows no genre
-      no library bias
-      LLM writes freely
+      heroine × one who worries × a_type
+    Worked out live = true, to how a living thing feels
+      a hungry agent gives no mind to curiosity
+      patrols only while at peace, and full
+    Animo knows no one kind of game
+      no library holds it to one side
+      the LLM writes freely
 ```
 
 ---
@@ -2870,7 +2870,7 @@ mindmap
 ```mermaid
 sequenceDiagram
   autonumber
-  participant Dev as Developer
+  participant Dev as Writer
   participant LLM
   participant JSON as animo.json
   participant Val as Validator
@@ -2893,7 +2893,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-  Dev["Developer's natural language"]
+  Dev["The writer's own, plain words"]
   LLM["LLM"]
   G["germio.json<br/>rule changes<br/>(WHAT)"]
   B["level_layout.json<br/>level changes<br/>(WHERE)"]
@@ -2919,42 +2919,42 @@ All TODOs collected during the design.
 
 ```mermaid
 mindmap
-  root((Animo<br/>future work))
-    Logging integration
-      GermioLog/BrikoLog/AnimoLog<br/>3 copies exist
-      → integrate into UtiloLog
-    Utilo new package
-      shared logger
+  root((Animo<br/>work still to come))
+    Bringing logging together
+      GermioLog/BrikoLog/AnimoLog<br/>3 copies now stand
+      → bring into one, UtiloLog
+    Utilo, a new package
+      a logger, shared
       ValidationResult
       ValidationLevel
       Location
-    Germio packaging
-      extract from stemic
+    Germio, put in a box, ready to ship
+      taken out from stemic
       com.studiomeowtoon.germio
-    Organization migration
+    Moving where the work lives
       hiroxpepe → meowtoon
-      G+B+A+U all moved
-    GroupMind v2
-      fear contagion
-      group behavior
+      G+B+A+U, all moved
+    GroupMind, a second version
+      fear, spreading through a group
+      how a group acts
     Scene Context
-      Store singleton → per-Scene
-      consider DI
-    JSON splitting
-      kinds/ directory
-      personas/ directory
-      Validator merges them
-    actions Dictionary
-      reconsider in v0.2
-    cyclic influences
-      v0.1.2 makes them Errors
-      learning rate alpha in v0.2
-    Validator evolution
-      A012 if composition changes
-      A020 dedupe
-    schema versioning
-      "1.3" / "1.4" current
-      "2.0" migration in v2
+      Store, one instance → one, for each Scene
+      look at DI
+    JSON, split apart
+      a kinds/ folder
+      a personas/ folder
+      Validator joins them
+    actions as a Dictionary
+      look at this again, in v0.2
+    A Need's own graph, holding a cycle
+      v0.1.2 makes these an Error
+      a rate of learning, alpha, in v0.2
+    The Validator, growing further
+      A012, should the way of putting together change
+      A020, dropping a doubled one
+    Naming the schema's own version
+      "1.3" / "1.4", now in use
+      "2.0", a move, in version 2
 ```
 
 ### 21.2 Bringing Logging Together (the first thing to do)
@@ -2998,7 +2998,7 @@ flowchart LR
     M4["germio (new)"]
     M5["utilo (new)"]
   end
-  Personal -.->|"migrate"| Org
+  Personal -.->|"moves"| Org
   style Org fill:#d1fae5,stroke:#059669,stroke-width:3px
 ```
 
@@ -3077,7 +3077,7 @@ flowchart LR
     B1["Engine"]
     B2["Needs"]
     B3["Agent"]
-    B4["Backstage"]
+    B4["Held Behind the Scenes"]
   end
   subgraph Iter3["final v0.1.4"]
     C1["Engine"]
@@ -3085,7 +3085,7 @@ flowchart LR
     C3["Agent"]
     C4["Store"]
   end
-  Iter1 -->|"strip prefix"| Iter2
+  Iter1 -->|"take off the start mark"| Iter2
   Iter2 -->|"adjust feel"| Iter3
   style Iter3 fill:#d1fae5,stroke:#059669
 ```
@@ -3170,15 +3170,14 @@ The fourth round stood apart. Rather than pointing at holes in the design, it po
 
 Twenty-six chapters, of talk on the design. The main matters, by their own weight:
 
-```mermaid
-pie title v0.1.4 work share
-  "Lock / Unlock API design (Wall 3)" : 30
-  "frustration Need + feedback patterns (Wall 2)" : 30
-  "ScenarioRunner / Behavior Trace (Wall 1)" : 20
-  "Validator A030/A031/A032 added" : 10
-  "Backward compatibility (schema 1.3 / 1.4)" : 5
-  "v0.1.3 spec carry-over and check" : 5
-```
+| What the talk covered | Its own share, of the whole |
+| --- | --- |
+| Lock / Unlock API design (Wall 3) | 30% |
+| frustration Need + feedback patterns (Wall 2) | 30% |
+| ScenarioRunner / Behavior Trace (Wall 1) | 20% |
+| Validator A030/A031/A032 added | 10% |
+| Working with what came before (schema 1.3 / 1.4) | 5% |
+| v0.1.3 spec carry-over and check | 5% |
 
 ### 22.8 Final Evolution Graph
 
@@ -3187,8 +3186,8 @@ flowchart LR
   V100["v0.1.0<br/>initial design"]
   V110["v0.1.1<br/>Maslow dynamic<br/>base_score removed"]
   V120["v0.1.2<br/>Hysteresis inside suppression<br/>float[] storage<br/>cycle = Error"]
-  V130["v0.1.3<br/>Commitment rename<br/>Pre-cache Principle<br/>force_reset re-defined"]
-  V140["v0.1.4<br/>Lock API added<br/>frustration Need<br/>operational layer"]
+  V130["v0.1.3<br/>Commitment, a new name<br/>the Rule of Caching First<br/>force_reset, given a new sense"]
+  V140["v0.1.4<br/>Lock API added<br/>frustration Need<br/>a layer, for running"]
   V100 -->|"Gemini critique 1"| V110
   V110 -->|"Gemini critique 2"| V120
   V120 -->|"Gemini critique 3"| V130
@@ -3502,7 +3501,7 @@ A new call, `engine.SuppressAction(action_id: "SearchFood", duration: 30.0f)`, w
 
 → **Not taken up, in v0.1.4.** Look at this again, in v0.2.
 
-### 24.4 Recommended Operational Pattern
+### 24.4 A Pattern Held Up, For Real Use
 
 ```mermaid
 flowchart TB
@@ -3574,7 +3573,7 @@ This gives the LLM a small push, to add a way back, once things go wrong.
 flowchart LR
   Game["Germio / Game"]
   Game -->|"Affect: change inner state"| Animo
-  Animo -->|"behavior notification"| Game
+  Animo -->|"word of a behavior"| Game
   Game -->|"Lock: freeze action"| Animo
   style Animo fill:#ffd5cc,stroke:#dc2626
 ```
@@ -3774,7 +3773,7 @@ After the LLM edits `animo.json`, **automatically run ScenarioRunner and feed th
 ```mermaid
 sequenceDiagram
   autonumber
-  participant Dev as Developer
+  participant Dev as Writer
   participant LLM
   participant Runner as ScenarioRunner
   participant Result as Trace result
