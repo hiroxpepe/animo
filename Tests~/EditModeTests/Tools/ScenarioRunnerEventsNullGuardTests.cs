@@ -24,7 +24,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
 
         [Test] public void Case01_SpecEN_RunNormalizesEventsToEmptyArray() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S104: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("events ??= System.Array.Empty<TimedAffectEvent>()"),

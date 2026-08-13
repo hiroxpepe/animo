@@ -36,7 +36,7 @@ namespace Animo.Tests.EditMode.BootstrapperTests {
 
         [Test] public void Case02_SpecEN_AnimoBootstrapperOnDestroyHasGuard() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S118: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("if (!Application.isEditor || Application.isPlaying) return;"),

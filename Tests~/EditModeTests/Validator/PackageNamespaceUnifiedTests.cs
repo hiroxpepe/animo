@@ -35,7 +35,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
 
         [Test] public void Case02_SpecEN_NoMeowtoonOutsideHistoricalCitation() {
             string? found = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) found = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) found = p; }
             Assert.That(found, Is.Not.Null, "Q-S94: spec EN must exist.");
             var text = File.ReadAllText(found!);
             // Q-S94 ヘッダー Theme + §3.1 paragraph contain `com.meowtoon.*` as historical citation.

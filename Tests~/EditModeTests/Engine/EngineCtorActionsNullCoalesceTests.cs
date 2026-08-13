@@ -24,7 +24,7 @@ namespace Animo.Tests.EditMode.EngineTests {
 
         [Test] public void Case01_SpecEN_CtorActionsLoopsNullCoalesce() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S125: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("foreach (var action in _composed_persona.actions ?? new List<Action>())"),

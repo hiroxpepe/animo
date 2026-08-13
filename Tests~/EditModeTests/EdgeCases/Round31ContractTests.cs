@@ -112,14 +112,14 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
             var path = Path.Combine(
                 System.IO.Directory.GetCurrentDirectory()
                     .Split(new[] { "Tests~" }, System.StringSplitOptions.None)[0],
-                "docs", "animo_spec_v0.1.5_EN.md");
+                "docs", "animo_spec.md");
             // Walk up to repo root
             string? dir = System.IO.Directory.GetCurrentDirectory();
             while (dir != null &&
                    !System.IO.File.Exists(System.IO.Path.Combine(dir, "Scripts", "Const.cs")))
                 dir = System.IO.Directory.GetParent(dir)?.FullName;
             if (dir != null)
-                path = System.IO.Path.Combine(dir, "docs", "animo_spec_v0.1.5_EN.md");
+                path = System.IO.Path.Combine(dir, "docs", "animo_spec.md");
 
             Assert.That(System.IO.File.Exists(path), Is.True, $"spec EN not found: {path}");
             var text = System.IO.File.ReadAllText(path);

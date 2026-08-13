@@ -33,7 +33,7 @@ namespace Animo.Tests.EditMode.BootstrapperTests {
             while (dir != null && !File.Exists(Path.Combine(dir, "Scripts", "Const.cs")))
                 dir = Directory.GetParent(dir)?.FullName;
             if (dir != null) {
-                var spec = File.ReadAllText(Path.Combine(dir, "docs", "animo_spec_v0.1.5_EN.md"));
+                var spec = File.ReadAllText(Path.Combine(dir, "docs", "animo_spec.md"));
                 Assert.That(spec, Does.Contain("Q-S58"),
                     "Q-S58: spec EN must document the paired cleanup contract.");
             }

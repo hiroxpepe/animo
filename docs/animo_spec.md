@@ -1670,6 +1670,15 @@ public sealed class Agent : MonoBehaviour, IAnimoAgent {
             enabled = false;
             return;
         }
+
+        // (Q-S144) The one, true rule for AnimoLog.Error: PersonaCache
+        // **only ever throws**, with no call to AnimoLog at all — the
+        // exception's own message carries the full word of what went
+        // wrong. Agent.Awake's own catch block is the one, true place
+        // that calls AnimoLog.Error, and it calls it only once, with
+        // the Agent's own name and template id put in front. Should
+        // both sides call AnimoLog, the very same failure would be
+        // written down twice, over the same root cause.
         // PersonaCacheNotInitializedException, on purpose, is NOT caught —
         // it passes on, out of Awake, Unity writes it down as a hard
         // scene-load error, and the builder fixes the Bootstrapper. That
@@ -2445,7 +2454,13 @@ namespace Animo {
         // tests (AssertResult.cs, NumericEdgeTests.cs, and the rest.) read
         // `has_errors` — C# is case-sensitive; the spec narrative was
         // wrong. Q-S74 unifies on `has_errors`.
+        // (Q-S149) `has_errors` and `has_warnings` give back a plain
+        // `bool`, worked out fresh, each time — never a throw. A
+        // debugger's own Watch window reads every property, on its
+        // own, as it runs; a throwing stand-in here would flood the
+        // IDE with a wall of errors, shown for no true reason.
         public bool has_errors => errors.Count > 0;
+        public bool has_warnings => warnings.Count > 0;
         public bool HasRule(string rule_id);
 
         /// <summary>
@@ -2608,9 +2623,13 @@ namespace Animo {
         // ============================================================
         // Not just documentation — the Engine's max_lower_tier_intensity
         // computation (§8.3) reads these maps as its one, true source.
+        // (Q-S150) Both maps below are held as IReadOnlyDictionary, never
+        // a plain, changeable Dictionary — a Dictionary, left open to
+        // change, would let real code corrupt Maslow's own tier map,
+        // while the game runs.
 
-        public static readonly Dictionary<string, int> NEED_TIER_BY_NAME =
-            new() {
+        public static readonly IReadOnlyDictionary<string, int> NEED_TIER_BY_NAME =
+            new Dictionary<string, int>() {
                 { "hunger",     1 }, { "fatigue",    1 },
                 { "fear",       2 }, { "frustration", 2 },
                 { "loneliness", 3 },
@@ -2618,8 +2637,8 @@ namespace Animo {
                 { "curiosity",  5 }, { "idle",       5 },
             };
 
-        public static readonly Dictionary<int, int[]> NEED_INDICES_BY_TIER =
-            new() {
+        public static readonly IReadOnlyDictionary<int, int[]> NEED_INDICES_BY_TIER =
+            new Dictionary<int, int[]>() {
                 { 1, new[] { NEED_INDEX_HUNGER, NEED_INDEX_FATIGUE } },
                 { 2, new[] { NEED_INDEX_FEAR, NEED_INDEX_FRUSTRATION } },
                 { 3, new[] { NEED_INDEX_LONELINESS } },

@@ -69,7 +69,7 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
         // ── Q-S144: AnimoLog.Error logging responsibility ────────────────────
         [Test] public void Case04_SpecDocumentsLoggingResponsibility() {
             var path = Path.Combine(RepoRoot(), "docs",
-                "animo_spec_v0.1.5_EN.md");
+                "animo_spec.md");
             Assert.That(File.Exists(path), Is.True);
             var text = File.ReadAllText(path);
             Assert.That(text, Does.Contain("Q-S144"),

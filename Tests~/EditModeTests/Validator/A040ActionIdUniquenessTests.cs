@@ -29,7 +29,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
 
         [Test] public void Case01_SpecEN_A040RuleIsDefined() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S113: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("**A040**"),
@@ -40,7 +40,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
 
         [Test] public void Case02_LayoutAnnotation_UpdatedToA000_A040() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S113: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("A000-A040"),

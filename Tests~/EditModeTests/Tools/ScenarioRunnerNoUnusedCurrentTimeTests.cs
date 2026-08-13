@@ -31,7 +31,7 @@ namespace Animo.Tests.EditMode.ToolsTests {
 
         [Test] public void Case01_SpecEN_NoUnusedCurrentTimeDeclaration() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S123: spec EN must exist.");
             var lines = File.ReadAllLines(path!);
             // Live code-block lines are unindented C#-like and follow a

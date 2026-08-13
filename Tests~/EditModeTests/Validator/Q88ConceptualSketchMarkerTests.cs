@@ -24,13 +24,13 @@ namespace Animo.Tests.EditMode.ValidatorTests {
 
         [Test] public void Case01_Section_16_2_2_1_PseudocodeMarkedConceptualOnly() {
             string? found = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) found = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) found = p; }
             Assert.That(found, Is.Not.Null, "Q-S88: spec EN must exist.");
             var text = File.ReadAllText(found!);
-            Assert.That(text, Does.Contain("Conceptual sketch only"),
-                "Q-S88: §16.2.2.1 must contain 'Conceptual sketch only' marker.");
-            Assert.That(text, Does.Contain("CANONICAL implementation: §3.5.2 PHASE A"),
-                "Q-S88: §16.2.2.1 must point to §3.5.2 PHASE A as canonical.");
+            Assert.That(text, Does.Contain("A sketch, only to show the idea"),
+                "Q-S88: §16.2.2.1 must contain 'A sketch, only to show the idea' marker.");
+            Assert.That(text, Does.Contain("CANONICAL implementation: §8.10 PHASE A"),
+                "Q-S88: §16.2.2.1 must point to §8.10 PHASE A as canonical.");
         }
     }
 }

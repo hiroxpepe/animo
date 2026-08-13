@@ -27,14 +27,14 @@ namespace Animo.Tests.EditMode.BootstrapperTests {
 
         [Test] public void Case01_SpecEN_DocsTestSideDiscipline() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S130: spec EN must exist.");
             var text = File.ReadAllText(path!);
-            Assert.That(text, Does.Contain("EditMode test isolation discipline"),
+            Assert.That(text, Does.Contain("Keeping one EditMode test's own world apart from another's"),
                 "Q-S130: spec EN must declare test isolation discipline.");
             Assert.That(text, Does.Contain("Q-S130"),
                 "Q-S130: spec EN must reference Q-S130.");
-            Assert.That(text, Does.Contain("`Animo.Store.ResetForTesting()` in `[SetUp]`"),
+            Assert.That(text, Does.Contain("`Animo.Store.ResetForTesting()`, in `[SetUp]`"),
                 "Q-S130: spec EN must require Store reset in SetUp.");
         }
     }

@@ -503,3 +503,43 @@ form — a short form is put right in the code, and not kept here.
 + th
 + provider providers
 + step5
++ adjacency
++ deduplicated
++ incoming
++ mergeactions
++ mergebinding
++ mergecommitment
++ mergeinfluences
++ mergekind
++ mergeneeds
++ mergeneedsmeta
++ mergepersonaown
++ mergerates
++ mergesuppression
++ resolvekindids
++ tabstate
++ vertex
++ watcher
++ applypending
++ clampdeltatime
++ converter
++ step2
++ step3thresholds
++ handleasync
++ readloopasync
++ recordings
++ runasync
++ validateactions
++ validateinfluences
++ validatekindfields
++ validateneeds
++ validaterates
++ validatesuppression
++ checkplaceholders
++ crown crowns
++ capitalize capitalizes capitalized capitalizing
++ misspell misspells misspelled misspelling
++ remake remakes remade remaking
++ underneath
++ infinite
++ bear bears bore bearing

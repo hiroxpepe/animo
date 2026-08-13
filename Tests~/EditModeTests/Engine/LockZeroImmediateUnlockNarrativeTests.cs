@@ -25,12 +25,12 @@ namespace Animo.Tests.EditMode.EngineTests {
 
         [Test] public void Case01_SpecEN_LockZeroNarrativeMentionsPropertySemantics() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S126: spec EN must exist.");
             var text = File.ReadAllText(path!);
             Assert.That(text, Does.Contain("Q-S126"),
                 "Q-S126: spec EN must reference Q-S126 in the Lock(0) clarification.");
-            Assert.That(text, Does.Contain("no special path inside `Lock` is required"),
+            Assert.That(text, Does.Contain("no special path, inside `Lock`, is ever needed"),
                 "Q-S126: spec EN must explicitly state no special path in Lock is needed.");
         }
     }

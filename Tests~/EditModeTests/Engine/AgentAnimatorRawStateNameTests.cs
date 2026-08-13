@@ -12,7 +12,7 @@ namespace Animo.Tests.EditMode.EngineTests {
 
         [Test] public void Case01_SpecEN_AwakeUsesRawBehaviorForAnimator() {
             string? path = null;
-            { var p = System.IO.Path.Combine(RepoRoot(), "docs", "animo_spec_v0.1.5_EN.md"); if (System.IO.File.Exists(p)) path = p; }
+            { var p = System.IO.Path.Combine(RepoRoot(), "docs", "animo_spec.md"); if (System.IO.File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S102: spec EN must exist.");
             var text = System.IO.File.ReadAllText(path!);
             Assert.That(text, Does.Contain("Q-S102").Or.Contain("_animator"),
