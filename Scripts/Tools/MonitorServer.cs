@@ -43,7 +43,7 @@ namespace Animo.Tools {
         }
 
         public MonitorServer(MonitorLoop loop, int port = 8181, int frame_delay_ms = 100)
-            : this(setOfOne(loop), port, frame_delay_ms) { }
+            : this(setOfOne(loop: loop), port, frame_delay_ms) { }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Methods [verb]
@@ -68,7 +68,7 @@ namespace Animo.Tools {
                     }
                     var socket_context = await context.AcceptWebSocketAsync(null);
                     // Run this dashboard on its own task; do not block the accept loop.
-                    _ = handleAsync(socket_context.WebSocket, token);
+                    _ = handleAsync(socket: socket_context.WebSocket, token: token);
                 }
             } finally {
                 listener.Stop();
@@ -80,8 +80,8 @@ namespace Animo.Tools {
         // private static Methods [verb]
 
         static MonitorSet setOfOne(MonitorLoop loop) {
-            var set = new MonitorSet(loop.DeltaTime);
-            set.Add(loop.Engine.AgentID, loop.Engine);
+            var set = new MonitorSet(delta_time: loop.DeltaTime);
+            set.Add(id: loop.Engine.AgentID, engine: loop.Engine);
             return set;
         }
 
@@ -100,7 +100,7 @@ namespace Animo.Tools {
 
         async Task handleAsync(WebSocket socket, CancellationToken token) {
             try {
-                var incoming = readLoopAsync(socket, token);
+                var incoming = readLoopAsync(socket: socket, token: token);
                 while (socket.State == WebSocketState.Open && !token.IsCancellationRequested) {
                     var snapshot_set = _set.TickAll();
                     var message = new {
@@ -108,7 +108,7 @@ namespace Animo.Tools {
                         ids = _set.Ids,
                         agents = snapshot_set,
                     };
-                    var bytes = Encoding.UTF8.GetBytes(JSON.Serialize(message));
+                    var bytes = Encoding.UTF8.GetBytes(JSON.Serialize(value: message));
                     await socket.SendAsync(bytes, WebSocketMessageType.Text, true, token);
                     await Task.Delay(_frame_delay_ms, token);
                 }
@@ -118,7 +118,7 @@ namespace Animo.Tools {
             } catch (WebSocketException) {
                 // dashboard dropped mid-flight — fall through to close
             } finally {
-                await closeQuietly(socket);
+                await closeQuietly(socket: socket);
                 socket.Dispose();
             }
         }
@@ -129,7 +129,7 @@ namespace Animo.Tools {
                 var result = await socket.ReceiveAsync(buffer, token);
                 if (result.MessageType == WebSocketMessageType.Close) break;
                 var text = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                StepInReader.Read(_set, text);
+                StepInReader.Read(set: _set, text: text);
             }
         }
     }

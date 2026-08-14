@@ -42,10 +42,10 @@ namespace Animo.Tools {
 
             if ((string?)message["kind"] == "watch") {
                 var agent = (string?)message["agent"];
-                if (!string.IsNullOrEmpty(agent)) set.Watch(agent!);
+                if (!string.IsNullOrEmpty(agent)) set.Watch(id: agent!);
                 return;
             }
-            Read(set.Loop(set.Watched), text);
+            Read(loop: set.Loop(id: set.Watched), text: text);
         }
 
         public static void Read(MonitorLoop loop, string text) {
@@ -65,7 +65,7 @@ namespace Animo.Tools {
                     var need = (string?)message["need"];
                     var delta = (float?)message["delta"];
                     if (!string.IsNullOrEmpty(need) && delta.HasValue)
-                        loop.QueueAffect(need!, delta.Value);
+                        loop.QueueAffect(need: need!, delta: delta.Value);
                     break;
                 case "pause":
                     loop.Pause();
@@ -83,7 +83,7 @@ namespace Animo.Tools {
                     if (duration.HasValue) {
                         var mode = (string?)message["mode"] == "soft"
                             ? LockMode.Soft : LockMode.Hard;
-                        loop.QueueLock(duration.Value, mode);
+                        loop.QueueLock(duration: duration.Value, mode: mode);
                     }
                     break;
                 case "unlock":

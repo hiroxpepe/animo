@@ -42,13 +42,13 @@ namespace Animo.Core {
             };
 
             // §10 steps 2-3: merge Kinds in cascade order.
-            foreach (var kind_id in resolveKindIds(persona, root)) {
-                var kind = findKind(root, kind_id);
-                if (kind != null) mergeKind(composed, kind);
+            foreach (var kind_id in resolveKindIds(persona: persona, root: root)) {
+                var kind = findKind(root: root, kind_id: kind_id);
+                if (kind != null) mergeKind(composed: composed, kind: kind);
             }
 
             // §10 step 4: persona's own fields win (applied last).
-            mergePersonaOwn(composed, persona);
+            mergePersonaOwn(composed: composed, source: persona);
 
             // (Q-S7) Ensure binding is always non-null after Compose.
             if (composed.binding == null) {
@@ -58,14 +58,14 @@ namespace Animo.Core {
             }
 
             // (Q-S11 + Q-S86) Fill reset_threshold.
-            fillResetThresholds(composed);
+            fillResetThresholds(composed: composed);
 
             // (Q-S7) Fill missing referenced Need keys with 0.0f.
-            fillMissingNeeds(composed);
+            fillMissingNeeds(composed: composed);
 
             // (§16.3.4 Pre-cache Principle) Topo-sort influences[] once at compose time
             // so Engine Step 2 can iterate a pre-ordered int[] with zero allocation.
-            topologicalSortInfluences(composed);
+            topologicalSortInfluences(composed: composed);
 
             return composed;
         }
@@ -103,31 +103,31 @@ namespace Animo.Core {
         // Kind merge (builds up the base; persona overrides come after)
 
         static void mergeKind(Persona composed, Kind kind) {
-            if (kind.rates       != null) mergeRates(composed, kind.rates);
-            if (kind.suppression != null) mergeSuppression(composed, kind.suppression);
-            if (kind.influences  != null) mergeInfluences(composed, kind.influences);
-            if (kind.actions     != null) mergeActions(composed, kind.actions);
-            if (kind.commitment  != null) mergeCommitment(composed, kind.commitment);
-            if (kind.binding     != null) mergeBinding(composed, kind.binding);
-            if (kind.needs_meta  != null) mergeNeedsMeta(composed, kind.needs_meta);
+            if (kind.rates       != null) mergeRates(composed: composed, source: kind.rates);
+            if (kind.suppression != null) mergeSuppression(composed: composed, source: kind.suppression);
+            if (kind.influences  != null) mergeInfluences(composed: composed, source: kind.influences);
+            if (kind.actions     != null) mergeActions(composed: composed, source: kind.actions);
+            if (kind.commitment  != null) mergeCommitment(composed: composed, source: kind.commitment);
+            if (kind.binding     != null) mergeBinding(composed: composed, source: kind.binding);
+            if (kind.needs_meta  != null) mergeNeedsMeta(composed: composed, source: kind.needs_meta);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Persona own-field merge (persona wins)
 
         static void mergePersonaOwn(Persona composed, Persona source) {
-            if (source.needs      != null) mergeNeeds(composed, source.needs);
-            if (source.rates      != null) mergeRates(composed, source.rates);
-            if (source.suppression!= null) mergeSuppression(composed, source.suppression);
+            if (source.needs      != null) mergeNeeds(composed: composed, source: source.needs);
+            if (source.rates      != null) mergeRates(composed: composed, source: source.rates);
+            if (source.suppression!= null) mergeSuppression(composed: composed, source: source.suppression);
 
             // (Q-S19/Q-S20) Persona-first ordering: persona entries lead,
             // then Kind entries not already present by key.
-            if (source.influences != null) mergeInfluencesPersonaFirst(composed, source.influences);
-            if (source.actions    != null) mergeActionsPersonaFirst(composed, source.actions);
+            if (source.influences != null) mergeInfluencesPersonaFirst(composed: composed, persona_influences: source.influences);
+            if (source.actions    != null) mergeActionsPersonaFirst(composed: composed, persona_acts: source.actions);
 
-            if (source.commitment != null) mergeCommitment(composed, source.commitment);
-            if (source.binding    != null) mergeBinding(composed, source.binding);
-            if (source.needs_meta != null) mergeNeedsMeta(composed, source.needs_meta);
+            if (source.commitment != null) mergeCommitment(composed: composed, source: source.commitment);
+            if (source.binding    != null) mergeBinding(composed: composed, source: source.binding);
+            if (source.needs_meta != null) mergeNeedsMeta(composed: composed, source: source.needs_meta);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ namespace Animo.Core {
             if (composed.binding == null) composed.binding = new Binding();
             if (source.on_action_change != null)
                 composed.binding.on_action_change = source.on_action_change;
-            mergeThresholds(composed.binding.thresholds, source.thresholds);
+            mergeThresholds(merged: composed.binding.thresholds, incoming: source.thresholds);
         }
 
         // (Q-S14 + Q-S43 + Q-S47 + Q-S85) first-occurrence-wins, EPSILON compound key.
@@ -227,7 +227,7 @@ namespace Animo.Core {
             foreach (var threshold in incoming) {
                 int found = -1;
                 for (int i = 0; i < merged.Count; i++) {
-                    if (ThresholdsMatch(merged[i], threshold)) { found = i; break; }
+                    if (ThresholdsMatch(first: merged[i], second: threshold)) { found = i; break; }
                 }
                 if (found >= 0) merged[found] = threshold.DeepCopy();
                 else            merged.Add(threshold.DeepCopy());

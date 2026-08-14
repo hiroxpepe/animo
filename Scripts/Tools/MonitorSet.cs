@@ -52,10 +52,10 @@ namespace Animo.Tools {
         /// </summary>
         public void Add(string id, Engine engine) {
             if (_loops.ContainsKey(id)) {
-                AnimoLog.Warning($"MonitorSet.Add: agent id '{id}' is already in the set; ignored.");
+                AnimoLog.Warning(message: $"MonitorSet.Add: agent id '{id}' is already in the set; ignored.");
                 return;
             }
-            _loops[id] = new MonitorLoop(engine, _delta_time);
+            _loops[id] = new MonitorLoop(engine: engine, delta_time: _delta_time);
             _recordings[id] = new Recording();
             _order.Add(id);
             if (_watched.Length == 0) _watched = id;
@@ -89,7 +89,7 @@ namespace Animo.Tools {
             var snapshot_set = new Dictionary<string, EngineSnapshot>();
             foreach (var id in _order) {
                 var snapshot = _loops[id].Tick();
-                _recordings[id].Add(snapshot);
+                _recordings[id].Add(snapshot: snapshot);
                 snapshot_set[id] = snapshot;
             }
             return snapshot_set;

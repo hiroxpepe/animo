@@ -76,7 +76,7 @@ namespace Animo {
         void Awake() {
             // (Q-S112) Warn once if Bus is null — authoring aid, not fatal.
             if (_bus == null)
-                AnimoLog.Warning($"Agent '{name}': no Bus assigned. OnSignal events will not route.");
+                AnimoLog.Warning($"Agent '{name}': no Bus assigned. OnSignaled events will not route.");
 
             try {
                 // Step 1 (Q-S34): Get composed Persona from cache.
@@ -96,8 +96,8 @@ namespace Animo {
                 // Step 5 (Q-S22): Register in Store.
                 Animo.Store.Instance.Register(agent: this);
 
-                // Step 6 (Q-S102): Wire OnSignal to Bus and Animator.
-                _engine.OnSignal += OnSignalHandler;
+                // Step 6 (Q-S102): Wire OnSignaled to Bus and Animator.
+                _engine.OnSignaled += OnSignalHandler;
 
                 // Step 7 (Q-S80): Seed first behavior (silent per Q-S31).
                 _engine.Live(delta_time: 0.0f);
@@ -127,7 +127,7 @@ namespace Animo {
             // (Q-S102) Publish to Bus on every signal (Step 3 threshold + Step 5 behavior).
             _bus?.Publish(signal_id);
             // (#1) Only call Animator.Play when behavior actually changes.
-            // Engine.OnSignal fires for BOTH Step 3 threshold events AND Step 5 behavior
+            // Engine.OnSignaled fires for BOTH Step 3 threshold events AND Step 5 behavior
             // switches; calling Play on every signal would restart the current animation
             // from frame 0 each time a threshold crosses, causing visible stutter.
             string current = _engine.Behavior;
@@ -192,9 +192,9 @@ namespace Animo {
             // _locked_behavior_index so the Engine leaves a consistent state.
             //
             // (#3 Phase_3_5_2) NOTE: An earlier comment claimed "Unlock may publish
-            // an OnSignal event (behavior-change upon release), so Store.Unregister
+            // an OnSignaled event (behavior-change upon release), so Store.Unregister
             // must come after." That was a fact error — Engine.Unlock() only resets
-            // two fields; OnSignal is raised by Step 5 inside Live(delta_time), not by Unlock
+            // two fields; OnSignaled is raised by Step 5 inside Live(delta_time), not by Unlock
             // itself. Since OnDestroy is the agent's last frame, no Live(delta_time) will run
             // again. The Unlock/Unregister order is therefore semantically free; we
             // keep Unlock first as defensive ordering for future code changes.

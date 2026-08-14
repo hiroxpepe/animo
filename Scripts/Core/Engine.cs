@@ -155,8 +155,8 @@ namespace Animo.Core {
             foreach (var entry in _need_index) {
                 NeedMeta meta = (_persona.needs_meta != null &&
                                  _persona.needs_meta.TryGetValue(entry.Key, out var em))
-                                ? em : NeedMeta.DefaultFor(entry.Key);
-                applyNonTierMetadata(entry.Value, meta);
+                                ? em : NeedMeta.DefaultFor(need_name: entry.Key);
+                applyNonTierMetadata(need_index: entry.Value, meta: meta);
             }
 
             // ── Action score array ─────────────────────────────────────────
@@ -184,7 +184,7 @@ namespace Animo.Core {
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Events [verb, verb phrase]
 
-        public event Action<string>? OnSignal;      // Q-S26
+        public event Action<string>? OnSignaled;      // Q-S26
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // public Properties [noun, adjective]
@@ -215,7 +215,7 @@ namespace Animo.Core {
                 if (_lock_remaining <= 0f) {
                     _lock_remaining = 0f;
                     _locked_behavior_index = -1;
-                    // Unlock raises OnSignal for behavior change in Step 5 below
+                    // Unlock raises OnSignaled for behavior change in Step 5 below
                 }
             }
 
@@ -257,7 +257,7 @@ namespace Animo.Core {
             if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
             if (float.IsNaN(delta)) throw new ArgumentException("delta is NaN.", nameof(delta));
             if (!_need_index.TryGetValue(need, out var index)) {
-                AnimoLog.Warning($"Engine.Affect: need '{need}' is unknown (no-op).");
+                AnimoLog.Warning(message: $"Engine.Affect: need '{need}' is unknown (no-op).");
                 return;
             }
             float new_value;
@@ -287,7 +287,7 @@ namespace Animo.Core {
             // (A031) Runtime warning when duration exceeds LOCK_DURATION_WARN_THRESHOLD (30s).
             if (duration > Const.LOCK_DURATION_WARN_THRESHOLD)
                 AnimoLog.Warning(
-                    $"[A031] Engine.Lock: duration {duration}s exceeds " +
+                    message: $"[A031] Engine.Lock: duration {duration}s exceeds " +
                     $"LOCK_DURATION_WARN_THRESHOLD ({Const.LOCK_DURATION_WARN_THRESHOLD}s). " +
                     "Runaway Lock state risk.");
             _lock_remaining        = duration;
@@ -308,7 +308,7 @@ namespace Animo.Core {
             if (need == null) throw new ArgumentNullException(nameof(need));
             if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
             if (!_need_index.TryGetValue(need, out var index)) {
-                AnimoLog.Warning($"Engine.GetNeed: '{need}' unknown."); return 0f;
+                AnimoLog.Warning(message: $"Engine.GetNeed: '{need}' unknown."); return 0f;
             }
             return _effective_needs[index];
         }
@@ -317,7 +317,7 @@ namespace Animo.Core {
             if (need == null) throw new ArgumentNullException(nameof(need));
             if (string.IsNullOrEmpty(need)) throw new ArgumentException("need cannot be empty.", nameof(need));
             if (!_need_index.TryGetValue(need, out var index)) {
-                AnimoLog.Warning($"Engine.GetBaseNeed: '{need}' unknown."); return 0f;
+                AnimoLog.Warning(message: $"Engine.GetBaseNeed: '{need}' unknown."); return 0f;
             }
             return _needs[index];
         }
@@ -332,12 +332,12 @@ namespace Animo.Core {
             var base_needs = new Dictionary<string, float>();
             var effective_needs = new Dictionary<string, float>();
             foreach (var name in GetAllNeedNames()) {
-                base_needs[name] = GetBaseNeed(name);
-                effective_needs[name] = GetNeed(name);
+                base_needs[name] = GetBaseNeed(need: name);
+                effective_needs[name] = GetNeed(need: name);
             }
             var action_scores = new Dictionary<string, float>();
             foreach (var id in GetAllActionIds())
-                action_scores[id] = GetActionScore(id);
+                action_scores[id] = GetActionScore(action_id: id);
             return new EngineSnapshot(
                 behavior: Behavior,
                 is_locked: IsLocked,
@@ -371,7 +371,7 @@ namespace Animo.Core {
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // protected Methods [verb]
 
-        protected void RaiseSignal(string signal_id) => OnSignal?.Invoke(signal_id);
+        protected void RaiseSignal(string signal_id) => OnSignaled?.Invoke(signal_id);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // private Methods [verb]
@@ -426,7 +426,7 @@ namespace Animo.Core {
                 if (!threshold.is_above) {
                     if (current >= threshold.trigger_threshold) {
                         threshold.is_above = true;
-                        RaiseSignal(threshold.expanded_trigger);
+                        RaiseSignal(signal_id: threshold.expanded_trigger);
                     }
                 } else {
                     if (current <= reset) threshold.is_above = false;
@@ -504,7 +504,7 @@ namespace Animo.Core {
             if (new_behavior != _current_behavior) {
                 string previous = _current_behavior;
                 _current_behavior = new_behavior;
-                onBehaviorChanged(previous, new_behavior);
+                onBehaviorChanged(previous: previous, next_behavior: new_behavior);
             }
             _previous_behavior = _current_behavior;
         }
@@ -512,7 +512,7 @@ namespace Animo.Core {
         void onBehaviorChanged(string previous, string next_behavior) {
             if (previous == "") return;  // Q-S31: silent first transition
             if (_cached_action_triggers.TryGetValue(next_behavior, out var sig))
-                RaiseSignal(sig);
+                RaiseSignal(signal_id: sig);
         }
 
         void applyNonTierMetadata(int need_index, NeedMeta meta) {

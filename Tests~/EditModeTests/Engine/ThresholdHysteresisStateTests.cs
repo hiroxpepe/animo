@@ -18,7 +18,7 @@ namespace Animo.Tests.EditMode.EngineTests {
     /// to re-arm, so reset_threshold becomes dead code.
     ///
     /// Phase 3 (full Engine impl) will assert the firing sequence
-    /// directly via OnSignal subscription. Here we pin the data-shape
+    /// directly via OnSignaled subscription. Here we pin the data-shape
     /// contract: Threshold has the is_above field.
     /// </summary>
     /// <author>h.adachi (STUDIO MeowToon)</author>

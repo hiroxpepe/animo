@@ -196,11 +196,11 @@ namespace Animo.Tools {
             // Composer.Compose call let invalid templates crash at Live() inside Step 5.
             // GetComposed returns a shared composed template; DeepCopy so per-run mutation
             // (agent_id override) doesn't corrupt the cache for concurrent runs.
-            var composed = Animo.PersonaCache.GetComposed(agent_id).DeepCopy();
+            var composed = Animo.PersonaCache.GetComposed(template_id: agent_id).DeepCopy();
             string effective_id = agent_id_override ?? $"{agent_id}_run_{_sequence++}";
             composed.agent_id   = effective_id;
 
-            _engine = new Engine(composed);
+            _engine = new Engine(persona: composed);
 
             // (#2 Phase_3_5_2) Cache need names and action ids once.
             // Persona structure is fixed at ctor time, so per-frame GetAllNeedNames()
@@ -210,9 +210,9 @@ namespace Animo.Tools {
             var need_names_cache = _engine.GetAllNeedNames();
             var action_ids_cache = _engine.GetAllActionIds();
 
-            // (#2 Q-S26) Subscribe to Engine.OnSignal so signals_fired is populated per frame.
+            // (#2 Q-S26) Subscribe to Engine.OnSignaled so signals_fired is populated per frame.
             var pending_signals = new System.Collections.Generic.List<string>();
-            _engine.OnSignal += signal => pending_signals.Add(signal);
+            _engine.OnSignaled += signal => pending_signals.Add(signal);
             var result = new TraceResult();
 
             // (#5 + Q-S35) Normalize and sort events by time. spec §26.3.1 requires
@@ -233,13 +233,13 @@ namespace Animo.Tools {
             // (Q-S55) Sweep events[next].time <= 0.0f BEFORE spawn Live(0.0f).
             // Includes negative-time events (hand-built tests, pre-t0 priming).
             while (next < event_list.Length && event_list[next].time <= 0.0f) {
-                _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
+                _engine.Affect(need: event_list[next].event_value.need, delta: event_list[next].event_value.delta, force_reset: event_list[next].event_value.force_reset);
                 next++;
             }
 
             // Spawn frame (Q-S34)
-            _engine.Live(0.0f);
-            recordFrame(result, 0f, _engine, pending_signals, need_names_cache, action_ids_cache);
+            _engine.Live(delta_time: 0.0f);
+            recordFrame(result: result, time: 0f, engine: _engine, pending_signals: pending_signals, need_names: need_names_cache, action_ids: action_ids_cache);
 
             // (Q-S84 + Q-S98) Integer step counter with double-precision Math.Round.
             int   total_steps = (int)System.Math.Round((double)duration / (double)delta_time);
@@ -249,24 +249,24 @@ namespace Animo.Tools {
 
                 // (Q-S35) Consume events within the upcoming frame window (next pointer, O(1) per frame).
                 while (next < event_list.Length && event_list[next].time < frame_end) {
-                    _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
+                    _engine.Affect(need: event_list[next].event_value.need, delta: event_list[next].event_value.delta, force_reset: event_list[next].event_value.force_reset);
                     next++;
                 }
 
-                _engine.Live(delta_time);
-                recordFrame(result, frame_end, _engine, pending_signals, need_names_cache, action_ids_cache);
+                _engine.Live(delta_time: delta_time);
+                recordFrame(result: result, time: frame_end, engine: _engine, pending_signals: pending_signals, need_names: need_names_cache, action_ids: action_ids_cache);
             }
 
             // (Q-S40) Post-loop sweep: events at time == duration (or missed by loop).
             bool sweep_any = false;
             while (next < event_list.Length && event_list[next].time <= duration) {
-                _engine.Affect(event_list[next].event_value.need, event_list[next].event_value.delta, event_list[next].event_value.force_reset);
+                _engine.Affect(need: event_list[next].event_value.need, delta: event_list[next].event_value.delta, force_reset: event_list[next].event_value.force_reset);
                 next++;
                 sweep_any = true;
             }
             if (sweep_any) {
-                _engine.Live(0.0f);
-                recordFrame(result, duration, _engine, pending_signals, need_names_cache, action_ids_cache);
+                _engine.Live(delta_time: 0.0f);
+                recordFrame(result: result, time: duration, engine: _engine, pending_signals: pending_signals, need_names: need_names_cache, action_ids: action_ids_cache);
             }
 
             // (Q-S93) Populate analysis counters in a single post-run pass.
@@ -295,11 +295,11 @@ namespace Animo.Tools {
             // (#2 Phase_3_5_2) Use cached name/id lists — no per-frame alloc.
             for (int i = 0; i < need_names.Count; i++) {
                 var n = need_names[i];
-                frame.needs[n]           = engine.GetBaseNeed(n);
-                frame.effective_needs[n] = engine.GetNeed(n);
+                frame.needs[n]           = engine.GetBaseNeed(need: n);
+                frame.effective_needs[n] = engine.GetNeed(need: n);
             }
             for (int i = 0; i < action_ids.Count; i++)
-                frame.action_scores[action_ids[i]] = engine.GetActionScore(action_ids[i]);
+                frame.action_scores[action_ids[i]] = engine.GetActionScore(action_id: action_ids[i]);
             result.frames.Add(frame);
         }
     }

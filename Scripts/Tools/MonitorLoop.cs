@@ -45,7 +45,7 @@ namespace Animo.Tools {
 
         public MonitorLoop(Engine engine, float delta_time) {
             _engine = engine;
-            _delta_time = clampDeltaTime(delta_time);
+            _delta_time = clampDeltaTime(delta_time: delta_time);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ namespace Animo.Tools {
         /// </summary>
         public float DeltaTime {
             get => _delta_time;
-            set => _delta_time = clampDeltaTime(value);
+            set => _delta_time = clampDeltaTime(delta_time: value);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,12 +75,12 @@ namespace Animo.Tools {
         /// change never falls in the middle of a step.
         /// </summary>
         public void QueueAffect(string need, float delta, bool force_reset = false) {
-            _pending_steps.Enqueue(engine => engine.Affect(need, delta, force_reset));
+            _pending_steps.Enqueue(engine => engine.Affect(need: need, delta: delta, force_reset: force_reset));
         }
 
         /// <summary>Queue a Lock step-in, applied at the head of the next frame.</summary>
         public void QueueLock(float duration, LockMode mode = LockMode.Hard) {
-            _pending_steps.Enqueue(engine => engine.Lock(duration, mode));
+            _pending_steps.Enqueue(engine => engine.Lock(duration: duration, mode: mode));
         }
 
         /// <summary>Queue an Unlock step-in, applied at the head of the next frame.</summary>
@@ -101,7 +101,7 @@ namespace Animo.Tools {
         public EngineSnapshot Tick() {
             applyPending();
             if (!_paused)
-                _engine.Live(_delta_time);
+                _engine.Live(delta_time: _delta_time);
             return _engine.Snapshot();
         }
 
@@ -112,7 +112,7 @@ namespace Animo.Tools {
         /// </summary>
         public EngineSnapshot Step() {
             applyPending();
-            _engine.Live(_delta_time);
+            _engine.Live(delta_time: _delta_time);
             return _engine.Snapshot();
         }
 

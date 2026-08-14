@@ -14,12 +14,12 @@ namespace Animo.Tests.EditMode.EngineTests {
             };
             var e = new Engine(p);
             int signals = 0;
-            e.OnSignal += _ => signals++;
+            e.OnSignaled += _ => signals++;
             e.Live(0.0f);
             Assert.That(e.Behavior, Is.EqualTo("Idle"),
                 "Q-S34: Live(0) must seed behavior to actions[0] via Q-S9.");
             Assert.That(signals, Is.EqualTo(0),
-                "Q-S31: first transition must NOT raise OnSignal.");
+                "Q-S31: first transition must NOT raise OnSignaled.");
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Animo.Tests.EditMode.EngineTests {
     /// <summary>
     /// Decision-table test for Q-S31 (v0.1.5): the very first behavior
     /// assignment ("" → actions[0] via Q-S9 tie-break on frame 1) must
-    /// NOT raise OnSignal. 100 NPCs spawning into a scene cannot publish
+    /// NOT raise OnSignaled. 100 NPCs spawning into a scene cannot publish
     /// 100 simultaneous animo_*_idle signals — that's an init storm
     /// rate-limited Bus listeners cannot absorb.
     ///
@@ -27,10 +27,10 @@ namespace Animo.Tests.EditMode.EngineTests {
 
         [Test] public void Case01_FirstLive_NoOnSignalForFirstBehaviorAssignment() {
             // Pre: Persona with two actions; frame 1 tie-break picks
-            //      actions[0] (Q-S9). Pre-Q-S31 OnSignal would raise
+            //      actions[0] (Q-S9). Pre-Q-S31 OnSignaled would raise
             //      with payload like "animo_a_idle" because behavior
             //      transitioned from "" to "Idle".
-            // Post-Q-S31: OnSignal is NOT raised on frame 1.
+            // Post-Q-S31: OnSignaled is NOT raised on frame 1.
             Persona p = new Persona {
                 agent_id = "a",
                 needs    = NeedsOf(("idle", 30f), ("fear", 30f)),
@@ -45,14 +45,14 @@ namespace Animo.Tests.EditMode.EngineTests {
             Engine engine = new Engine(persona: p);
 
             int signal_count = 0;
-            engine.OnSignal += signal_id => signal_count++;
+            engine.OnSignaled += signal_id => signal_count++;
 
             // Frame 1: behavior transitions from "" to "Idle" (Q-S9 tie-break).
-            // Q-S31: OnSignal must NOT be raised for this transition.
+            // Q-S31: OnSignaled must NOT be raised for this transition.
             Assert.DoesNotThrow(code: () => engine.Live(delta_time: 0.016f));
 
             Assert.That(signal_count, Is.EqualTo(expected: 0),
-                "Q-S31: OnSignal must NOT raise on the very first behavior assignment " +
+                "Q-S31: OnSignaled must NOT raise on the very first behavior assignment " +
                 "(\"\" → actions[0]). Pre-Q-S31, 100 NPCs spawning would send 100 " +
                 "simultaneous init signals to Bus. Post-frame-1 transitions still fire.");
         }

@@ -66,9 +66,9 @@ namespace Animo.Tools {
         /// </summary>
         public string ToCSV() {
             if (frames.Count == 0) return "";
-            var need_keys   = sortedKeys(frames[0].needs);
-            var effective_keys    = sortedKeys(frames[0].effective_needs);
-            var score_keys  = sortedKeys(frames[0].action_scores);
+            var need_keys   = sortedKeys(dictionary: frames[0].needs);
+            var effective_keys    = sortedKeys(dictionary: frames[0].effective_needs);
+            var score_keys  = sortedKeys(dictionary: frames[0].action_scores);
 
             var invariant_culture = CultureInfo.InvariantCulture;
             var builder = new StringBuilder();
@@ -81,7 +81,7 @@ namespace Animo.Tools {
 
             // Rows
             foreach (var frame in frames) {
-                builder.Append($"{frame.time.ToString("F4", invariant_culture)},{csv(frame.behavior)},{frame.is_locked},{csv(frame.locked_behavior)}");
+                builder.Append($"{frame.time.ToString("F4", invariant_culture)},{csv(value: frame.behavior)},{frame.is_locked},{csv(value: frame.locked_behavior)}");
                 foreach (var k in need_keys)  builder.Append($",{frame.needs.GetValueOrDefault(k).ToString("F4", invariant_culture)}");
                 foreach (var k in effective_keys)   builder.Append($",{frame.effective_needs.GetValueOrDefault(k).ToString("F4", invariant_culture)}");
                 foreach (var k in score_keys) builder.Append($",{frame.action_scores.GetValueOrDefault(k).ToString("F4", invariant_culture)}");

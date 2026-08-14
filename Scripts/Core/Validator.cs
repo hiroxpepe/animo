@@ -83,7 +83,7 @@ namespace Animo.Core {
 
         // (Q-S72) Merge another ValidationResult's issues into this one.
         public void Merge(ValidationResult other) {
-            foreach (var issue in other.issues) Add(issue);
+            foreach (var issue in other.issues) Add(issue: issue);
         }
 
         // Helper used by Validator internally.
@@ -129,19 +129,19 @@ namespace Animo.Core {
 
         public static ValidationResult Validate(Root root) {
             var result = new ValidationResult();
-            var emit   = (Issue i) => result.Add(i);
+            var emit   = (Issue i) => result.Add(issue: i);
 
             // A000: schema_version exists and is not empty.
             if (string.IsNullOrEmpty(root.schema_version))
-                emit(new Issue("A000", Severity.Error, "schema_version is missing or empty.", "schema_version"));
+                emit(new Issue(rule_id: "A000", severity: Severity.Error, message: "schema_version is missing or empty.", path: "schema_version"));
             else if (!Const.SUPPORTED_SCHEMA_VERSIONS.Contains(root.schema_version))
-                emit(new Issue("A021", Severity.Error,
-                    $"schema_version '{root.schema_version}' is not supported. Expected one of: {string.Join(", ", Const.SUPPORTED_SCHEMA_VERSIONS)}.",
-                    "schema_version"));
+                emit(new Issue(rule_id: "A021", severity: Severity.Error,
+                    message: $"schema_version '{root.schema_version}' is not supported. Expected one of: {string.Join(", ", Const.SUPPORTED_SCHEMA_VERSIONS)}.",
+                    path: "schema_version"));
 
             // A001: personas exists and is not empty.
             if (root.personas == null || root.personas.Count == 0)
-                emit(new Issue("A001", Severity.Error, "personas array is missing or empty.", "personas"));
+                emit(new Issue(rule_id: "A001", severity: Severity.Error, message: "personas array is missing or empty.", path: "personas"));
 
             // Validate each kind.
             var kind_ids_seen = new Dictionary<string, int>();
@@ -149,20 +149,20 @@ namespace Animo.Core {
                 var kind = root.kinds[kind_index];
                 // A003: kind_id snake_case, not empty, unique, ≤128.
                 if (string.IsNullOrEmpty(kind.kind_id)) {
-                    emit(new Issue("A003", Severity.Error, $"kinds[{kind_index}].kind_id is empty.", $"kinds[{kind_index}].kind_id"));
+                    emit(new Issue(rule_id: "A003", severity: Severity.Error, message: $"kinds[{kind_index}].kind_id is empty.", path: $"kinds[{kind_index}].kind_id"));
                 } else {
                     if (kind.kind_id.Length > MAX_ID_LEN)
-                        emit(new Issue("A003", Severity.Error,
-                            $"kinds[{kind_index}].kind_id exceeds {MAX_ID_LEN} chars (A018 merged into A003).", $"kinds[{kind_index}].kind_id"));
+                        emit(new Issue(rule_id: "A003", severity: Severity.Error,
+                            message: $"kinds[{kind_index}].kind_id exceeds {MAX_ID_LEN} chars (A018 merged into A003).", path: $"kinds[{kind_index}].kind_id"));
                     else if (!SNAKE_CASE.IsMatch(kind.kind_id))
-                        emit(new Issue("A003", Severity.Error,
-                            $"kinds[{kind_index}].kind_id '{kind.kind_id}' is not snake_case.", $"kinds[{kind_index}].kind_id"));
+                        emit(new Issue(rule_id: "A003", severity: Severity.Error,
+                            message: $"kinds[{kind_index}].kind_id '{kind.kind_id}' is not snake_case.", path: $"kinds[{kind_index}].kind_id"));
                     if (kind_ids_seen.ContainsKey(kind.kind_id))
-                        emit(new Issue("A003", Severity.Error,
-                            $"kinds[{kind_index}].kind_id '{kind.kind_id}' is not unique.", $"kinds[{kind_index}].kind_id"));
+                        emit(new Issue(rule_id: "A003", severity: Severity.Error,
+                            message: $"kinds[{kind_index}].kind_id '{kind.kind_id}' is not unique.", path: $"kinds[{kind_index}].kind_id"));
                     else kind_ids_seen[kind.kind_id] = kind_index;
                 }
-                validateKindFields(kind, kind_index, emit);
+                validateKindFields(kind: kind, kind_index: kind_index, emit: emit);
             }
 
             // Validate each persona.
@@ -171,20 +171,20 @@ namespace Animo.Core {
                 var persona = root.personas[persona_index];
                 // A002: agent_id snake_case, not empty, unique, ≤128.
                 if (string.IsNullOrEmpty(persona.agent_id)) {
-                    emit(new Issue("A002", Severity.Error, $"personas[{persona_index}].agent_id is empty.", $"personas[{persona_index}].agent_id"));
+                    emit(new Issue(rule_id: "A002", severity: Severity.Error, message: $"personas[{persona_index}].agent_id is empty.", path: $"personas[{persona_index}].agent_id"));
                 } else {
                     if (persona.agent_id.Length > MAX_ID_LEN)
-                        emit(new Issue("A002", Severity.Error,
-                            $"personas[{persona_index}].agent_id exceeds {MAX_ID_LEN} chars (A018 merged into A002).", $"personas[{persona_index}].agent_id"));
+                        emit(new Issue(rule_id: "A002", severity: Severity.Error,
+                            message: $"personas[{persona_index}].agent_id exceeds {MAX_ID_LEN} chars (A018 merged into A002).", path: $"personas[{persona_index}].agent_id"));
                     else if (!SNAKE_CASE.IsMatch(persona.agent_id))
-                        emit(new Issue("A002", Severity.Error,
-                            $"personas[{persona_index}].agent_id '{persona.agent_id}' is not snake_case.", $"personas[{persona_index}].agent_id"));
+                        emit(new Issue(rule_id: "A002", severity: Severity.Error,
+                            message: $"personas[{persona_index}].agent_id '{persona.agent_id}' is not snake_case.", path: $"personas[{persona_index}].agent_id"));
                     if (persona_ids_seen.ContainsKey(persona.agent_id))
-                        emit(new Issue("A002", Severity.Error,
-                            $"personas[{persona_index}].agent_id '{persona.agent_id}' is not unique.", $"personas[{persona_index}].agent_id"));
+                        emit(new Issue(rule_id: "A002", severity: Severity.Error,
+                            message: $"personas[{persona_index}].agent_id '{persona.agent_id}' is not unique.", path: $"personas[{persona_index}].agent_id"));
                     else persona_ids_seen[persona.agent_id] = persona_index;
                 }
-                validatePersonaFields(persona, persona_index, root, emit);
+                validatePersonaFields(persona: persona, persona_index: persona_index, root: root, emit: emit);
             }
 
             return result;
@@ -194,7 +194,7 @@ namespace Animo.Core {
 
         public static ValidationResult ValidateStage2(Persona composed) {
             var result = new ValidationResult();
-            var emit   = (Issue i) => result.Add(i);
+            var emit   = (Issue i) => result.Add(issue: i);
             string id  = composed.agent_id;
 
             // Collect "in use" Need names (5-site union per Q-S41+Q-S49+Q-S57+Q-S124).
@@ -214,41 +214,41 @@ namespace Animo.Core {
                 if (!known.Contains(need)) {
                     // Check for levenshtein proximity to standard names.
                     string? close = Const.STANDARD_NEEDS
-                        .FirstOrDefault(candidate => levenshtein(need, candidate) <= 2);
+                        .FirstOrDefault(candidate => levenshtein(first: need, second: candidate) <= 2);
                     if (close != null)
-                        emit(new Issue("A019", Severity.Warning,
-                            $"persona '{id}': Need '{need}' looks like a typo of '{close}'.",
-                            $"persona.{need}"));
+                        emit(new Issue(rule_id: "A019", severity: Severity.Warning,
+                            message: $"persona '{id}': Need '{need}' looks like a typo of '{close}'.",
+                            path: $"persona.{need}"));
                 }
             }
 
             // A025 stage 2: composed influences cycle.
-            if (composed.influences != null && hasCycle(composed.influences))
-                emit(new Issue("A025", Severity.Error,
-                    $"persona '{id}': composed influences[] contains a cycle.", "influences"));
+            if (composed.influences != null && hasCycle(influences: composed.influences))
+                emit(new Issue(rule_id: "A025", severity: Severity.Error,
+                    message: $"persona '{id}': composed influences[] contains a cycle.", path: "influences"));
 
             // A035: after Composer fills reset_threshold, trigger > reset strictly.
             if (composed.binding != null)
                 for (int i = 0; i < composed.binding.thresholds.Count; i++) {
                     var threshold = composed.binding.thresholds[i];
                     if (threshold.reset_threshold.HasValue && threshold.trigger_threshold <= threshold.reset_threshold.Value)
-                        emit(new Issue("A035", Severity.Error,
-                            $"persona '{id}' threshold[{i}]: trigger_threshold ({threshold.trigger_threshold}) ≤ reset_threshold ({threshold.reset_threshold.Value}) after fill.",
-                            $"binding.thresholds[{i}]"));
+                        emit(new Issue(rule_id: "A035", severity: Severity.Error,
+                            message: $"persona '{id}' threshold[{i}]: trigger_threshold ({threshold.trigger_threshold}) ≤ reset_threshold ({threshold.reset_threshold.Value}) after fill.",
+                            path: $"binding.thresholds[{i}]"));
                 }
 
             // A036: composed actions[] must be non-empty.
             if (composed.actions == null || composed.actions.Count == 0)
-                emit(new Issue("A036", Severity.Error,
-                    $"persona '{id}': composed actions[] is empty — Engine Step 5 would throw.", "actions"));
+                emit(new Issue(rule_id: "A036", severity: Severity.Error,
+                    message: $"persona '{id}': composed actions[] is empty — Engine Step 5 would throw.", path: "actions"));
 
             // A037: multiple influences writing to same target.
             if (composed.influences != null) {
                 var targets = new Dictionary<string, int>();
                 foreach (var influence in composed.influences) {
                     if (targets.ContainsKey(influence.target))
-                        emit(new Issue("A037", Severity.Warning,
-                            $"persona '{id}': multiple influences write to Need '{influence.target}' (order-dependent).", "influences"));
+                        emit(new Issue(rule_id: "A037", severity: Severity.Warning,
+                            message: $"persona '{id}': multiple influences write to Need '{influence.target}' (order-dependent).", path: "influences"));
                     else targets[influence.target] = 1;
                 }
             }
@@ -257,9 +257,9 @@ namespace Animo.Core {
             if (composed.needs_meta != null)
                 foreach (var entry in composed.needs_meta)
                     if (!in_use.Contains(entry.Key))
-                        emit(new Issue("A038", Severity.Warning,
-                            $"persona '{id}': needs_meta['{entry.Key}'] references a Need not in use (orphan).",
-                            $"needs_meta['{entry.Key}']"));
+                        emit(new Issue(rule_id: "A038", severity: Severity.Warning,
+                            message: $"persona '{id}': needs_meta['{entry.Key}'] references a Need not in use (orphan).",
+                            path: $"needs_meta['{entry.Key}']"));
 
             // A039: sibling threshold proximity Warning (Q-S47 + Q-S122 inclusive).
             if (composed.binding != null) {
@@ -269,9 +269,9 @@ namespace Animo.Core {
                     for (int i = 0; i < sorted.Count - 1; i++) {
                         float difference = sorted[i + 1].trigger_threshold - sorted[i].trigger_threshold;
                         if (difference <= 1.0f + SIBLING_THRESHOLD_EPSILON)
-                            emit(new Issue("A039", Severity.Warning,
-                                $"persona '{id}': sibling thresholds on '{group.Key}' at {sorted[i].trigger_threshold} and {sorted[i+1].trigger_threshold} are within 1.0f of each other.",
-                                "binding.thresholds"));
+                            emit(new Issue(rule_id: "A039", severity: Severity.Warning,
+                                message: $"persona '{id}': sibling thresholds on '{group.Key}' at {sorted[i].trigger_threshold} and {sorted[i+1].trigger_threshold} are within 1.0f of each other.",
+                                path: "binding.thresholds"));
                     }
                 }
             }
@@ -281,9 +281,9 @@ namespace Animo.Core {
                 var ids_seen = new HashSet<string>();
                 foreach (var act in composed.actions)
                     if (!ids_seen.Add(act.id))
-                        emit(new Issue("A040", Severity.Error,
-                            $"persona '{id}': composed actions[].id '{act.id}' is not unique.",
-                            "actions"));
+                        emit(new Issue(rule_id: "A040", severity: Severity.Error,
+                            message: $"persona '{id}': composed actions[].id '{act.id}' is not unique.",
+                            path: "actions"));
             }
 
             return result;
@@ -294,17 +294,17 @@ namespace Animo.Core {
 
         static void validateKindFields(Kind kind, int kind_index, Action<Issue> emit) {
             string kind_path = $"kinds[{kind_index}]";
-            if (kind.rates != null)       validateRates(kind.rates, $"{kind_path}.rates", emit);
-            if (kind.suppression != null) validateSuppression(kind.suppression, $"{kind_path}.suppression", emit);
-            if (kind.influences != null)  validateInfluences(kind.influences, $"{kind_path}.influences", emit);
-            if (kind.actions != null)     validateActions(kind.actions, $"{kind_path}.actions", emit);
-            if (kind.commitment != null)  validateCommitment(kind.commitment, $"{kind_path}.commitment", emit);
-            if (kind.binding != null)     validateBinding(kind.binding, $"{kind_path}.binding", emit);
-            if (kind.needs_meta != null)  validateNeedsMeta(kind.needs_meta, $"{kind_path}.needs_meta", emit);
+            if (kind.rates != null)       validateRates(rates: kind.rates, path: $"{kind_path}.rates", emit: emit);
+            if (kind.suppression != null) validateSuppression(suppression: kind.suppression, path: $"{kind_path}.suppression", emit: emit);
+            if (kind.influences != null)  validateInfluences(influences: kind.influences, path: $"{kind_path}.influences", emit: emit);
+            if (kind.actions != null)     validateActions(acts: kind.actions, path: $"{kind_path}.actions", emit: emit);
+            if (kind.commitment != null)  validateCommitment(commitment: kind.commitment, path: $"{kind_path}.commitment", emit: emit);
+            if (kind.binding != null)     validateBinding(binding: kind.binding, path: $"{kind_path}.binding", emit: emit);
+            if (kind.needs_meta != null)  validateNeedsMeta(meta: kind.needs_meta, path: $"{kind_path}.needs_meta", emit: emit);
             // A025 stage 1: influence cycle in raw kind.
-            if (kind.influences != null && hasCycle(kind.influences))
-                emit(new Issue("A025", Severity.Error,
-                    $"kinds[{kind_index}] has a cycle in influences[].", $"{kind_path}.influences"));
+            if (kind.influences != null && hasCycle(influences: kind.influences))
+                emit(new Issue(rule_id: "A025", severity: Severity.Error,
+                    message: $"kinds[{kind_index}] has a cycle in influences[].", path: $"{kind_path}.influences"));
         }
 
         static void validatePersonaFields(Persona persona, int persona_index, Root root, Action<Issue> emit) {
@@ -314,99 +314,99 @@ namespace Animo.Core {
                 var kind_id_set = new HashSet<string>(root.kinds.Select(k => k.kind_id));
                 for (int i = 0; i < persona.kind_ids.Count; i++) {
                     if (!kind_id_set.Contains(persona.kind_ids[i]))
-                        emit(new Issue("A004", Severity.Error,
-                            $"personas[{persona_index}].kind_ids[{i}] '{persona.kind_ids[i]}' not found in kinds.",
-                            $"{persona_path}.kind_ids[{i}]"));
+                        emit(new Issue(rule_id: "A004", severity: Severity.Error,
+                            message: $"personas[{persona_index}].kind_ids[{i}] '{persona.kind_ids[i]}' not found in kinds.",
+                            path: $"{persona_path}.kind_ids[{i}]"));
                 }
                 // A033: duplicate kind_ids.
                 var seen = new HashSet<string>();
                 foreach (var kind_id in persona.kind_ids)
                     if (!seen.Add(kind_id))
-                        emit(new Issue("A033", Severity.Warning,
-                            $"personas[{persona_index}].kind_ids contains duplicate '{kind_id}'. Composer keeps last occurrence.",
-                            $"{persona_path}.kind_ids"));
+                        emit(new Issue(rule_id: "A033", severity: Severity.Warning,
+                            message: $"personas[{persona_index}].kind_ids contains duplicate '{kind_id}'. Composer keeps last occurrence.",
+                            path: $"{persona_path}.kind_ids"));
             }
             // A011a: no kind_ids → must have at least one action.
             if ((persona.kind_ids == null || persona.kind_ids.Count == 0) &&
                 (persona.actions  == null || persona.actions.Count  == 0))
-                emit(new Issue("A011a", Severity.Error,
-                    $"personas[{persona_index}] has no kind_ids and no actions (at least one action required).",
-                    $"{persona_path}.actions"));
-            if (persona.needs      != null) validateNeeds(persona.needs, $"{persona_path}.needs", emit);
-            if (persona.rates      != null) validateRates(persona.rates, $"{persona_path}.rates", emit);
-            if (persona.suppression!= null) validateSuppression(persona.suppression, $"{persona_path}.suppression", emit);
-            if (persona.influences != null) validateInfluences(persona.influences, $"{persona_path}.influences", emit);
-            if (persona.actions    != null) validateActions(persona.actions, $"{persona_path}.actions", emit);
-            if (persona.commitment != null) validateCommitment(persona.commitment, $"{persona_path}.commitment", emit);
-            if (persona.binding    != null) validateBinding(persona.binding, $"{persona_path}.binding", emit);
-            if (persona.needs_meta != null) validateNeedsMeta(persona.needs_meta, $"{persona_path}.needs_meta", emit);
+                emit(new Issue(rule_id: "A011a", severity: Severity.Error,
+                    message: $"personas[{persona_index}] has no kind_ids and no actions (at least one action required).",
+                    path: $"{persona_path}.actions"));
+            if (persona.needs      != null) validateNeeds(needs: persona.needs, path: $"{persona_path}.needs", emit: emit);
+            if (persona.rates      != null) validateRates(rates: persona.rates, path: $"{persona_path}.rates", emit: emit);
+            if (persona.suppression!= null) validateSuppression(suppression: persona.suppression, path: $"{persona_path}.suppression", emit: emit);
+            if (persona.influences != null) validateInfluences(influences: persona.influences, path: $"{persona_path}.influences", emit: emit);
+            if (persona.actions    != null) validateActions(acts: persona.actions, path: $"{persona_path}.actions", emit: emit);
+            if (persona.commitment != null) validateCommitment(commitment: persona.commitment, path: $"{persona_path}.commitment", emit: emit);
+            if (persona.binding    != null) validateBinding(binding: persona.binding, path: $"{persona_path}.binding", emit: emit);
+            if (persona.needs_meta != null) validateNeedsMeta(meta: persona.needs_meta, path: $"{persona_path}.needs_meta", emit: emit);
             // A013: rates keys are subset of needs keys.
             if (persona.rates != null && persona.needs != null) {
                 foreach (var rate_key in persona.rates.values.Keys)
                     if (!persona.needs.values.ContainsKey(rate_key))
-                        emit(new Issue("A013", Severity.Warning,
-                            $"{persona_path}: rates key '{rate_key}' is not in needs.", $"{persona_path}.rates"));
+                        emit(new Issue(rule_id: "A013", severity: Severity.Warning,
+                            message: $"{persona_path}: rates key '{rate_key}' is not in needs.", path: $"{persona_path}.rates"));
             }
 
             // A020a/b/c: cross-kind checks (kind fields referencing Needs not in referencing Persona.needs).
             if (persona.kind_ids != null && persona.needs != null) {
                 var persona_needs = new HashSet<string>(persona.needs.values.Keys);
                 foreach (var kind_id in persona.kind_ids) {
-                    var kind = findKind(root, kind_id);
+                    var kind = findKind(root: root, kind_id: kind_id);
                     if (kind == null) continue;
                     // A020a: kind.rates key not in persona.needs.
                     if (kind.rates != null)
                         foreach (var rate_key in kind.rates.values.Keys)
                             if (!persona_needs.Contains(rate_key))
-                                emit(new Issue("A020a", Severity.Warning,
-                                    $"{persona_path}: kind '{kind_id}' rates key '{rate_key}' not in persona.needs.", $"{persona_path}.kind_ids"));
+                                emit(new Issue(rule_id: "A020a", severity: Severity.Warning,
+                                    message: $"{persona_path}: kind '{kind_id}' rates key '{rate_key}' not in persona.needs.", path: $"{persona_path}.kind_ids"));
                     // A020b: kind.influences source/target not in persona.needs.
                     if (kind.influences != null)
                         foreach (var influence in kind.influences) {
                             if (!persona_needs.Contains(influence.source))
-                                emit(new Issue("A020b", Severity.Warning,
-                                    $"{persona_path}: kind '{kind_id}' influence source '{influence.source}' not in persona.needs.", $"{persona_path}.kind_ids"));
+                                emit(new Issue(rule_id: "A020b", severity: Severity.Warning,
+                                    message: $"{persona_path}: kind '{kind_id}' influence source '{influence.source}' not in persona.needs.", path: $"{persona_path}.kind_ids"));
                             if (!persona_needs.Contains(influence.target))
-                                emit(new Issue("A020b", Severity.Warning,
-                                    $"{persona_path}: kind '{kind_id}' influence target '{influence.target}' not in persona.needs.", $"{persona_path}.kind_ids"));
+                                emit(new Issue(rule_id: "A020b", severity: Severity.Warning,
+                                    message: $"{persona_path}: kind '{kind_id}' influence target '{influence.target}' not in persona.needs.", path: $"{persona_path}.kind_ids"));
                         }
                     // A020c: kind.actions[].need not in persona.needs.
                     if (kind.actions != null)
                         foreach (var act in kind.actions)
                             if (!persona_needs.Contains(act.need))
-                                emit(new Issue("A020c", Severity.Warning,
-                                    $"{persona_path}: kind '{kind_id}' action '{act.id}' need '{act.need}' not in persona.needs.", $"{persona_path}.kind_ids"));
+                                emit(new Issue(rule_id: "A020c", severity: Severity.Warning,
+                                    message: $"{persona_path}: kind '{kind_id}' action '{act.id}' need '{act.need}' not in persona.needs.", path: $"{persona_path}.kind_ids"));
                 }
             }
-                emit(new Issue("A016", Severity.Warning,
-                    $"personas[{persona_index}] has no binding. Composer will fill defaults.",
-                    $"{persona_path}.binding"));
+                emit(new Issue(rule_id: "A016", severity: Severity.Warning,
+                    message: $"personas[{persona_index}] has no binding. Composer will fill defaults.",
+                    path: $"{persona_path}.binding"));
             // A025 stage 1: cycle in raw persona influences.
-            if (persona.influences != null && hasCycle(persona.influences))
-                emit(new Issue("A025", Severity.Error,
-                    $"personas[{persona_index}] has a cycle in influences[].",
-                    $"{persona_path}.influences"));
+            if (persona.influences != null && hasCycle(influences: persona.influences))
+                emit(new Issue(rule_id: "A025", severity: Severity.Error,
+                    message: $"personas[{persona_index}] has a cycle in influences[].",
+                    path: $"{persona_path}.influences"));
             // A029: commitment omitted but 2+ actions.
             if (persona.commitment == null && persona.actions != null && persona.actions.Count >= 2)
-                emit(new Issue("A029", Severity.Warning,
-                    $"personas[{persona_index}] has {persona.actions.Count} actions but no commitment (chattering risk).",
-                    $"{persona_path}.commitment"));
+                emit(new Issue(rule_id: "A029", severity: Severity.Warning,
+                    message: $"personas[{persona_index}] has {persona.actions.Count} actions but no commitment (chattering risk).",
+                    path: $"{persona_path}.commitment"));
             // A030: no actions or influences use frustration.
             bool uses_frustration =
                 (persona.actions    != null && persona.actions.Any(action => action.need == "frustration")) ||
                 (persona.influences != null && persona.influences.Any(i =>
                     i.source == "frustration" || i.target == "frustration"));
             if (!uses_frustration && (persona.actions != null || persona.influences != null))
-                emit(new Issue("A030", Severity.Warning,
-                    $"personas[{persona_index}]: no actions or influences use 'frustration' (feedback loop may be missing).",
-                    $"{persona_path}"));
+                emit(new Issue(rule_id: "A030", severity: Severity.Warning,
+                    message: $"personas[{persona_index}]: no actions or influences use 'frustration' (feedback loop may be missing).",
+                    path: $"{persona_path}"));
             // A032: no fallback low-tier action other than idle.
             if (persona.actions != null) {
                 bool has_fallback = persona.actions.Any(action => action.need != "idle" && action.tier <= 2);
                 if (!has_fallback && persona.actions.Any())
-                    emit(new Issue("A032", Severity.Info,
-                        $"personas[{persona_index}]: no low-tier fallback action besides idle.",
-                        $"{persona_path}.actions"));
+                    emit(new Issue(rule_id: "A032", severity: Severity.Info,
+                        message: $"personas[{persona_index}]: no low-tier fallback action besides idle.",
+                        path: $"{persona_path}.actions"));
             }
         }
 
@@ -415,8 +415,8 @@ namespace Animo.Core {
             foreach (var entry in needs.values)
                 if (float.IsNaN(entry.Value) || float.IsInfinity(entry.Value) ||
                     entry.Value < 0f || entry.Value > 100f)
-                    emit(new Issue("A005", Severity.Error,
-                        $"{path}['{entry.Key}'] = {entry.Value} is outside [0, 100] (or NaN/Infinity).", path));
+                    emit(new Issue(rule_id: "A005", severity: Severity.Error,
+                        message: $"{path}['{entry.Key}'] = {entry.Value} is outside [0, 100] (or NaN/Infinity).", path: path));
         }
 
         static void validateRates(Rates rates, string path, Action<Issue> emit) {
@@ -425,8 +425,8 @@ namespace Animo.Core {
             // silently destroying the agent state. Reject as A005-class Error.
             foreach (var entry in rates.values) {
                 if (float.IsNaN(entry.Value) || float.IsInfinity(entry.Value))
-                    emit(new Issue("A005", Severity.Error,
-                        $"{path}['{entry.Key}'] = {entry.Value} is NaN or Infinity.", path));
+                    emit(new Issue(rule_id: "A005", severity: Severity.Error,
+                        message: $"{path}['{entry.Key}'] = {entry.Value} is NaN or Infinity.", path: path));
             }
         }
 
@@ -435,8 +435,8 @@ namespace Animo.Core {
             foreach (var (name, value) in new[] {
                 ("tier2", suppression.tier2), ("tier3", suppression.tier3), ("tier4", suppression.tier4), ("tier5", suppression.tier5) }) {
                 if (value < 0f || value > 1f)
-                    emit(new Issue("A006", Severity.Error,
-                        $"{path}.{name} = {value} is outside [0.0, 1.0].", $"{path}.{name}"));
+                    emit(new Issue(rule_id: "A006", severity: Severity.Error,
+                        message: $"{path}.{name} = {value} is outside [0.0, 1.0].", path: $"{path}.{name}"));
             }
         }
 
@@ -445,9 +445,9 @@ namespace Animo.Core {
             for (int i = 0; i < influences.Count; i++) {
                 var coefficient = influences[i].coefficient;
                 if (float.IsNaN(coefficient) || float.IsInfinity(coefficient) || coefficient < -1f || coefficient > 1f)
-                    emit(new Issue("A012", Severity.Error,
-                        $"{path}[{i}].coefficient = {coefficient} is outside [-1.0, 1.0] (or NaN/Infinity).",
-                        $"{path}[{i}].coefficient"));
+                    emit(new Issue(rule_id: "A012", severity: Severity.Error,
+                        message: $"{path}[{i}].coefficient = {coefficient} is outside [-1.0, 1.0] (or NaN/Infinity).",
+                        path: $"{path}[{i}].coefficient"));
             }
         }
 
@@ -457,63 +457,63 @@ namespace Animo.Core {
                 string action_path = $"{path}[{i}]";
                 // A009: id not empty.
                 if (string.IsNullOrEmpty(act.id))
-                    emit(new Issue("A009", Severity.Error, $"{action_path}.id is empty.", $"{action_path}.id"));
+                    emit(new Issue(rule_id: "A009", severity: Severity.Error, message: $"{action_path}.id is empty.", path: $"{action_path}.id"));
                 // A007: tier 1-5.
                 if (act.tier < 1 || act.tier > 5)
-                    emit(new Issue("A007", Severity.Error,
-                        $"{action_path}.tier = {act.tier} is outside [1, 5].", $"{action_path}.tier"));
+                    emit(new Issue(rule_id: "A007", severity: Severity.Error,
+                        message: $"{action_path}.tier = {act.tier} is outside [1, 5].", path: $"{action_path}.tier"));
                 // A008: exponent 0.1-5.0.
                 if (act.exponent < 0.1f || act.exponent > 5.0f)
-                    emit(new Issue("A008", Severity.Error,
-                        $"{action_path}.exponent = {act.exponent} is outside [0.1, 5.0].", $"{action_path}.exponent"));
+                    emit(new Issue(rule_id: "A008", severity: Severity.Error,
+                        message: $"{action_path}.exponent = {act.exponent} is outside [0.1, 5.0].", path: $"{action_path}.exponent"));
                 // A022: need is required.
                 if (string.IsNullOrEmpty(act.need))
-                    emit(new Issue("A022", Severity.Error, $"{action_path}.need is required.", $"{action_path}.need"));
+                    emit(new Issue(rule_id: "A022", severity: Severity.Error, message: $"{action_path}.need is required.", path: $"{action_path}.need"));
                 // A024: if need is 'idle', tier should be 5.
                 if (act.need == "idle" && act.tier != 5)
-                    emit(new Issue("A024", Severity.Warning,
-                        $"{action_path}: action uses 'idle' Need but tier is {act.tier} (should be 5).", $"{action_path}.tier"));
+                    emit(new Issue(rule_id: "A024", severity: Severity.Warning,
+                        message: $"{action_path}: action uses 'idle' Need but tier is {act.tier} (should be 5).", path: $"{action_path}.tier"));
             }
         }
 
         static void validateCommitment(Commitment commitment, string path, Action<Issue> emit) {
             // A028: bonus < 0 Error; bonus > 30 Warning; ceiling at 50.
             if (commitment.bonus < 0f)
-                emit(new Issue("A028", Severity.Error,
-                    $"{path}.bonus = {commitment.bonus} is negative (must be ≥ 0).", $"{path}.bonus"));
+                emit(new Issue(rule_id: "A028", severity: Severity.Error,
+                    message: $"{path}.bonus = {commitment.bonus} is negative (must be ≥ 0).", path: $"{path}.bonus"));
             else if (commitment.bonus > 50f)
-                emit(new Issue("A028", Severity.Error,
-                    $"{path}.bonus = {commitment.bonus} exceeds ceiling of 50.", $"{path}.bonus"));
+                emit(new Issue(rule_id: "A028", severity: Severity.Error,
+                    message: $"{path}.bonus = {commitment.bonus} exceeds ceiling of 50.", path: $"{path}.bonus"));
             else if (commitment.bonus > 30f)
-                emit(new Issue("A028", Severity.Warning,
-                    $"{path}.bonus = {commitment.bonus} exceeds 30 (lock-in risk).", $"{path}.bonus"));
+                emit(new Issue(rule_id: "A028", severity: Severity.Warning,
+                    message: $"{path}.bonus = {commitment.bonus} exceeds 30 (lock-in risk).", path: $"{path}.bonus"));
         }
 
         static void validateBinding(Binding binding, string path, Action<Issue> emit) {
             // A014: on_action_change placeholders.
             if (binding.on_action_change != null)
-                checkPlaceholders(binding.on_action_change, "A014", path + ".on_action_change",
-                    Const.TEMPLATE_PLACEHOLDERS_ACTION, emit);
+                checkPlaceholders(template: binding.on_action_change, rule_id: "A014", path: path + ".on_action_change",
+                    allowed: Const.TEMPLATE_PLACEHOLDERS_ACTION, emit: emit);
             // A010, A015, A023, A034 on thresholds.
             for (int i = 0; i < binding.thresholds.Count; i++) {
                 var threshold  = binding.thresholds[i];
                 string threshold_path = $"{path}.thresholds[{i}]";
                 // A010: trigger_threshold in (0, 100].
                 if (threshold.trigger_threshold <= 0f || threshold.trigger_threshold > 100f)
-                    emit(new Issue("A010", Severity.Error,
-                        $"{threshold_path}.trigger_threshold = {threshold.trigger_threshold} is outside (0, 100].", threshold_path));
+                    emit(new Issue(rule_id: "A010", severity: Severity.Error,
+                        message: $"{threshold_path}.trigger_threshold = {threshold.trigger_threshold} is outside (0, 100].", path: threshold_path));
                 // A023: trigger > reset (if reset provided).
                 if (threshold.reset_threshold.HasValue && threshold.trigger_threshold <= threshold.reset_threshold.Value)
-                    emit(new Issue("A023", Severity.Error,
-                        $"{threshold_path}: trigger_threshold ({threshold.trigger_threshold}) must be > reset_threshold ({threshold.reset_threshold.Value}).", threshold_path));
+                    emit(new Issue(rule_id: "A023", severity: Severity.Error,
+                        message: $"{threshold_path}: trigger_threshold ({threshold.trigger_threshold}) must be > reset_threshold ({threshold.reset_threshold.Value}).", path: threshold_path));
                 // A034: reset_threshold < 0 Error.
                 if (threshold.reset_threshold.HasValue && threshold.reset_threshold.Value < 0f)
-                    emit(new Issue("A034", Severity.Error,
-                        $"{threshold_path}.reset_threshold = {threshold.reset_threshold.Value} is negative.", threshold_path));
+                    emit(new Issue(rule_id: "A034", severity: Severity.Error,
+                        message: $"{threshold_path}.reset_threshold = {threshold.reset_threshold.Value} is negative.", path: threshold_path));
                 // A015: trigger placeholders.
                 if (!string.IsNullOrEmpty(threshold.trigger))
-                    checkPlaceholders(threshold.trigger, "A015", $"{threshold_path}.trigger",
-                        Const.TEMPLATE_PLACEHOLDERS_THRESHOLD, emit);
+                    checkPlaceholders(template: threshold.trigger, rule_id: "A015", path: $"{threshold_path}.trigger",
+                        allowed: Const.TEMPLATE_PLACEHOLDERS_THRESHOLD, emit: emit);
             }
             // (#9) A039 Stage 1: sibling threshold proximity in RAW JSON.
             // Without this, Composer.mergeThresholds (EPSILON=0.01) would collapse
@@ -525,9 +525,9 @@ namespace Animo.Core {
                 for (int i = 0; i < sorted.Count - 1; i++) {
                     float difference = sorted[i + 1].trigger_threshold - sorted[i].trigger_threshold;
                     if (difference <= 1.0f + SIBLING_THRESHOLD_EPSILON)
-                        emit(new Issue("A039", Severity.Warning,
-                            $"{path}: sibling thresholds on '{group.Key}' at {sorted[i].trigger_threshold} and {sorted[i+1].trigger_threshold} are within 1.0f of each other.",
-                            $"{path}.thresholds"));
+                        emit(new Issue(rule_id: "A039", severity: Severity.Warning,
+                            message: $"{path}: sibling thresholds on '{group.Key}' at {sorted[i].trigger_threshold} and {sorted[i+1].trigger_threshold} are within 1.0f of each other.",
+                            path: $"{path}.thresholds"));
                 }
             }
         }
@@ -537,12 +537,12 @@ namespace Animo.Core {
             // A038 Stage 1: standard Need tier mismatch → Warning.
             foreach (var entry in meta) {
                 if (entry.Value.tier < 1 || entry.Value.tier > 5)
-                    emit(new Issue("A038", Severity.Error,
-                        $"{path}['{entry.Key}'].tier = {entry.Value.tier} is outside [1, 5].", path));
+                    emit(new Issue(rule_id: "A038", severity: Severity.Error,
+                        message: $"{path}['{entry.Key}'].tier = {entry.Value.tier} is outside [1, 5].", path: path));
                 else if (Const.NEED_TIER_BY_NAME.TryGetValue(entry.Key, out var expected_tier) &&
                          entry.Value.tier != expected_tier)
-                    emit(new Issue("A038", Severity.Warning,
-                        $"{path}['{entry.Key}'].tier = {entry.Value.tier} overrides standard tier {expected_tier} (spec §3.5 value wins).", path));
+                    emit(new Issue(rule_id: "A038", severity: Severity.Warning,
+                        message: $"{path}['{entry.Key}'].tier = {entry.Value.tier} overrides standard tier {expected_tier} (spec §3.5 value wins).", path: path));
             }
         }
 
@@ -552,9 +552,9 @@ namespace Animo.Core {
             foreach (Match match in found) {
                 string key = match.Groups[1].Value;
                 if (!allowed.Contains(key))
-                    emit(new Issue(rule_id, Severity.Error,
-                        $"{path}: placeholder '{{{key}}}' is not allowed. Allowed: {{{string.Join("}, {", allowed)}}}.",
-                        path));
+                    emit(new Issue(rule_id: rule_id, severity: Severity.Error,
+                        message: $"{path}: placeholder '{{{key}}}' is not allowed. Allowed: {{{string.Join("}, {", allowed)}}}.",
+                        path: path));
             }
         }
 
@@ -579,11 +579,11 @@ namespace Animo.Core {
                 if (visited.Contains(node))  return false;
                 visited.Add(node); in_stack.Add(node);
                 if (graph.TryGetValue(node, out var neighbors))
-                    foreach (var n in neighbors) if (dfs(n)) return true;
+                    foreach (var n in neighbors) if (dfs(node: n)) return true;
                 in_stack.Remove(node);
                 return false;
             }
-            foreach (var node in graph.Keys) if (dfs(node)) return true;
+            foreach (var node in graph.Keys) if (dfs(node: node)) return true;
             return false;
         }
 

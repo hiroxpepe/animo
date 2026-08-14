@@ -25,3 +25,5 @@ check lower-cases them when it matches.
 + SQL
 + XML
 + URI
++ AST
++ MCP

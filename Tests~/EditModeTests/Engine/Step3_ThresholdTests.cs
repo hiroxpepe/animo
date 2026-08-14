@@ -10,7 +10,7 @@ using Animo.Model;
 using static Animo.Tests.EditMode.Helpers.Fixture;
 
 namespace Animo.Tests.EditMode.EngineTests {
-    /// <summary>Step 3: Threshold hysteresis — OnSignal fire verification (spec §12.3).</summary>
+    /// <summary>Step 3: Threshold hysteresis — OnSignaled fire verification (spec §12.3).</summary>
     [TestFixture]
     public class Step3_ThresholdTests {
 
@@ -28,26 +28,26 @@ namespace Animo.Tests.EditMode.EngineTests {
         [Test] public void Case01_BelowTrigger_DoesNotFire() {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 50f, trigger: 80f, reset: 70f);
-            e.OnSignal += s => { if (s == "fear_alert") fired++; };
+            e.OnSignaled += s => { if (s == "fear_alert") fired++; };
             e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(0),
-                "Step 3: below trigger must NOT fire OnSignal.");
+                "Step 3: below trigger must NOT fire OnSignaled.");
         }
 
         [Test] public void Case02_AtOrAboveTrigger_FiresOnce() {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
-            e.OnSignal += s => { if (s == "fear_alert") fired++; };
+            e.OnSignaled += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);  // → 81, crosses 80
             e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(1),
-                "Step 3: crossing trigger must fire OnSignal exactly once.");
+                "Step 3: crossing trigger must fire OnSignaled exactly once.");
         }
 
         [Test] public void Case03_StaysAboveReset_DoesNotRefire() {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
-            e.OnSignal += s => { if (s == "fear_alert") fired++; };
+            e.OnSignaled += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);
             e.Live(delta_time: 0.016f);   // fires once
             e.Live(delta_time: 0.016f);   // stays above reset → must NOT refire
@@ -58,7 +58,7 @@ namespace Animo.Tests.EditMode.EngineTests {
         [Test] public void Case04_DropsBelowReset_RearmsAndCanFireAgain() {
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 79f, trigger: 80f, reset: 70f);
-            e.OnSignal += s => { if (s == "fear_alert") fired++; };
+            e.OnSignaled += s => { if (s == "fear_alert") fired++; };
             e.Affect("fear", +2f);
             e.Live(delta_time: 0.016f);   // fires #1
             e.Affect("fear", -20f); // → ~61, drops below reset 70
@@ -73,7 +73,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             // Q-S8/Q-S25: spawn-time seeding sets is_above=true without firing.
             int fired = 0;
             Engine e = MakeEngineWithThreshold(fear_init: 90f, trigger: 80f, reset: 70f);
-            e.OnSignal += s => { if (s == "fear_alert") fired++; };
+            e.OnSignaled += s => { if (s == "fear_alert") fired++; };
             e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(0),
                 "Step 3 Q-S8: spawning above trigger must NOT fire (already above at construction).");

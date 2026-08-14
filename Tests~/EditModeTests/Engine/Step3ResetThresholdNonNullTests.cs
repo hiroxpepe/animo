@@ -54,7 +54,7 @@ namespace Animo.Tests.EditMode.EngineTests {
                     ThresholdOf("fear",80f,"alert",70f) }}
             };
             var e = new Engine(p);
-            e.OnSignal += s => { if (s == "alert") fired++; };
+            e.OnSignaled += s => { if (s == "alert") fired++; };
             e.Affect("fear", +35f);  // 85 → crosses 80
             e.Live(delta_time: 0.016f);
             Assert.That(fired, Is.EqualTo(1), "Q-S86: threshold must fire.");

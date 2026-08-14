@@ -54,7 +54,7 @@ namespace Animo {
         /// </summary>
         public void Register(IAnimoAgent agent) {
             if (_agents.ContainsKey(agent.agent_id)) {
-                AnimoLog.Warning($"Store.Register: agent_id '{agent.agent_id}' already registered (keep first, no-op).");
+                AnimoLog.Warning(message: $"Store.Register: agent_id '{agent.agent_id}' already registered (keep first, no-op).");
                 return;
             }
             _agents[agent.agent_id] = agent;
@@ -63,12 +63,12 @@ namespace Animo {
         /// <summary>Unregister. Unknown id → Warning + no-op (spec §11.2).</summary>
         public void Unregister(IAnimoAgent agent) {
             if (!_agents.TryGetValue(agent.agent_id, out var registered)) {
-                AnimoLog.Warning($"Store.Unregister: agent_id '{agent.agent_id}' is not registered (no-op).");
+                AnimoLog.Warning(message: $"Store.Unregister: agent_id '{agent.agent_id}' is not registered (no-op).");
                 return;
             }
             // Instance-equality check (Q-S22).
             if (!ReferenceEquals(registered, agent)) {
-                AnimoLog.Warning($"Store.Unregister: agent_id '{agent.agent_id}' is registered to a different instance (no-op).");
+                AnimoLog.Warning(message: $"Store.Unregister: agent_id '{agent.agent_id}' is registered to a different instance (no-op).");
                 return;
             }
             _agents.Remove(agent.agent_id);
@@ -79,10 +79,10 @@ namespace Animo {
         /// </summary>
         public void Affect(string agent_id, string need, float delta, bool force_reset = false) {
             if (!_agents.TryGetValue(agent_id, out var agent)) {
-                AnimoLog.Warning($"Store.Affect: agent_id '{agent_id}' is not registered (no-op).");
+                AnimoLog.Warning(message: $"Store.Affect: agent_id '{agent_id}' is not registered (no-op).");
                 return;
             }
-            agent.Affect(need, delta, force_reset);
+            agent.Affect(need: need, delta: delta, force_reset: force_reset);
         }
 
         /// <summary>
