@@ -549,3 +549,9 @@ form — a short form is put right in the code, and not kept here.
 + mit
 + bcl
 + newtonsoft
++ loop loops
++ tablet tablets
++ manual manuals
++ desktop
++ checklist checklists
++ reuse reuses reused
