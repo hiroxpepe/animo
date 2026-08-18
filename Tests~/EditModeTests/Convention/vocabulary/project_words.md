@@ -35,3 +35,4 @@ The made-up names across our projects (webio, animo, briko, and the like).
 + NGSL
 + oscillator oscillators
 + arpeggiator arpeggiators
++ stemic

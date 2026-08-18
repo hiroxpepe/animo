@@ -6,9 +6,18 @@ change in as a commit.
 
 <!-- format: v1 | fields: status, id, title, phase -->
 
-+ [ ] TASK-001 [PHASE-05]: Put the rest of the docs into Basic English
-+ [ ] TASK-002 [PHASE-05]: Let a persona give a display name for a need or action
-+ [ ] TASK-003 [PHASE-05]: Add a MockBus to check a Lock-time Bus.Publish direct
++ [ ] TASK-001 [P-XX]: Put the rest of the docs into Basic English
++ [ ] TASK-002 [P-XX]: Let a persona give a display name for a need or action
++ [ ] TASK-003 [P-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
++ [ ] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
++ [ ] TASK-005 [P-04]: Write a true spec for the adapter layer itself
++ [ ] TASK-006 [P-04]: Put the adapter spec through a true G review
++ [ ] TASK-007 [P-04]: Decide the public shape (a property, or an event)
++ [ ] TASK-008 [P-04]: Build the adapter, by TDD, from the checked spec
++ [ ] TASK-009 [P-05]: Give the goblin_scout persona a true threat action
++ [ ] TASK-010 [P-05]: Check a Germio Command/Rule can call the new adapter
++ [ ] TASK-011 [P-05]: Wire one agent into stemic, and check it by real play
++ [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
 
 ## Detail
 
@@ -68,3 +77,80 @@ the `Engine` at test time, which was filed during Phase 2 as a Phase
 3 follow-up and is still open now that Phase 3 is done. Add the
 `MockBus` injection point, then add the direct assertion these two
 test files already point to in their own comments.
+
+### TASK-004
+
+**Checked true, 2026-08-18 (Master's own word).** `Scripts/Animo.csproj`
+holds at `net8.0` today. Setting `TargetFramework` to `netstandard2.1`
+alone gave 26 build errors — every one `CS8400` (a C# 8.0 language-
+version ceiling; `netstandard2.1` itself sets no language-version
+floor). Adding one line, `<LangVersion>12</LangVersion>` (the same
+setting `Quyno`/`Signo`'s own `Core` .csproj already holds), gave a
+true, clean build — 0 errors, 1 warning. Bring this real, checked
+change into the true `Animo.csproj` (reverted after the check, not
+yet landed).
+
+### TASK-005
+
+**Master's own word, 2026-08-18.** A real check found `Agent.cs`'s
+own `using Germio;` line is not truly used at all — no true call
+reaches any real `Germio` type or member anywhere in the file.
+Write a true spec for this engine's own adapter layer, before any
+code: what this engine passes out (the `Behavior` string alone, or
+need values too), who starts it up, and how often a real `Germio`
+game is meant to read or hear it, each true frame.
+
+### TASK-006
+
+Put the true spec TASK-005 wrote through a real, hard-questioning `G`
+review, the same way every other true spec in this repository
+already stands on one.
+
+### TASK-007
+
+Given TASK-006's own true review, decide the adapter's own public
+shape: a plain, read-any-time property, or an `event` fired only on
+a true behavior change. `Animo` holds this true interface itself,
+since a persona's own mind is each given game's own true, different
+content, unlike sound (a true, shared, one-size shape `Germio`
+itself holds through `SoundSystem.cs`).
+
+### TASK-008
+
+Build the true adapter, by TDD, from the checked spec (TASK-005)
+and the true shape TASK-007 picked.
+
+### TASK-009
+
+A real, headless run of `examples/goblin_scout.json` through
+`ScenarioRunner` (a true fear spike at t=5s, 40s total) showed:
+`Socialize` → `Flee` (13s straight) → `SearchFood`, switching away
+from `Flee` while fear was still at 72 (still high). This persona
+holds no true threat/attack action at all — only `Flee`,
+`SearchFood`, `Rest`, `Patrol`, `Socialize` — so as an "enemy" for
+`stemic`'s own new NPC (see `stemic`'s own TASKLIST TASK-005/006)
+it gives no real way to threaten the player. Either add a true
+threat action (an `Attack`-class need/action pair) to this persona,
+or drop the "enemy" framing and give this NPC a different, honest
+role (a wildlife-class NPC that only flees/wanders).
+
+### TASK-010
+
+Check, with a plain, given test `Rule`, that a real `Germio`
+Command/Rule can truly read the adapter TASK-008 built — a small,
+given check, ahead of any full `stemic`-side wiring at all.
+
+### TASK-011
+
+Wire one true `Agent` (given the `goblin_scout` persona, given
+TASK-009 lands first) into a real `germio` game (`stemic`, first),
+read through the true adapter, and check it by real play — the
+true, final check that closes this whole phase. A plain, small
+PoC — one agent, no true scale or timing ask at all.
+
+### TASK-012
+
+Not owed at all, but worth a true weigh once P-04/P-05 both close:
+a 100-agent, one-hour real Unity soak test (too great a real ask
+for this true phase, and not this engine's own true worth right
+now — held here in case a later, real need calls for it).

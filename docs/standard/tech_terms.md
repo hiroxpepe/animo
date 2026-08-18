@@ -231,3 +231,14 @@ single, new object.
 
 **sequencer** — A program that reads a song's own score, and sends out a
 note, at the right moment, to make music.
+
+**netstandard** — A shared, true .NET target that lets one build run
+true across many true, different engines (Unity included), given no
+single one's own newer feature.
+
+**csproj** — A project file, given to .NET's own build tool, naming
+what to build and what it needs.
+
+**adapter** — A true, given layer that lets one part of a system
+talk to another, apart part, with no change owed to either one's
+own true inner work.
