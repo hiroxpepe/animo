@@ -18,6 +18,7 @@ change in as a commit.
 + [ ] TASK-010 [P-05]: Check a Germio Command/Rule can call the new adapter
 + [ ] TASK-011 [P-05]: Wire one agent into stemic, and check it by real play
 + [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
++ [ ] TASK-013 [P-XX]: Write the kind/persona pair for stemic's own two characters
 
 ## Detail
 
@@ -154,3 +155,13 @@ Not owed at all, but worth a true weigh once P-04/P-05 both close:
 a 100-agent, one-hour real Unity soak test (too great a real ask
 for this true phase, and not this engine's own true worth right
 now — held here in case a later, real need calls for it).
+
+### TASK-013
+
+**Checked true, 2026-08-19, in a plan talk with Master.** A true
+re-shape of the Adapter (bridge) layer itself, over a wish to give
+`stemic` a true pair of characters. The full true design (why a
+target may still be held, who holds it, and the kind/persona pair
+itself) sits in `docs/adapter_spec.md` — this task closes once
+that spec is checked true and the kind/persona JSON it calls for is
+written.
