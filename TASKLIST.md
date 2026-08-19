@@ -14,7 +14,7 @@ change in as a commit.
 + [ ] TASK-006 [P-04]: Put the adapter spec through a true G review
 + [ ] TASK-007 [P-04]: Decide the public shape (a property, or an event)
 + [ ] TASK-008 [P-04]: Build the adapter, by TDD, from the checked spec
-+ [ ] TASK-009 [P-05]: Give the goblin_scout persona a true threat action
++ [x] TASK-009 [P-05]: Give the goblin_scout persona a true threat action (dropped, see detail)
 + [ ] TASK-010 [P-05]: Check a Germio Command/Rule can call the new adapter
 + [ ] TASK-011 [P-05]: Wire one agent into stemic, and check it by real play
 + [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
@@ -123,17 +123,25 @@ and the true shape TASK-007 picked.
 
 ### TASK-009
 
-A real, headless run of `examples/goblin_scout.json` through
-`ScenarioRunner` (a true fear spike at t=5s, 40s total) showed:
-`Socialize` → `Flee` (13s straight) → `SearchFood`, switching away
-from `Flee` while fear was still at 72 (still high). This persona
-holds no true threat/attack action at all — only `Flee`,
-`SearchFood`, `Rest`, `Patrol`, `Socialize` — so as an "enemy" for
-`stemic`'s own new NPC (see `stemic`'s own TASKLIST TASK-005/006)
-it gives no real way to threaten the player. Either add a true
-threat action (an `Attack`-class need/action pair) to this persona,
-or drop the "enemy" framing and give this NPC a different, honest
-role (a wildlife-class NPC that only flees/wanders).
+**Dropped, 2026-08-19, in a later plan talk with Master.** A real,
+headless run of `examples/goblin_scout.json` through `ScenarioRunner`
+(a true fear spike at t=5s, 40s total) showed `Socialize` → `Flee`
+(13s straight) → `SearchFood`, switching away from `Flee` while fear
+was still at 72 (still high). This persona holds no true threat/
+attack action at all — only `Flee`, `SearchFood`, `Rest`, `Patrol`,
+`Socialize`. A first plan (this same day) held this would call for
+an `Attack`-class need/action pair, since `stemic`'s own new
+character was, at that point, meant as one enemy NPC (the true
+reference to `stemic`'s own TASKLIST TASK-005/006 above was itself
+stale even then — `stemic`'s own true numbers for that work had
+moved to TASK-015/016 by that point).
+
+A later plan talk (this same day) dropped the "enemy" framing for
+`stemic`'s own new work for good, in place of a true pair of
+characters with no fixed side at all. `goblin_scout` itself is left
+untouched (a true, standing example persona, not tied to any one
+game); TASK-013 below holds the true kind/persona work `stemic`'s
+own P-04 now calls for instead.
 
 ### TASK-010
 
