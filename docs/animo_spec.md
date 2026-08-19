@@ -2982,6 +2982,43 @@ github.com/meowtoon/utilo
 | A Need's own graph, holding a cycle   | v0.1.2 made these an Error. Should a true, real use show up, add a rate of learning, α (in the style of PageRank), for running through it, with an end it settles down to. |
 | Branches of a Need (idle's own kinds) | a list, such as `idle_default`, `idle_mischief`, and the rest, for one kind of game                                                                                        |
 
+### 21.4a `GroupMind`, a Look at the Idea First (2026-08-19)
+
+**The question, put by Master:** if a Scene holds five agents, each run by
+Animo, can they split, on their own, into two sides and three sides, and go
+against each other — with no player in the loop at all?
+
+**The answer, today: not yet.** A check of the code, done on this same day,
+found no path from one `Engine` to another. `Store.Affect(agent_id, need,
+delta, force_reset)` lets outside code push a `Need` value into one named
+agent, but no `Engine` reads a value from a second `Engine`. `MonitorSet`
+holds many agents at once, yet only to run them and keep a record of each;
+it does not let one agent's state move into another's.
+
+**Why the idea still has worth.** A single, simple enemy (checked in the
+`super-nekokun` game's own `Enemy.cs`) does not need this at all — three
+`bool` flags and a plain state switch cover it well. But five agents split
+into sides, on their own, is a true group act, not a single-agent one. This
+is the true worth `GroupMind` would bring: not one more way to run a single
+enemy, but a way for many agents to shape each other, with no player, no
+script, and no fixed rule, driving the split.
+
+**What a first build would need, at a plain level:**
+
++ A tie between two agents (an ally mark, or an enemy mark), held as data not
+  yet in `Persona` or `kind` today.
++ A path for one `Need`'s value (say, `fear`) to push into a second agent's
+  own `Need`, through the tie above — not just from outside code, as
+  `Store.Affect` does now, but agent to agent.
++ A rule for how the split itself comes about (by a starting roll, by how
+  close each agent's own `Needs` sit to each other, or some other rule not
+  yet picked).
+
+**Where this sits, against today's work.** TASK-005 through TASK-008 (the
+adapter layer, joining Animo to Germio) stay as they are: a thin path for
+one agent's own `Behavior` to reach Germio. `GroupMind` is a separate, later
+piece of work, on Animo's own side, not a part of the adapter itself.
+
 ### 21.5 Organization Migration Plan
 
 ```mermaid
