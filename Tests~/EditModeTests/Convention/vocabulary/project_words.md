@@ -36,3 +36,4 @@ The made-up names across our projects (webio, animo, briko, and the like).
 + oscillator oscillators
 + arpeggiator arpeggiators
 + stemic
++ Tanukichi
