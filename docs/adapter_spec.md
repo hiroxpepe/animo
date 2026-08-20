@@ -52,7 +52,17 @@ class, by true design:
   `"confidence"`), not a place in the world or another agent.
 
 This still stands, and this spec does not touch it. **The target itself
-is held by the Germio-side Adapter, never by Animo.**
+is held by the Adapter, never by Animo.**
+
+**Where the Adapter itself sits (Master's own word, 2026-08-19):** with
+`Human_Animable`, on the `stemic` side, for as long as this stays a PoC.
+The two are one true piece of work split in two — moving one alone to
+`germio` would mean reaching across two separate places for every small
+design fix, while the design is still finding its own shape. Once the
+PoC shows this holds true for any game, both move to `germio` together
+(the same true way `SoundSystem` and `Sensor` already sit there).
+`Sensor` itself is the one part that belongs in `germio` from the
+start, since a character with no Animo mind at all still uses it.
 
 ---
 
@@ -60,35 +70,49 @@ is held by the Germio-side Adapter, never by Animo.**
 
 ```mermaid
 flowchart LR
-  S["Germio's own Sensor<br/>(see germio TASK-014)"]
-  A["Germio-side Adapter<br/>holds the target"]
-  E["Animo Engine<br/>Affect(need, delta)"]
+  N["Animo Needs<br/>climb on their own<br/>(persona rates)"]
   B["Engine.Behavior<br/>e.g. 'Socialize'"]
+  A["Adapter<br/>(stemic side, for now)<br/>holds the target"]
+  S["Germio's own Sensor<br/>(see germio TASK-014)"]
   M["Adapter moves the<br/>character toward its<br/>held target"]
-  S -- "found a target" --> A
-  A -- "a plain number only" --> E
-  E -- "picks the Behavior" --> B
+  F["Adapter calls<br/>Affect(need, -N)<br/>once it truly lands"]
+  N -- "no outside push at all" --> B
   B -- "read back" --> A
+  A -- "asks for a target" --> S
+  S -- "found one" --> A
   A --> M
+  M -- "got there" --> F
+  F -- "the Need falls" --> N
 ```
 
-1. Germio's own Sensor (a shared class, spec'd on the `germio` side as
-   TASK-014) finds a target near the character — say, the other
-   character.
-2. The Adapter holds onto that target itself (a plain field on the
-   Adapter, not on Animo).
-3. The Adapter calls `Engine.Affect(need, delta)` with a plain number
-   alone (say, `Affect("loneliness", +5)` while the target stays near,
-   each true tick).
-4. Animo never learns who or where the target is; it only feels the Need
-   climb, runs its own true Step 1-5 pass, and picks a Behavior.
-5. Once `Engine.Behavior` reads back as (say) `"Socialize"`, the Adapter
-   moves the character toward the target **it**, not Animo, still holds.
-6. When the two characters sit close enough, the Adapter calls
-   `Affect("loneliness", -30)` (the same shape `animo_spec.md`'s own
-   `Socialize succeeds` row already shows), and the Need falls back down.
+1. A Need climbs on its own, with no outside push at all, at whatever
+   rate the persona's own `rates` sets (say, `loneliness` at +1.2 a
+   second, `curiosity` at +0.8). **This is Animo's own true work, and
+   the Adapter never pushes a Need up.**
+2. Animo runs its own true Step 1-5 pass and picks a Behavior, say
+   `"Socialize"` or `"Patrol"`.
+3. The Adapter reads `Engine.Behavior` back, and asks Germio's own
+   Sensor (a shared class, spec'd on the `germio` side as TASK-014) for
+   whatever that Behavior calls for — another character, for
+   `"Socialize"`; a block or step not yet stood on, for `"Patrol"`.
+4. The Adapter holds onto that target itself (a plain field on the
+   Adapter, not on Animo), and moves the character toward it.
+5. Animo never learns who or where the target is; it only ever feels
+   its own Needs, and picks what to do.
+6. Once the character truly gets there (close enough to the other
+   character, or standing on the new block), the Adapter calls
+   `Affect("loneliness", -30)` — or `Affect("curiosity", -N)` — and the
+   Need falls back down. **This one call, telling Animo an action
+   truly landed, is the Adapter's own only true reach into Animo.**
 
 **Animo picks *what* to do; Germio alone knows *who* or *where*.**
+
+Why the Adapter must make that last call at all: `Action` holds only
+`id`, `need`, `tier`, `exponent` (checked true in
+`Scripts/Model/Data.cs`) — no field at all for "how far this Need falls
+once the action lands". Animo, holding no place in the world, can never
+know on its own whether a character truly got anywhere. Germio alone
+knows, so Germio alone can tell it.
 
 ---
 

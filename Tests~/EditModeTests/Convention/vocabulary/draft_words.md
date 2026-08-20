@@ -557,3 +557,4 @@ form — a short form is put right in the code, and not kept here.
 + reuse reuses reused
 + reverted headless spike wildlife
 + p
++ sensor sensors
