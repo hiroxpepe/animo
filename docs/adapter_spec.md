@@ -60,9 +60,12 @@ The two are one true piece of work split in two — moving one alone to
 `germio` would mean reaching across two separate places for every small
 design fix, while the design is still finding its own shape. Once the
 PoC shows this holds true for any game, both move to `germio` together
-(the same true way `SoundSystem` and `Sensor` already sit there).
-`Sensor` itself is the one part that belongs in `germio` from the
-start, since a character with no Animo mind at all still uses it.
+(the same true way `SoundSystem` already sits there).
+
+**Seeking does not sit in `germio` at all.** It was planned there
+once, and moved to `modio` on 2026-08-21: seeking and remembering are
+one act ("find a Block not yet met"), and cannot be split. See
+`modio`'s own `docs/modio_spec.md` §3.3.
 
 ---
 
@@ -73,7 +76,7 @@ flowchart LR
   N["Animo Needs<br/>climb on their own<br/>(persona rates)"]
   B["Engine.Behavior<br/>e.g. 'Socialize'"]
   A["Adapter<br/>(stemic side, for now)<br/>holds the target"]
-  S["Germio's own Sensor<br/>(see germio TASK-014)"]
+  S["Modio's own seeking<br/>(see modio_spec §3.3)"]
   M["Adapter moves the<br/>character toward its<br/>held target"]
   F["Adapter calls<br/>Affect(need, -N)<br/>once it truly lands"]
   N -- "no outside push at all" --> B
@@ -92,7 +95,7 @@ flowchart LR
 2. Animo runs its own true Step 1-5 pass and picks a Behavior, say
    `"Socialize"` or `"Patrol"`.
 3. The Adapter reads `Engine.Behavior` back, and asks Germio's own
-   Sensor (a shared class, spec'd on the `germio` side as TASK-014) for
+   seeking (held by `modio`; see its own `docs/modio_spec.md` §3.3) for
    whatever that Behavior calls for — another character, for
    `"Socialize"`; a block or step not yet stood on, for `"Patrol"`.
 4. The Adapter holds onto that target itself (a plain field on the
@@ -122,41 +125,30 @@ Two kinds, off one shared base (`stemic_character`, with a plain `idle`
 and `fatigue` rate), the same shape `tanukichi.json` already shows (a
 base kind plus a second kind that gives its own true way of being):
 
-| Kind | High rate | Low rate | Action set |
-| --- | --- | --- | --- |
-| A wish for new places | `curiosity` | `loneliness` | `Idle`, `Patrol` |
-| A wish for company | `loneliness` | `curiosity` | `Idle`, `Socialize` |
+**These two are now fully designed** — see
+`docs/persona_design_spec.md` §6, which holds every value settled
+(Stage/Need/start/rate/exponent/Action/suppression, plus influence and
+commitment bonus for each), all checked by real sums.
 
-A sketch of the shape (values still open, not final):
+What that design settled, in short:
 
-```json
-{
-  "schema_version": "1.4",
-  "kinds": [
-    {
-      "kind_id": "stemic_character",
-      "rates": { "idle": 0.5, "fatigue": 0.8 },
-      "actions": [
-        { "id": "Idle", "need": "idle", "tier": 5, "exponent": 1.0 }
-      ]
-    },
-    {
-      "kind_id": "place_curious",
-      "rates": { "curiosity": 1.2, "loneliness": 0.4 },
-      "actions": [
-        { "id": "Patrol", "need": "curiosity", "tier": 3, "exponent": 1.3 }
-      ]
-    },
-    {
-      "kind_id": "company_seeking",
-      "rates": { "loneliness": 1.2, "curiosity": 0.4 },
-      "actions": [
-        { "id": "Socialize", "need": "loneliness", "tier": 3, "exponent": 1.3 }
-      ]
-    }
-  ]
-}
-```
+| Kind              | Stage 3 (social)          | Stage 5 (own true self) | Commitment |
+| ----------------- | ------------------------- | ----------------------- | ---------- |
+| `place_curious`   | `loneliness` → `Approach` | `curiosity` → `Explore` | +6         |
+| `company_seeking` | `loneliness` → `Approach` | `togetherness` → `Give` | +12        |
+
+The two were built as one true pair: `place_curious` cannot reach
+`Explore` while its own `loneliness` sits high (Maslow's own
+holding-back, `animo_spec.md` §8.3), so it only truly goes exploring
+once `company_seeking` comes near. Each time it walks off again,
+`company_seeking`'s own `separation` climbs, and it calls out. One
+true, closed round — checked by real sums in `persona_design_spec.md`
+§6.
+
+An older sketch stood here, holding only one Stage-3 pair for each,
+plus an `idle` Need. Both were dropped: no persona may use `idle` at
+all (`persona_design_spec.md` §3), and every one of Maslow's own 5
+Stages must hold a true Need (§1).
 
 Neither kind holds `Flee` or a fight action at all — those call for a
 true side (friend/enemy), which this pair does not have.
@@ -165,8 +157,9 @@ true side (friend/enemy), which this pair does not have.
 
 ## Not part of this spec
 
-+ Germio's own Sensor class (drop-off check, sight check, the call-in
-  point for `DoFixedUpdate.Apply`) — see `germio`'s own TASK-014.
++ Modio's own seeking (a sight check, a drop-off check, and the
+  call-in point for `DoFixedUpdate.Apply`) — moved out of `germio` on
+  2026-08-21.
 + `GroupMind` (a Need spreading between more than two agents at once) —
   still a v0.2 idea only, not real code, per `animo_spec.md` §21.4a.
 
@@ -176,8 +169,8 @@ true side (friend/enemy), which this pair does not have.
 
 + The real number for `loneliness`'s own climb rate while a target sits
   near, and how close "near" truly is, are both still open — a Germio-
-  side call, once the Sensor itself (TASK-014) is built and can be
+  side call, once seeking itself is built in `modio` and can be
   checked against real play.
-+ Whether the Adapter should drop its held target the moment the Sensor
++ Whether the Adapter should drop its held target the moment seeking
   no longer finds it (a hard cut), or let it fall away over a short true
   span (a soft cut), is still open.

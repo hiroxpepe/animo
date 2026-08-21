@@ -37,3 +37,4 @@ The made-up names across our projects (webio, animo, briko, and the like).
 + arpeggiator arpeggiators
 + stemic
 + Tanukichi
++ modio
