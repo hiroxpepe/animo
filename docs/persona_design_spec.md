@@ -34,9 +34,9 @@ code):
 | 4     | Being held in true regard | Being held in true regard by others; one's own true trust in the self.            |
 | 5     | Becoming one's true self  | Reaching one's own true, full growth — making, building, becoming more.           |
 
-`goblin_scout` (checked true against `examples/goblin_scout.json`) holds
-no true Need at Stage 4 today — under this true rule, this is not
-whole, and must be closed later.
+`goblin_scout` (checked true against `examples/goblin_scout.json`) held
+no true Need at Stage 4 — the first real case this rule caught. §6
+below holds its own whole, made-new form.
 
 ---
 
@@ -195,8 +195,9 @@ given to helping the whole true village.
 | 4     | `reliance` (want to be leaned on)      | 35    | +0.5 | 1.4      | `HelpVillager` (help a true villager) | 0.6         |
 | 5     | `curiosity` (want to know)             | 50    | +0.8 | 1.0      | `Craft` (make or size up true goods)  | 0.7         |
 
-**Influence:** `stock_worry → confidence`, coefficient `-0.3` (worry
-over trade wears down his own true confidence).
+**Influence:** `stock_worry → reliance`, coefficient `+0.4` (worry over
+trade makes him want, all the more, to be leaned on by the village —
+held true inside the same 5 Needs, never reaching outside them).
 **Commitment bonus:** `+5` (held lower still than `shiori`'s own — a
 true, easy-going small-store owner holds to nothing firmly for long).
 **Competing pair (§5, above):** Stage 2 (`stock_worry`) against Stage 4
@@ -206,10 +207,50 @@ the village" truly compete.
 
 ---
 
+### `goblin_scout`, made new again
+
+A plan talk with Master: a scout who feels fear quickly, who cannot fight, and so holds
+his own true worth in the one thing he can do — go out, watch, and
+bring word back.
+
+| Stage | Need (sense)                                 | Start | Rate | Exponent | Action (sense)                        | Suppression |
+| ----- | -------------------------------------------- | ----- | ---- | -------- | ------------------------------------- | ----------- |
+| 1     | `hunger` (want food)                         | 40    | +2.0 | 1.8      | `SearchFood` (go find food)           | —           |
+| 2     | `fear` (afraid)                              | 20    | -2.0 | 0.6      | `Flee` (run away)                     | 0.3         |
+| 3     | `loneliness` (alone)                         | 30    | +1.2 | 1.3      | `Socialize` (go be near someone)      | 0.5         |
+| 4     | `recognition` (want to be given true regard) | 25    | +0.5 | 1.3      | `Report` (tell the group what he saw) | 0.7         |
+| 5     | `duty` (pride in the work given him)         | 60    | +0.9 | 1.1      | `Patrol` (go out and watch)           | 0.9         |
+
+**Influence:** `fear → duty`, coefficient `-0.5` (real fear breaks down
+his own sense of the work given him — held true inside the same 5
+Needs).
+**Commitment bonus:** `+10` (the highest of all three — a scout on
+watch holds to the work given him harder than a teenager or an
+easy-going small-store owner).
+**Competing pair (§5, above):** Stage 4 (`recognition`) against Stage 5
+(`duty`) — close `tier` (4/5) and close `exponent` (1.3/1.1), so "go
+back and tell them" and "keep watching" truly compete: a scout's own
+true, everyday pull.
+**`agent_id`:** `goblin_scout_v2`. **`kind_id`:** `scout_v2` (one kind
+alone, matching `shiori`/`tanukichi` above — the older file's own two
+kinds, `goblin` plus `scout`, are folded into one).
+
+**What was dropped, and why:**
+
++ `exponent` on `Flee` was `2.5` in the older file — by §8.5.3's own
+  table, that reads "holds back, then bursts out" — the mark of one
+  who holds firm under fear, not one who feels it quickly. Set to
+  `0.6` ("reacts early").
++ `fatigue`/`Rest` was dropped: one true Need to a Stage, and `hunger`
+  speaks more to what a goblin is.
++ `confidence`, `frustration`, `curiosity`, `idle` were all dropped:
+  each held a `rate` but no true Action at all, a shape neither
+  `shiori` nor `tanukichi` holds.
+
+---
+
 ## 7. Still owed
 
-+ `goblin_scout` itself still holds no true Stage 4 Need (§1, above) —
-  to be made new again next, the same true way, tomorrow.
 + `ganon` (§19.1), the older `tanukichi`/`villager` form (§19.2), and
   the older `shiori`/`heroine` form (§19.3), all in `animo_spec.md`
   itself, still hold `idle` and gaps of their own — not yet touched.
