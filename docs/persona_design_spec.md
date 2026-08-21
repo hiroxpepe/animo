@@ -249,11 +249,77 @@ kinds, `goblin` plus `scout`, are folded into one).
 
 ---
 
+### `place_curious` and `company_seeking`, the two for `stemic`
+
+**A plan talk with Master, 2026-08-20.** These two alone are the real
+PoC pair (see `docs/adapter_spec.md`); the three above are design
+examples. They were built as one true pair, not one at a time: Maslow's
+own holding-back (§8.3) becomes, in play, the bond between them.
+
+`place_curious` cannot reach Stage 5 (`Explore`) while Stage 3
+(`loneliness`) sits high — so it can only truly go exploring once
+`company_seeking` comes near. And `company_seeking`, each time
+`place_curious` walks off, feels Stage 2 (`separation`) climb, and
+calls out. One true, closed round.
+
+#### `place_curious` (one who wants new places)
+
+| Stage | Need (sense)                                   | Start | Rate | Exponent | Action (sense)                                | Suppression |
+| ----- | ---------------------------------------------- | ----- | ---- | -------- | --------------------------------------------- | ----------- |
+| 1     | `fatigue` (worn out)                           | 20    | +1.2 | 1.5      | `Rest` (stop and rest)                        | —           |
+| 2     | `exposure` (open to harm, out in the wild)     | 25    | +0.7 | 1.8      | `GoHome` (go back to a known place)           | 0.3         |
+| 3     | `loneliness` (alone)                           | 50    | +1.0 | 1.2      | `Approach` (go to the other one)              | 0.6         |
+| 4     | `recognition` (want what was found to be seen) | 20    | +0.5 | 1.3      | `ShowFind` (carry the find back, and show it) | 0.7         |
+| 5     | `curiosity` (want to know)                     | 60    | +1.2 | 1.0      | `Explore` (go where it has not yet been)      | 0.9         |
+
+**Influence:** `curiosity → loneliness`, coefficient `-0.3` (deep in a
+find, it forgets it is alone).
+**Commitment bonus:** `+6` (its mind is easily turned).
+**Competing pair (§5, above):** Stage 3 (`loneliness`) against Stage 5
+(`curiosity`) — checked by real sums: at `loneliness` 40 `Explore`
+wins by 10.1; at 50 `Approach` wins by 4.0. A true crossing point sits
+right between, and the `+6` bonus holds it steady, with no chattering.
+**`agent_id`:** `place_curious_01`. **`kind_id`:** `wanderer`.
+
+#### `company_seeking` (one who wants to be with)
+
+| Stage | Need (sense)                            | Start | Rate | Exponent | Action (sense)                    | Suppression |
+| ----- | --------------------------------------- | ----- | ---- | -------- | --------------------------------- | ----------- |
+| 1     | `fatigue` (worn out)                    | 20    | +0.6 | 1.5      | `Rest` (stop and rest)            | —           |
+| 2     | `separation` (fear of being cut off)    | 30    | +1.0 | 1.4      | `Call` (stand still and call out) | 0.3         |
+| 3     | `loneliness` (alone)                    | 60    | +1.5 | 0.8      | `Approach` (go to the other one)  | 0.6         |
+| 4     | `usefulness` (want to be of true use)   | 20    | +0.8 | 1.4      | `Tend` (care for the other one)   | 0.7         |
+| 5     | `togetherness` (being as one, together) | 40    | +0.9 | 1.1      | `Give` (give to the other one)    | 0.9         |
+
+**Influence:** `loneliness → togetherness`, coefficient `+0.4` (the
+more alone it feels, the more it wants to be as one).
+**Commitment bonus:** `+12` (the highest of all five — once it picks
+someone, it holds on).
+**Competing pair (§5, above):** Stage 4 (`usefulness`) against Stage 5
+(`togetherness`) — checked by real sums: they cross at `usefulness`
+near 72, about 65 seconds in at `+0.8` a second.
+**`agent_id`:** `company_seeking_01`. **`kind_id`:** `companion`.
+
+#### The round, checked by real sums
+
+| Moment                                   | `place_curious`                                   | `company_seeking` |
+| ---------------------------------------- | ------------------------------------------------- | ----------------- |
+| At the start                             | `Approach` 37.0 (`Explore` 33.0, only 4.0 behind) | `Approach` 54.5   |
+| Once they meet (`loneliness` -30 each)   | **`Explore` 46.5**                                | `Approach` 31.3   |
+| The other walks off (`separation` up 70) | (out exploring)                                   | **`Call` 56.1**   |
+
+Every one of the 10 Actions was checked, by real sums, to truly win at
+some point — not one sits dead in the file.
+
+---
+
 ## 7. Still owed
 
 + `ganon` (§19.1), the older `tanukichi`/`villager` form (§19.2), and
   the older `shiori`/`heroine` form (§19.3), all in `animo_spec.md`
   itself, still hold `idle` and gaps of their own — not yet touched.
-+ `place_curious`/`company_seeking` (`docs/adapter_spec.md`, made for
-  `stemic`) still hold one true pair alone — not yet built out to a
-  whole, true persona.
++ `docs/adapter_spec.md` still shows the older, one-pair-only form of
+  `place_curious`/`company_seeking` — to be brought in line with §6
+  above.
++ Every persona in §6 stands as a design alone: none is yet written out
+  as a real `animo.json` file.
