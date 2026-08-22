@@ -55,18 +55,18 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
                 System.IO.Path.Combine(
                     System.IO.Path.GetDirectoryName(
                         System.Reflection.Assembly.GetExecutingAssembly().Location)!,
-                    "..", "..", "..", "..", "..", "..", "Scripts", "Data.cs"));
+                    "..", "..", "..", "..", "..", "..", "Scripts", "Model", "Data.cs"));
             if (!System.IO.File.Exists(root)) root =
                 System.IO.Path.Combine(
                     System.IO.Directory.GetCurrentDirectory(),
-                    "Scripts", "Data.cs");
-            // Repo-relative fallback: walk up until Scripts/Data.cs is found.
+                    "Scripts", "Model", "Data.cs");
+            // Repo-relative fallback: walk up until Scripts/Model/Data.cs is found.
             string? dir = System.IO.Directory.GetCurrentDirectory();
-            while (dir != null && !System.IO.File.Exists(System.IO.Path.Combine(dir, "Scripts", "Data.cs")))
+            while (dir != null && !System.IO.File.Exists(System.IO.Path.Combine(dir, "Scripts", "Model", "Data.cs")))
                 dir = System.IO.Directory.GetParent(dir)?.FullName;
-            if (dir != null) root = System.IO.Path.Combine(dir, "Scripts", "Data.cs");
+            if (dir != null) root = System.IO.Path.Combine(dir, "Scripts", "Model", "Data.cs");
 
-            Assert.That(System.IO.File.Exists(root), Is.True, $"Scripts/Data.cs not found at {root}");
+            Assert.That(System.IO.File.Exists(root), Is.True, $"Scripts/Model/Data.cs not found at {root}");
             var text = System.IO.File.ReadAllText(root);
             Assert.That(text, Does.Contain("NeedMeta DeepCopy()"),
                 "Q-S134: Scripts/Data.cs must declare NeedMeta.DeepCopy().");

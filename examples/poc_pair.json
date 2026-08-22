@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.4",
+  "kinds": [
+    {
+      "kind_id": "wanderer",
+      "rates": {
+        "fatigue": 1.2,
+        "exposure": 2.0,
+        "loneliness": 1.0,
+        "recognition": 2.0,
+        "curiosity": 1.2
+      },
+      "suppression": {
+        "tier2": 0.3,
+        "tier3": 0.6,
+        "tier4": 0.5,
+        "tier5": 0.9
+      },
+      "influences": [
+        {
+          "source": "curiosity",
+          "target": "loneliness",
+          "coefficient": -0.1
+        }
+      ],
+      "actions": [
+        {
+          "id": "Rest",
+          "need": "fatigue",
+          "tier": 1,
+          "exponent": 1.5
+        },
+        {
+          "id": "GoHome",
+          "need": "exposure",
+          "tier": 2,
+          "exponent": 1.8
+        },
+        {
+          "id": "Approach",
+          "need": "loneliness",
+          "tier": 3,
+          "exponent": 1.2
+        },
+        {
+          "id": "ShowFind",
+          "need": "recognition",
+          "tier": 4,
+          "exponent": 1.3
+        },
+        {
+          "id": "Explore",
+          "need": "curiosity",
+          "tier": 5,
+          "exponent": 1.0
+        }
+      ],
+      "commitment": {
+        "bonus": 6
+      }
+    },
+    {
+      "kind_id": "companion",
+      "rates": {
+        "fatigue": 1.0,
+        "separation": 2.2,
+        "loneliness": 1.5,
+        "usefulness": 2.2,
+        "togetherness": 0.9
+      },
+      "suppression": {
+        "tier2": 0.3,
+        "tier3": 0.6,
+        "tier4": 0.5,
+        "tier5": 0.9
+      },
+      "influences": [
+        {
+          "source": "loneliness",
+          "target": "togetherness",
+          "coefficient": 0.4
+        }
+      ],
+      "actions": [
+        {
+          "id": "Rest",
+          "need": "fatigue",
+          "tier": 1,
+          "exponent": 1.5
+        },
+        {
+          "id": "Call",
+          "need": "separation",
+          "tier": 2,
+          "exponent": 1.4
+        },
+        {
+          "id": "Approach",
+          "need": "loneliness",
+          "tier": 3,
+          "exponent": 1.8
+        },
+        {
+          "id": "Tend",
+          "need": "usefulness",
+          "tier": 4,
+          "exponent": 1.4
+        },
+        {
+          "id": "Give",
+          "need": "togetherness",
+          "tier": 5,
+          "exponent": 1.1
+        }
+      ],
+      "commitment": {
+        "bonus": 12
+      }
+    }
+  ],
+  "personas": [
+    {
+      "agent_id": "place_curious_01",
+      "persona_name": "Place Curious \u2014 One Who Wants New Places",
+      "kind_ids": [
+        "wanderer"
+      ],
+      "needs": {
+        "fatigue": 20,
+        "exposure": 25,
+        "loneliness": 50,
+        "recognition": 20,
+        "curiosity": 60
+      }
+    },
+    {
+      "agent_id": "company_seeking_01",
+      "persona_name": "Company Seeking \u2014 One Who Wants To Be With",
+      "kind_ids": [
+        "companion"
+      ],
+      "needs": {
+        "fatigue": 20,
+        "separation": 30,
+        "loneliness": 60,
+        "usefulness": 20,
+        "togetherness": 40
+      }
+    }
+  ]
+}

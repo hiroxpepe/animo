@@ -25,7 +25,7 @@ namespace Animo.Tests.EditMode.ValidatorTests {
 
         [Test] public void Case01_PhysicalValidator_DocstringMentionsA040() {
             string? path = null;
-            { var p = Path.Combine(RepoRoot(), "Scripts", "Validator.cs"); if (File.Exists(p)) path = p; }
+            { var p = Path.Combine(RepoRoot(), "Scripts", "Core", "Validator.cs"); if (File.Exists(p)) path = p; }
             Assert.That(path, Is.Not.Null, "Q-S119: Validator.cs must exist.");
             var text = File.ReadAllText(path!);
             // Find the ValidateStage2 method's docstring block by

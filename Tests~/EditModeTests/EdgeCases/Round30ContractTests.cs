@@ -40,7 +40,7 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
 
         // ── Q-S142: _locked_behavior_index field ─────────────────────────────
         [Test] public void Case02_Engine_Declares_LockedBehaviorIndex() {
-            var path = Path.Combine(RepoRoot(), "Scripts", "Engine.cs");
+            var path = Path.Combine(RepoRoot(), "Scripts", "Core", "Engine.cs");
             Assert.That(File.Exists(path), Is.True);
             var text = File.ReadAllText(path);
             Assert.That(text, Does.Contain("_locked_behavior_index"),

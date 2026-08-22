@@ -267,13 +267,13 @@ calls out. One true, closed round.
 | Stage | Need (sense)                                   | Start | Rate | Exponent | Action (sense)                                | Suppression |
 | ----- | ---------------------------------------------- | ----- | ---- | -------- | --------------------------------------------- | ----------- |
 | 1     | `fatigue` (worn out)                           | 20    | +1.2 | 1.5      | `Rest` (stop and rest)                        | —           |
-| 2     | `exposure` (open to harm, out in the wild)     | 25    | +0.7 | 1.8      | `GoHome` (go back to a known place)           | 0.3         |
+| 2     | `exposure` (open to harm, out in the wild)     | 25    | +2.0 | 1.8      | `GoHome` (go back to a known place)           | 0.3         |
 | 3     | `loneliness` (alone)                           | 50    | +1.0 | 1.2      | `Approach` (go to the other one)              | 0.6         |
-| 4     | `recognition` (want what was found to be seen) | 20    | +0.5 | 1.3      | `ShowFind` (carry the find back, and show it) | 0.7         |
+| 4     | `recognition` (want what was found to be seen) | 20    | +2.0 | 1.3      | `ShowFind` (carry the find back, and show it) | **0.5**     |
 | 5     | `curiosity` (want to know)                     | 60    | +1.2 | 1.0      | `Explore` (go where it has not yet been)      | 0.9         |
 
-**Influence:** `curiosity → loneliness`, coefficient `-0.3` (deep in a
-find, it forgets it is alone).
+**Influence:** `curiosity → loneliness`, coefficient `-0.1` (deep in a
+find, it forgets a little that it is alone).
 **Commitment bonus:** `+6` (its mind is easily turned).
 **Competing pair (§5, above):** Stage 3 (`loneliness`) against Stage 5
 (`curiosity`) — checked by real sums: at `loneliness` 40 `Explore`
@@ -285,10 +285,10 @@ right between, and the `+6` bonus holds it steady, with no chattering.
 
 | Stage | Need (sense)                            | Start | Rate | Exponent | Action (sense)                    | Suppression |
 | ----- | --------------------------------------- | ----- | ---- | -------- | --------------------------------- | ----------- |
-| 1     | `fatigue` (worn out)                    | 20    | +0.6 | 1.5      | `Rest` (stop and rest)            | —           |
-| 2     | `separation` (fear of being cut off)    | 30    | +1.0 | 1.4      | `Call` (stand still and call out) | 0.3         |
-| 3     | `loneliness` (alone)                    | 60    | +1.5 | 0.8      | `Approach` (go to the other one)  | 0.6         |
-| 4     | `usefulness` (want to be of true use)   | 20    | +0.8 | 1.4      | `Tend` (care for the other one)   | 0.7         |
+| 1     | `fatigue` (worn out)                    | 20    | +1.0 | 1.5      | `Rest` (stop and rest)            | —           |
+| 2     | `separation` (fear of being cut off)    | 30    | +2.2 | 1.4      | `Call` (stand still and call out) | 0.3         |
+| 3     | `loneliness` (alone)                    | 60    | +1.5 | **1.8**  | `Approach` (go to the other one)  | 0.6         |
+| 4     | `usefulness` (want to be of true use)   | 20    | +2.2 | 1.4      | `Tend` (care for the other one)   | **0.5**     |
 | 5     | `togetherness` (being as one, together) | 40    | +0.9 | 1.1      | `Give` (give to the other one)    | 0.9         |
 
 **Influence:** `loneliness → togetherness`, coefficient `+0.4` (the
@@ -299,6 +299,42 @@ someone, it holds on).
 (`togetherness`) — checked by real sums: they cross at `usefulness`
 near 72, about 65 seconds in at `+0.8` a second.
 **`agent_id`:** `company_seeking_01`. **`kind_id`:** `companion`.
+
+#### What running it truly showed (2026-08-22)
+
+**Every number above was first worked out by hand, at one moment
+alone: t=0.** Written out as a real `animo.json` and run through
+`ScenarioRunner` for a whole minute, three things broke that no
+hand-sum had caught.
+
+| What broke                                    | Why                                                                                                                     | Put right by       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `place_curious` went exploring from the start | The influence `curiosity → loneliness` at `-0.3` took loneliness from 50 down to 32, and the pair's whole round with it | coefficient `-0.1` |
+| Four Stages never once showed at all          | `suppression` at Stage 4 was `0.7`, carried over from `goblin_scout`. A want cut down by 7 parts in 10 can never win    | Stage 4 `0.5`      |
+| Stage 2 and Stage 4 never rose fast enough    | Their rates were the slowest of the five (0.5 to 1.0), so over a minute they never reached where they could win         | rates 2.0 and 2.2  |
+
+**Three lessons, paid for.**
+
++ **A sum at t=0 says nothing about a minute.** A rate of +1.5 a
+  second puts 90 points on a Need in a minute; the hand-sums held
+  every Need still.
++ **A slow rate on a high-tier Need means it never happens.** Held
+  back by suppression *and* slow to climb, such a want is written for
+  nothing.
++ **`suppression` is not one set of numbers for every character.**
+  `goblin_scout`'s own 0.3/0.5/0.7/0.9 suit a thing that acts on what it feels, with no thought at all.
+  A character meant to show all five Stages needs a lighter hand.
+
+Run again with the numbers above, over a minute, with `modio`'s own
+`Affect` calls standing in:
+
+```text
+place_curious    Approach → Explore → ShowFind → GoHome → Rest
+company_seeking  Approach → Give → Tend → Approach → Call → Tend → Rest
+```
+
+**All five Stages, in both.** `Tests~/EditModeTests/Integration/PoCPairEndToEndTests.cs`
+holds them there, with 9 tests.
 
 #### The round, checked by real sums
 

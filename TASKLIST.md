@@ -18,11 +18,14 @@ change in as a commit.
 + [xx] TASK-010 [P-05]: Check a Germio rule can call it — moved out, to germio
 + [xx] TASK-011 [P-05]: Wire one agent into stemic — moved out, to modio
 + [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
-+ [ ] TASK-013 [P-XX]: Write the kind/persona pair for stemic's own two characters
++ [x] TASK-013 [P-XX]: Write the kind/persona pair for stemic's own two characters
 + [ ] TASK-014 [P-XX]: Restore an Engine from a Snapshot, Needs and all
 + [ ] TASK-015 [P-XX]: Restore a lock, so a held Behavior stays held
 + [ ] TASK-016 [P-XX]: Turn down a Snapshot whose Needs do not match
 + [ ] TASK-017 [P-XX]: Make no garbage on a Restore, the same bar as Live
++ [x] TASK-018 [P-XX]: Point the contract tests at where the source files truly sit
++ [ ] TASK-019 [P-XX]: Bring shiori and tanukichi up to the design spec
++ [ ] TASK-020 [P-XX]: Run goblin_scout for a whole minute, and make all five show
 
 ## Detail
 
@@ -197,9 +200,24 @@ suppression, plus the influence and commitment bonus for each, all
 checked by real sums. **Nothing is left to decide. What is left is to
 write it out** as a real `animo.json` file, and see it read.
 
-**Two builds wait on this**: `modio`'s own TASK-015 (joining Modio to
-`stemic`) and `stemic`'s own TASK-021, neither of which can be checked
-by real play until these two personas run.
+**Done 2026-08-22**: `examples/poc_pair.json`, with 9 tests in
+`Tests~/EditModeTests/Integration/PoCPairEndToEndTests.cs`.
+
+**Running it changed three numbers.** Every value in §6 had been
+worked out by hand at t=0 alone; run for a whole minute, three things
+broke that no hand-sum caught — an influence that took the pair's own
+round apart, a suppression that kept 4 Stages from ever winning, and rates too slow for two Stages to reach where they could
+win. All three are put right, and written up in
+`docs/persona_design_spec.md` §6.
+
+Over a minute, with `modio`'s own `Affect` calls standing in, both
+show all five Stages:
+
+    place_curious    Approach → Explore → ShowFind → GoHome → Rest
+    company_seeking  Approach → Give → Tend → Approach → Call → Tend → Rest
+
+**Two builds were waiting on this**: `modio`'s own TASK-015 and
+`stemic`'s own TASK-021. Both may go ahead.
 
 The older sketch of the pair, in `docs/adapter_spec.md`, is a sketch
 only; §6 of the persona spec is the real thing.
@@ -247,3 +265,61 @@ A Restore is not on the hot path, but it must not undo that work by
 holding onto what it was given.
 
 **Test first:** a Restore run many times over makes no garbage at all.
+
+### TASK-018
+
+Six tests fail today, and have for some time:
+
+    Case01_DataCs_DocumentsNeedsJsonBridgeContract
+    Case01_PhysicalValidator_DocstringMentionsA040
+    Case02_Engine_Declares_LockedBehaviorIndex
+    Case02_EngineCs_DoesNotContainNullCoalesceForResetThreshold
+    Case03_Validator_DocumentsValidationResultInternalDesign
+    Case04_SpecDocumentsDeepCopyContract
+
+**Every one fails the same way**: `Assert.That(File.Exists(path))`
+gives back false. They look for `Scripts/Data.cs`,
+`Scripts/Engine.cs`, `Scripts/Validator.cs` — and those files moved
+into `Scripts/Model/` and `Scripts/Core/` some time back. The tests
+never followed.
+
+**Done 2026-08-22.** Three files had moved — `Data.cs` into
+`Scripts/Model/`, `Engine.cs` and `Validator.cs` into `Scripts/Core/`
+— and six tests across six files still looked in the old place.
+
+Every one now points where its file truly sits, and **all 605 tests
+are green.**
+
+These are contract tests: they hold a docstring to what a spec says.
+**A wrong path means nothing is held at all**, and the test passes for
+no reason or fails for no reason. Six of them had been failing
+quietly, long enough that they read as part of the furniture.
+
+### TASK-019
+
+`examples/shiori.json` and `examples/tanukichi.json` hold the older
+forms of those two: the ones with `idle` as a Need, and Stages left
+empty (see `docs/persona_design_spec.md` §1).
+
+**Both are wanted, and neither is to be taken away.** They are the
+worked examples the spec itself leans on — a reader who wants to see
+how a persona is built reads them.
+
+What is owed is that they be brought up to §6: `idle` out, all five
+Stages filled, and — as TASK-013 showed — **run for a whole minute,
+not weighed at t=0 alone.**
+
+### TASK-020
+
+`examples/goblin_scout.json` runs, and runs well at the moment it
+starts. **Over a minute it shows two behaviours out of five**:
+
+    goblin_scout   Socialize → Rest
+
+The same three things TASK-013 turned up are likely at work here:
+an influence pulling a Need down, a suppression too heavy for the
+higher Stages, and rates too slow for Stage 2 and Stage 4 to reach
+where they could win.
+
+**Run it for a minute, find which, and put them right.** §6 of the
+spec holds the shape this persona should take.

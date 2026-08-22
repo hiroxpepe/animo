@@ -37,7 +37,7 @@ namespace Animo.Tests.EditMode.EngineTests {
             while (root != null && !File.Exists(Path.Combine(root, "Scripts", "Const.cs")))
                 root = Directory.GetParent(root)?.FullName;
             Assert.That(root, Is.Not.Null, "Q-S86: repo root must be found.");
-            var text = File.ReadAllText(Path.Combine(root!, "Scripts", "Engine.cs"));
+            var text = File.ReadAllText(Path.Combine(root!, "Scripts", "Core", "Engine.cs"));
             Assert.That(text, Does.Not.Contain("?? System.Math.Max(0f, t.trigger_threshold - 5f)"),
                 "Q-S86: Engine.cs must not contain null-coalesce fallback for reset_threshold.");
             Assert.That(text, Does.Not.Contain(".HasValue\n                    ?"),

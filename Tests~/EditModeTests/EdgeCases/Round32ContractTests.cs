@@ -34,7 +34,7 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
 
         // ── Q-S151: Needs/Rates JSON deserialization contract ────────────────
         [Test] public void Case01_DataCs_DocumentsNeedsJsonBridgeContract() {
-            var path = Path.Combine(RepoRoot(), "Scripts", "Data.cs");
+            var path = Path.Combine(RepoRoot(), "Scripts", "Model", "Data.cs");
             Assert.That(File.Exists(path), Is.True);
             var text = File.ReadAllText(path);
             Assert.That(text, Does.Contain("Q-S151"),

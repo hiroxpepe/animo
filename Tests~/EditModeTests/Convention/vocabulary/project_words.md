@@ -38,3 +38,5 @@ The made-up names across our projects (webio, animo, briko, and the like).
 + stemic
 + Tanukichi
 + modio
++ shiori
++ tanukichi

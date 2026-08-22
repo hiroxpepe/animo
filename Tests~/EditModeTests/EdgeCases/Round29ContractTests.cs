@@ -50,7 +50,7 @@ namespace Animo.Tests.EditMode.EdgeCaseTests {
         [Test] public void Case03_Validator_DocumentsValidationResultInternalDesign() {
             // Q-S138: Validator.cs must document the O(1) internal backing-list
             // design for has_errors / errors / warnings / infos.
-            var path = Path.Combine(RepoRoot(), "Scripts", "Validator.cs");
+            var path = Path.Combine(RepoRoot(), "Scripts", "Core", "Validator.cs");
             Assert.That(File.Exists(path), Is.True);
             var text = File.ReadAllText(path);
             Assert.That(text, Does.Contain("SIBLING_THRESHOLD_EPSILON"),
