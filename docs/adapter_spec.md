@@ -16,7 +16,7 @@ with no fixed side at all — not one friend and one enemy. A first plan
 talk held that a character's true wish must stay fully inside itself (no
 target at all), since Animo, by true design, never picks *who* an action
 is toward. A second look found that rule too tight, and this spec sets
-out the fix, plus the full shape of the Adapter that makes it work.
+out the fix, plus the full shape of Modio that makes it work.
 
 ---
 
@@ -52,10 +52,21 @@ class, by true design:
   `"confidence"`), not a place in the world or another agent.
 
 This still stands, and this spec does not touch it. **The target itself
-is held by the Adapter, never by Animo.**
+is held by Modio, never by Animo.**
 
-**Where the Adapter itself sits (Master's own word, 2026-08-19):** with
-`Human_Animable`, on the `stemic` side, for as long as this stays a PoC.
+**Where Modio itself sits — settled 2026-08-21: it is `modio`.**
+
+This spec was written 2026-08-19, when Modio was thought to be a
+small piece beside `Human_Animable`, on the `stemic` side. Two days of
+hard questioning showed it was not small at all: it needs seeking, a
+past of its own, and a way to carry one deed out over time — three
+powers, each the size of a repository's own work.
+
+So it is now one of its own: **`modio`, the HOW layer**, sitting between `animo`
+(WHY) and `germio` (WHAT). Read `modio`'s own `docs/modio_spec.md`
+for the whole of it. What follows here still holds, and is written
+from `animo`'s own side: **what `animo` gives, and what it takes
+back.**
 The two are one true piece of work split in two — moving one alone to
 `germio` would mean reaching across two separate places for every small
 design fix, while the design is still finding its own shape. Once the
@@ -75,10 +86,10 @@ one act ("find a Block not yet met"), and cannot be split. See
 flowchart LR
   N["Animo Needs<br/>climb on their own<br/>(persona rates)"]
   B["Engine.Behavior<br/>e.g. 'Socialize'"]
-  A["Adapter<br/>(stemic side, for now)<br/>holds the target"]
+  A["Modio<br/>(the HOW layer)<br/>holds the target"]
   S["Modio's own seeking<br/>(see modio_spec §3.3)"]
-  M["Adapter moves the<br/>character toward its<br/>held target"]
-  F["Adapter calls<br/>Affect(need, -N)<br/>once it truly lands"]
+  M["Modio moves the<br/>character toward its<br/>held target"]
+  F["Modio calls<br/>Affect(need, -N)<br/>once it truly lands"]
   N -- "no outside push at all" --> B
   B -- "read back" --> A
   A -- "asks for a target" --> S
@@ -91,26 +102,26 @@ flowchart LR
 1. A Need climbs on its own, with no outside push at all, at whatever
    rate the persona's own `rates` sets (say, `loneliness` at +1.2 a
    second, `curiosity` at +0.8). **This is Animo's own true work, and
-   the Adapter never pushes a Need up.**
+   Modio never pushes a Need up.**
 2. Animo runs its own true Step 1-5 pass and picks a Behavior, say
    `"Socialize"` or `"Patrol"`.
-3. The Adapter reads `Engine.Behavior` back, and asks Germio's own
+3. Modio reads `Engine.Behavior` back, and asks Germio's own
    seeking (held by `modio`; see its own `docs/modio_spec.md` §3.3) for
    whatever that Behavior calls for — another character, for
    `"Socialize"`; a block or step not yet stood on, for `"Patrol"`.
-4. The Adapter holds onto that target itself (a plain field on the
+4. Modio holds onto that target itself (a plain field on the
    Adapter, not on Animo), and moves the character toward it.
 5. Animo never learns who or where the target is; it only ever feels
    its own Needs, and picks what to do.
 6. Once the character truly gets there (close enough to the other
-   character, or standing on the new block), the Adapter calls
+   character, or standing on the new block), Modio calls
    `Affect("loneliness", -30)` — or `Affect("curiosity", -N)` — and the
    Need falls back down. **This one call, telling Animo an action
-   truly landed, is the Adapter's own only true reach into Animo.**
+   truly landed, is Modio's own only true reach into Animo.**
 
 **Animo picks *what* to do; Germio alone knows *who* or *where*.**
 
-Why the Adapter must make that last call at all: `Action` holds only
+Why Modio must make that last call at all: `Action` holds only
 `id`, `need`, `tier`, `exponent` (checked true in
 `Scripts/Model/Data.cs`) — no field at all for "how far this Need falls
 once the action lands". Animo, holding no place in the world, can never
@@ -171,6 +182,6 @@ true side (friend/enemy), which this pair does not have.
   near, and how close "near" truly is, are both still open — a Germio-
   side call, once seeking itself is built in `modio` and can be
   checked against real play.
-+ Whether the Adapter should drop its held target the moment seeking
++ Whether Modio should drop its held target the moment seeking
   no longer finds it (a hard cut), or let it fall away over a short true
   span (a soft cut), is still open.

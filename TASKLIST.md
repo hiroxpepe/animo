@@ -10,15 +10,19 @@ change in as a commit.
 + [ ] TASK-002 [P-XX]: Let a persona give a display name for a need or action
 + [ ] TASK-003 [P-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
 + [ ] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
-+ [ ] TASK-005 [P-04]: Write a true spec for the adapter layer itself
-+ [ ] TASK-006 [P-04]: Put the adapter spec through a true G review
-+ [ ] TASK-007 [P-04]: Decide the public shape (a property, or an event)
-+ [ ] TASK-008 [P-04]: Build the adapter, by TDD, from the checked spec
++ [xx] TASK-005 [P-04]: Write a spec for the adapter layer — moved out, to modio
++ [xx] TASK-006 [P-04]: Put that spec through a G review — moved out, to modio
++ [x] TASK-007 [P-04]: Decide the public shape — settled, it is a property
++ [xx] TASK-008 [P-04]: Build the adapter, by TDD — moved out, to modio
 + [x] TASK-009 [P-05]: Give the goblin_scout persona a true threat action (dropped, see detail)
-+ [ ] TASK-010 [P-05]: Check a Germio Command/Rule can call the new adapter
-+ [ ] TASK-011 [P-05]: Wire one agent into stemic, and check it by real play
++ [xx] TASK-010 [P-05]: Check a Germio rule can call it — moved out, to germio
++ [xx] TASK-011 [P-05]: Wire one agent into stemic — moved out, to modio
 + [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
 + [ ] TASK-013 [P-XX]: Write the kind/persona pair for stemic's own two characters
++ [ ] TASK-014 [P-XX]: Restore an Engine from a Snapshot, Needs and all
++ [ ] TASK-015 [P-XX]: Restore a lock, so a held Behavior stays held
++ [ ] TASK-016 [P-XX]: Turn down a Snapshot whose Needs do not match
++ [ ] TASK-017 [P-XX]: Make no garbage on a Restore, the same bar as Live
 
 ## Detail
 
@@ -93,33 +97,39 @@ yet landed).
 
 ### TASK-005
 
-**Master's own word, 2026-08-18.** A real check found `Agent.cs`'s
-own `using Germio;` line is not truly used at all — no true call
-reaches any real `Germio` type or member anywhere in the file.
-Write a true spec for this engine's own adapter layer, before any
-code: what this engine passes out (the `Behavior` string alone, or
-need values too), who starts it up, and how often a real `Germio`
-game is meant to read or hear it, each true frame.
+**Moved out 2026-08-21, to `modio`.** This asked for a spec of the
+adapter layer, before any code.
+
+That spec was written, and grew past what a small adapter could be. It
+needs seeking, a past of its own, and a way to carry one deed out over
+time. **It is now `modio`, a build of its own**, and its spec is
+`modio`'s own `docs/modio_spec.md`.
+
+`animo` is owed nothing here. Its own public shape already serves —
+see TASK-007.
 
 ### TASK-006
 
-Put the true spec TASK-005 wrote through a real, hard-questioning `G`
-review, the same way every other true spec in this repository
-already stands on one.
+**Moved out 2026-08-21, to `modio`.** The G review of that spec goes
+with the spec (`modio`'s own TASK-005 there).
 
 ### TASK-007
 
-Given TASK-006's own true review, decide the adapter's own public
-shape: a plain, read-any-time property, or an `event` fired only on
-a true behavior change. `Animo` holds this true interface itself,
-since a persona's own mind is each given game's own true, different
-content, unlike sound (a true, shared, one-size shape `Germio`
-itself holds through `SoundSystem.cs`).
+**Settled 2026-08-21: a property.**
+
+`Engine.Behavior` gives back what was last picked, and `modio` reads
+it once a tick. An event was weighed and let go: `modio` already looks
+at the world every tick to seek (`modio`'s own `docs/modio_spec.md`
+§3), so it is there to read a property anyway. **An event would add
+work to join it up, and take it apart again, for nothing.**
+
+`modio` fires a signal only where the Behavior has **changed**
+(§7.10 there), so reading every tick costs nothing further on.
 
 ### TASK-008
 
-Build the true adapter, by TDD, from the checked spec (TASK-005)
-and the true shape TASK-007 picked.
+**Moved out 2026-08-21, to `modio`.** Building it is `modio`'s own
+work, by TDD, from the spec TASK-005 speaks of.
 
 ### TASK-009
 
@@ -145,17 +155,30 @@ own P-04 now calls for instead.
 
 ### TASK-010
 
-Check, with a plain, given test `Rule`, that a real `Germio`
-Command/Rule can truly read the adapter TASK-008 built — a small,
-given check, ahead of any full `stemic`-side wiring at all.
+**Moved out 2026-08-21, to `germio`.** A `germio` rule reaching this
+engine is now `germio`'s own TASK-018 there: a `update_need` command,
+firing an event out of the `Store`, which `modio` hears and turns into
+a call to `Affect`.
+
+`animo` gains nothing and loses nothing: `Affect(need, delta)` was
+always its one way in, and still is.
 
 ### TASK-011
 
-Wire one true `Agent` (given the `goblin_scout` persona, given
-TASK-009 lands first) into a real `germio` game (`stemic`, first),
-read through the true adapter, and check it by real play — the
-true, final check that closes this whole phase. A plain, small
-PoC — one agent, no true scale or timing ask at all.
+**Moved out 2026-08-21, to `modio`** (its own TASK-015 there).
+
+This asked for one `Agent` to be wired into `stemic` and checked by
+real play. Two things moved under it since:
+
++ **The joining up is `modio`'s own work**, not this engine's. See
+  P-04 in `ROADMAP.md`.
++ **The PoC is no longer one agent with the `goblin_scout` persona.**
+  It is two, `place_curious` and `company_seeking`, built as a pair so
+  that Maslow's own holding-back shows as the bond between them
+  (`docs/persona_design_spec.md` §6).
+
+**What this engine still owes is TASK-013** — writing those two out as
+a real `animo.json` file.
 
 ### TASK-012
 
@@ -166,10 +189,61 @@ now — held here in case a later, real need calls for it).
 
 ### TASK-013
 
-**Checked true, 2026-08-19, in a plan talk with Master.** A true
-re-shape of the Adapter (bridge) layer itself, over a wish to give
-`stemic` a true pair of characters. The full true design (why a
-target may still be held, who holds it, and the kind/persona pair
-itself) sits in `docs/adapter_spec.md` — this task closes once
-that spec is checked true and the kind/persona JSON it calls for is
-written.
+**The one thing this engine still owes the PoC.**
+
+`docs/persona_design_spec.md` §6 holds both personas worked out in
+full — every Stage, Need, starting value, rate, exponent, Action and
+suppression, plus the influence and commitment bonus for each, all
+checked by real sums. **Nothing is left to decide. What is left is to
+write it out** as a real `animo.json` file, and see it read.
+
+**Two builds wait on this**: `modio`'s own TASK-015 (joining Modio to
+`stemic`) and `stemic`'s own TASK-021, neither of which can be checked
+by real play until these two personas run.
+
+The older sketch of the pair, in `docs/adapter_spec.md`, is a sketch
+only; §6 of the persona spec is the real thing.
+
+### TASK-014
+
+`Engine.Snapshot()` reads a whole state out — every base Need, every
+effective Need, the Behavior, the lock, every action score.
+**Nothing reads one back in.**
+
+So an Engine can be watched, and never picked up again where it was
+left. A run cannot be carried on from the middle; a game cannot be
+saved and taken up later; a character cannot walk from one level into
+the next and still feel what it felt.
+
+**This is a hole in this engine itself**, not a want of some other
+build. `Snapshot()` without a way back is half a thing.
+
+Add `Restore(EngineSnapshot)`, its own other half.
+
+**Test first:** take a Snapshot with `hunger` at 47.3, put every Need
+somewhere else, Restore, and `GetNeed("hunger")` gives back 47.3.
+
+### TASK-015
+
+A Snapshot holds `is_locked` and `locked_behavior`. A Restore must put
+those back too, or a state picked up again would let go of a hold it
+was under.
+
+**Test first:** Snapshot while locked, Restore, and `IsLocked` is
+true with `LockedBehavior` unchanged.
+
+### TASK-016
+
+A Snapshot taken off one persona, put into an Engine built on another,
+names Needs that Engine does not hold.
+
+**Test first:** a Restore with an unknown Need throws, and leaves the
+Engine as it stood. **Half a Restore does more harm than none at all.**
+
+### TASK-017
+
+`Live()` makes no garbage on the hot path, proven over 100,000 runs.
+A Restore is not on the hot path, but it must not undo that work by
+holding onto what it was given.
+
+**Test first:** a Restore run many times over makes no garbage at all.

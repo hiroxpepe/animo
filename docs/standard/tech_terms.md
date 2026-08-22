@@ -242,3 +242,7 @@ what to build and what it needs.
 **adapter** — A true, given layer that lets one part of a system
 talk to another, apart part, with no change owed to either one's
 own true inner work.
+
+**deed** — One true thing done: a Behavior carried out over time,
+with a start, a middle, and an end. See `modio`'s own
+`docs/modio_spec.md`.
