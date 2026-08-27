@@ -246,3 +246,12 @@ own true inner work.
 **deed** — One true thing done: a Behavior carried out over time,
 with a start, a middle, and an end. See `modio`'s own
 `docs/modio_spec.md`.
+
+**levenshtein** — Short for the Levenshtein distance, a true, given
+count of the smallest number of one-letter changes needed to turn
+one word into another — used to find a close, given match for a
+name that is spelled a little off.
+
+**bootstrapper** — A true, given part that sets up and starts
+another, real part of a system, on its own, with no outside hand
+owed.
