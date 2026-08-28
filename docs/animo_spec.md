@@ -84,7 +84,7 @@ flowchart LR
 
 | Item                  | Value                        |
 | --------------------- | ---------------------------- |
-| Package name          | `com.studiomeowtoon.animo`   |
+| Package name          | `com.meowtoon.animo`         |
 | GitHub (current)      | `github.com/hiroxpepe/animo` |
 | GitHub (future)       | `github.com/meowtoon/animo`  |
 | License               | MIT                          |
@@ -2602,7 +2602,7 @@ animo/
 
 ```json
 {
-  "name": "com.studiomeowtoon.animo",
+  "name": "com.meowtoon.animo",
   "version": "0.1.4",
   "displayName": "Animo",
   "description": "Maslow-driven Utility AI engine for game agents. JSON-defined personas, Kind cascading inheritance, dynamic suppression, and Germio Bus integration. Part of the G+B+A stack.",
@@ -2625,7 +2625,7 @@ animo/
 
 ```mermaid
 flowchart LR
-  Animo["com.studiomeowtoon.animo<br/>v0.1.4"]
+  Animo["com.meowtoon.animo<br/>v0.1.4"]
   Newtonsoft["com.unity.nuget.newtonsoft-json<br/>3.2.1"]
   Animo -->|"required"| Newtonsoft
   style Animo fill:#ffd5cc,stroke:#dc2626
@@ -2635,15 +2635,15 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Animo["com.studiomeowtoon.animo"]
-  Germio["com.studiomeowtoon.germio"]
-  Utilo["com.studiomeowtoon.utilo<br/>(shared base)"]
+  Animo["com.meowtoon.animo"]
+  Germio["com.meowtoon.germio"]
+  Utilo["com.meowtoon.utilo<br/>(shared base)"]
   Newtonsoft["newtonsoft-json"]
   Animo --> Germio
   Animo --> Utilo
   Animo --> Newtonsoft
   Germio --> Utilo
-  Briko["com.studiomeowtoon.briko"] --> Germio
+  Briko["com.meowtoon.briko"] --> Germio
   Briko --> Utilo
   style Utilo fill:#d1fae5,stroke:#059669,stroke-width:3px
 ```
@@ -2930,7 +2930,7 @@ mindmap
       Location
     Germio, put in a box, ready to ship
       taken out from stemic
-      com.studiomeowtoon.germio
+      com.meowtoon.germio
     Moving where the work lives
       hiroxpepe → meowtoon
       G+B+A+U, all moved

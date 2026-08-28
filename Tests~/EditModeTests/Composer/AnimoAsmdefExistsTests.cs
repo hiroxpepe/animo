@@ -21,11 +21,11 @@ namespace Animo.Tests.EditMode.ComposerTests {
             { var p = System.IO.Path.Combine(RepoRoot(), "Scripts", "Animo.asmdef"); if (System.IO.File.Exists(p)) foundAsmdef = p; }
             { var p = System.IO.Path.Combine(RepoRoot(), "package.json"); if (System.IO.File.Exists(p)) foundPkg = p; }
             Assert.That(foundAsmdef, Is.Not.Null, "Q-S77: Scripts/Animo.asmdef must exist with Germio reference.");
-            Assert.That(foundPkg,    Is.Not.Null, "Q-S77: package.json must exist with com.studiomeowtoon.germio dependency.");
+            Assert.That(foundPkg,    Is.Not.Null, "Q-S77: package.json must exist with com.meowtoon.germio dependency.");
             var asmdefText = System.IO.File.ReadAllText(foundAsmdef!);
             Assert.That(asmdefText, Does.Contain("\"Germio\""), "Q-S77: Animo.asmdef must reference Germio.");
             var pkgText = System.IO.File.ReadAllText(foundPkg!);
-            Assert.That(pkgText, Does.Contain("com.studiomeowtoon.germio"), "Q-S77: package.json must include germio dependency.");
+            Assert.That(pkgText, Does.Contain("com.meowtoon.germio"), "Q-S77: package.json must include germio dependency.");
         }
     }
 }
