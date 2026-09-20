@@ -65,6 +65,9 @@ project you write a persona as a JSON file, and the engine reads it.
 **Unity** — A program for making games in 3D. The engine can run inside it, or
 on its own with no window.
 
+**TASKLIST** — The name of the file in each repository that holds the work
+still open there (`TASKLIST.md`). Used as a file name only.
+
 ---
 
 ## The engine

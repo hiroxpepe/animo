@@ -561,3 +561,4 @@ form — a short form is put right in the code, and not kept here.
 + her
 + goods
 + auto
++ wholly whole

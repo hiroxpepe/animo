@@ -26,6 +26,7 @@ change in as a commit.
 + [x] TASK-018 [P-XX]: Point the contract tests at where the source files truly sit
 + [ ] TASK-019 [P-XX]: Bring shiori and tanukichi up to the design spec
 + [ ] TASK-020 [P-XX]: Run goblin_scout for a whole minute, and make all five show
++ [ ] TASK-021 [P-XX]: Note that the first game's own plan asks for Needs the pair does not hold
 
 ## Detail
 
@@ -323,3 +324,37 @@ where they could win.
 
 **Run it for a minute, find which, and put them right.** §6 of the
 spec holds the shape this persona should take.
+
+### TASK-021
+
+**Found 2026-09-19, by setting two real things side by side.** The
+first game's own plan (`documents`, `X_ファーストゲーム企画.md`,
+2026-09-14) builds its whole NPC on this: *when `Fear` and
+`Frustration` climb past a mark, the character turns from quiet to
+angry*. But `examples/poc_pair.json` (2026-08-20) holds neither.
+`place_curious_01` keeps `fatigue`, `exposure`, `loneliness`,
+`recognition`, `curiosity`; `company_seeking_01` keeps `fatigue`,
+`separation`, `loneliness`, `usefulness`, `togetherness`. No `fear`,
+no `frustration`, in either one.
+
+**Neither is wrong.** The plan was written from `Const.cs`'s own
+standard eight (`hunger`, `fatigue`, `fear`, `loneliness`,
+`confidence`, `curiosity`, `idle`, `frustration`); the pair was
+written a month before, for a wholly different job. §13.3 lets a
+persona hold Needs outside the standard set, and the pair does.
+
+**What was checked, and found right:** the pair holds no `needs_meta`,
+so its five own Needs have no tier. This is not a thing left out.
+`persona_design_spec.md` §5 asks that every persona be given a pair of
+Stages picked on purpose to compete, by close `tier` and close
+`exponent` — and the pair carries those tiers on its **Actions**
+(`Rest` 1, `GoHome` 2, `Approach` 3, `ShowFind` 4, `Explore` 5), which
+is where the design puts them. Nothing to fix.
+
+**What this task is:** not to add `fear` and `frustration` to the two
+personas. Doing that would break the competing pair each was built
+around. The two are for the first check that `stemic`, `Modio` and
+`animo` run together at all; an angry NPC is the step after. **When
+that step comes, it asks for a third persona of its own, built around
+`fear` and `frustration` from the start.** Write that down where the
+plan can see it, so no one later tries to bend the pair into it.
