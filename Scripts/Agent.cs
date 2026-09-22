@@ -67,6 +67,12 @@ namespace Animo {
         // ran before _composed_persona was assigned in Awake step (3).
         public string agent_id => _composed_persona?.agent_id ?? "<uninitialized>";
 
+        // Held, 2026-09-21: read by stemic's own ExploreSweep, to gate the
+        // head-turn sweep on Behavior == "Explore" — see
+        // docs/sight_checklist.md §4.8 (modio repository). "" before the
+        // engine is built (matches the null-safe pattern above).
+        public string Behavior => _engine?.Behavior ?? "";
+
         // (Q-S115) Optional time provider injected by test harness.
         // null → falls back to Unity Time.deltaTime in Update.
         ITimeProvider? _time_provider = null;
