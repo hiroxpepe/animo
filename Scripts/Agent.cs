@@ -9,6 +9,7 @@ using UnityEngine;
 using Animo.Core;
 using Animo.Model;
 using Germio;
+using Germio.Systems;
 
 namespace Animo {
     /// <summary>
