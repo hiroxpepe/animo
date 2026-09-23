@@ -129,7 +129,7 @@ namespace Animo.Core {
 
         public static ValidationResult Validate(Root root) {
             var result = new ValidationResult();
-            var emit   = (Issue i) => result.Add(issue: i);
+            Action<Issue> emit = (Issue i) => result.Add(issue: i);
 
             // A000: schema_version exists and is not empty.
             if (string.IsNullOrEmpty(root.schema_version))
@@ -194,7 +194,7 @@ namespace Animo.Core {
 
         public static ValidationResult ValidateStage2(Persona composed) {
             var result = new ValidationResult();
-            var emit   = (Issue i) => result.Add(issue: i);
+            Action<Issue> emit = (Issue i) => result.Add(issue: i);
             string id  = composed.agent_id;
 
             // Collect "in use" Need names (5-site union per Q-S41+Q-S49+Q-S57+Q-S124).
