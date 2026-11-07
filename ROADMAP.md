@@ -5,8 +5,8 @@
 + [x] P-01: Fix the spec and build the schema and test base
 + [x] P-02: Build the core engine, with zero-GC proved
 + [x] P-03: Build the Unity layer and a stand-alone tool
-+ [ ] P-04: Build a true, public interface Germio can call
-+ [ ] P-05: Prove a real Germio game can call this engine (a PoC)
++ [x] P-04: Build a true, public interface Germio can call
++ [~] P-05: Prove a real Germio game can call this engine (a PoC)
 + [~] P-XX: Work that does not fit the phases above
 
 ## Detail

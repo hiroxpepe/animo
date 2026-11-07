@@ -9,7 +9,7 @@ change in as a commit.
 + [ ] TASK-001 [P-XX]: Put the rest of the docs into Basic English
 + [ ] TASK-002 [P-XX]: Let a persona give a display name for a need or action
 + [ ] TASK-003 [P-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
-+ [ ] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
++ [x] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
 + [xx] TASK-005 [P-04]: Write a spec for the adapter layer — moved out, to modio
 + [xx] TASK-006 [P-04]: Put that spec through a G review — moved out, to modio
 + [x] TASK-007 [P-04]: Decide the public shape — settled, it is a property
@@ -32,23 +32,14 @@ change in as a commit.
 
 ### TASK-001
 
-`CLAUDE.md`, `TASKLIST.md`, `HANDOFF.md`, `writing_standard.md`,
-`coding_standard.md`, `tech_terms.md`, and `docs/live_monitor_spec.md`
-are all in Basic English now. The rest of the docs are not:
-`README.md` and every other file under `docs/` still fail the check.
-This holds true for `docs/animo_roadmap.md` too — its own state was
-brought up to date tonight, but its words were not put into Basic
-English.
+**State 2026-11-07, by the Basic English check.** These fail it: `docs/decisions/v0.1.5_ambiguity_resolution.md` (6,371 lines, 915 of them with a word not allowed),
+`docs/animo_roadmap.md` (1,846 lines, 237), `docs/state_of_animo_v0.3.0.md` (303 lines, 59), `CHANGELOG.md` (106 lines, 34), `docs/benchmarks_v0.3.0.md` (90 lines, 12),
+and `docs/live_monitor_spec.md` (137 lines, 3). `README.md` holds one line with a word not allowed (`Roadmap`). `CLAUDE.md`, `docs/animo_spec.md`,
+`docs/persona_design_spec.md`, and the three files of `docs/standard/` pass.
 
-**A small, still-open thing inside `README.md` by itself**: two
-spots (the "Roadmap to v1.0.0" link near the top, and a mermaid box
-inside the TDD part) still point at the old file names
-`docs/animo_roadmap_to_v1.0.0.md` and `docs/test_plan_v0.1.4.md`,
-neither of which holds that content any more. Fixing either spot
-stages the whole file for the same check that blocks a commit on
-its own many words not yet in Basic English. Bring the whole file
-into Basic English first, then fix both spots as part of that same
-pass.
+**Two spots in `README.md`** still point at files that are gone: the "Roadmap to v1.0.0" link near the top (it names `docs/animo_roadmap_to_v1.0.0.md`) and a mermaid box
+inside the TDD part (it names `docs/test_plan_v0.1.4.md`); `docs/animo_roadmap.md` holds the plan of the phases now. Fixing either spot stages the whole file for the check that
+blocks a commit, so the file is put into Basic English first, and both spots are fixed in that same pass.
 
 Also still open: words put into `draft_words.md` in a hurry, to get
 `coding_standard.md` and `tech_terms.md` to pass. Some of these are real
@@ -89,15 +80,10 @@ test files already point to in their own comments.
 
 ### TASK-004
 
-**Checked true, 2026-08-18 (Master's own word).** `Scripts/Animo.csproj`
-holds at `net8.0` today. Setting `TargetFramework` to `netstandard2.1`
-alone gave 26 build errors — every one `CS8400` (a C# 8.0 language-
-version ceiling; `netstandard2.1` itself sets no language-version
-floor). Adding one line, `<LangVersion>12</LangVersion>` (the same
-setting `Quyno`/`Signo`'s own `Core` .csproj already holds), gave a
-true, clean build — 0 errors, 1 warning. Bring this real, checked
-change into the true `Animo.csproj` (reverted after the check, not
-yet landed).
+**Done 2026-09-22 (commit `8646a82`), found and checked 2026-11-07.** `Scripts/Animo.csproj` holds `<TargetFramework>netstandard2.1</TargetFramework>` and
+`<LangVersion>12</LangVersion>` (the same setting `Quyno`/`Signo`'s own `Core` .csproj holds). `dotnet build Scripts/Animo.csproj` builds with 0 errors and 0 warnings.
+The commit also put six lines into `Scripts/Agent.cs`, the version `0.1.5` into `package.json` (it was `0.1.5-design`), and the author name `STUDIO MeowToon`.
+Every test passes: 605 in `Tests~/EditModeTests` and 5 in `Tests~/MiniUnity.SelfTests`. The task of `stemic` that waits on this (its `TASK-015`) can move.
 
 ### TASK-005
 
