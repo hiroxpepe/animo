@@ -220,6 +220,8 @@ Add `Restore(EngineSnapshot)`, its own other half.
 **Test first:** take a Snapshot with `hunger` at 47.3, put every Need
 somewhere else, Restore, and `GetNeed("hunger")` gives back 47.3.
 
+**Read on 2026-11-14 (`Engine.cs`).** `Live` makes the effective needs and the action scores again from the base needs each time, so the base needs are the source. `GetNeed` gives the effective value and `GetBaseNeed` gives the base value. `Snapshot` holds both, and the scores. This task does not say whether the first test reads the base value or the effective value (a Restore does not run `Live`, so after it the effective value is still the old one), or whether a restored behavior gives the signal that a behavior changed (`_previous_behavior` is how a change is seen). The master decides these before the test is written.
+
 ### TASK-015
 
 A Snapshot holds `is_locked` and `locked_behavior`. A Restore must put
@@ -228,6 +230,8 @@ was under.
 
 **Test first:** Snapshot while locked, Restore, and `IsLocked` is
 true with `LockedBehavior` unchanged.
+
+**Read on 2026-11-14 (`Engine.cs`).** `IsLocked` is not kept: it is true while `_lock_remaining` is more than zero. `EngineSnapshot` holds `is_locked` and `locked_behavior` only. It does not hold the time that is left, or the lock mode (Hard or Soft). So a Restore cannot say how long the lock holds, or of what kind. The master decides: put the time left and the mode into `EngineSnapshot` and give them back as they were, or give back no lock.
 
 ### TASK-016
 
