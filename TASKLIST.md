@@ -6,7 +6,7 @@ change in as a commit.
 
 <!-- format: v1 | fields: status, id, title, phase -->
 
-+ [ ] TASK-001 [P-XX]: Put the rest of the docs into Basic English
++ [ ] TASK-001 [P-XX]: Put the first part of the old decisions paper into Basic English
 + [ ] TASK-002 [P-XX]: Let a persona give a display name for a need or action
 + [ ] TASK-003 [P-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
 + [x] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
@@ -27,25 +27,17 @@ change in as a commit.
 + [ ] TASK-019 [P-XX]: Bring shiori and tanukichi up to the design spec
 + [ ] TASK-020 [P-XX]: Run goblin_scout for a whole minute, and make all five show
 + [ ] TASK-021 [P-XX]: Note that the first game's own plan asks for Needs the pair does not hold
++ [ ] TASK-022 [P-XX]: Put the second part of the old decisions paper into Basic English
++ [ ] TASK-023 [P-XX]: Put the third part of the old decisions paper into Basic English
++ [ ] TASK-024 [P-XX]: Put the last part of the old decisions paper into Basic English
++ [ ] TASK-025 [P-XX]: Put the long roadmap into Basic English
++ [ ] TASK-026 [P-XX]: Put the papers on the state, the changes, the measures, and the monitor into Basic English
 
 ## Detail
 
 ### TASK-001
 
-**State 2026-11-07, by the Basic English check.** These fail it: `docs/decisions/v0.1.5_ambiguity_resolution.md` (6,371 lines, 915 of them with a word not allowed),
-`docs/animo_roadmap.md` (1,846 lines, 237), `docs/state_of_animo_v0.3.0.md` (303 lines, 59), `CHANGELOG.md` (106 lines, 34), `docs/benchmarks_v0.3.0.md` (90 lines, 12),
-and `docs/live_monitor_spec.md` (137 lines, 3). `README.md` holds one line with a word not allowed (`Roadmap`). `CLAUDE.md`, `docs/animo_spec.md`,
-`docs/persona_design_spec.md`, and the three files of `docs/standard/` pass.
-
-**Two spots in `README.md`** still point at files that are gone: the "Roadmap to v1.0.0" link near the top (it names `docs/animo_roadmap_to_v1.0.0.md`) and a mermaid box
-inside the TDD part (it names `docs/test_plan_v0.1.4.md`); `docs/animo_roadmap.md` holds the plan of the phases now. Fixing either spot stages the whole file for the check that
-blocks a commit, so the file is put into Basic English first, and both spots are fixed in that same pass.
-
-Also still open: words put into `draft_words.md` in a hurry, to get
-`coding_standard.md` and `tech_terms.md` to pass. Some of these are real
-technical words that should move to `tech_terms.md`, each with its own
-short sense, and not sit in `draft_words.md` with no sense given at all.
-This move needs the master's own GO first, word by word.
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/decisions/v0.1.5_ambiguity_resolution.md` has 914 words not allowed by the Basic English check in 6,371 lines (counted 2026-11-14); one task takes lines 1 to 1600 of it, as of 2026-11-14. The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: no line from 1 to 1600 is named by `tools/basic_english_cli.js` on that file.
 
 ### TASK-002
 
@@ -344,3 +336,23 @@ around. The two are for the first check that `stemic`, `Modio` and
 that step comes, it asks for a third persona of its own, built around
 `fear` and `frustration` from the start.** Write that down where the
 plan can see it, so no one later tries to bend the pair into it.
+
+### TASK-022
+
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/decisions/v0.1.5_ambiguity_resolution.md` has 914 words not allowed by the Basic English check in 6,371 lines (counted 2026-11-14); one task takes lines 1601 to 3200 of it, as of 2026-11-14. The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: no line from 1601 to 3200 is named by `tools/basic_english_cli.js` on that file.
+
+### TASK-023
+
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/decisions/v0.1.5_ambiguity_resolution.md` has 914 words not allowed by the Basic English check in 6,371 lines (counted 2026-11-14); one task takes lines 3201 to 4800 of it, as of 2026-11-14. The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: no line from 3201 to 4800 is named by `tools/basic_english_cli.js` on that file.
+
+### TASK-024
+
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/decisions/v0.1.5_ambiguity_resolution.md` has 914 words not allowed by the Basic English check in 6,371 lines (counted 2026-11-14); one task takes lines 4801 to 6371 of it, as of 2026-11-14. The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: no line from 4801 to 6371 is named by `tools/basic_english_cli.js` on that file.
+
+### TASK-025
+
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/animo_roadmap.md` (237) do not pass the Basic English check (the number is of words not allowed, counted 2026-11-14). The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: `tools/basic_english_cli.js` gives no error on each of these files, and the commit hook takes them.
+
+### TASK-026
+
+Cut out of the old TASK-001 on 2026-11-14, so that each task is 8 hours or less. `docs/state_of_animo_v0.3.0.md` (58), `CHANGELOG.md` (34), `docs/benchmarks_v0.3.0.md` (12), `docs/live_monitor_spec.md` (3) do not pass the Basic English check (the number is of words not allowed, counted 2026-11-14). The rule of the master: a word that has a simple word to take its place is replaced; only a word that no simple word can take the place of goes into `draft_words.md`, and no hard word goes there. The word lists in the `vocabulary` folder are not changed by these tasks. **Done, once**: `tools/basic_english_cli.js` gives no error on each of these files, and the commit hook takes them. `README.md` has one line with a word not allowed (`Roadmap`); put it right in the same pass.
