@@ -23,5 +23,5 @@ State on 2026-11-07, checked against the code.
 
 ## Next move
 
-Eleven tasks are open, all in `P-XX` (see `TASKLIST.md`; it sets no order): the docs into Basic English (`TASK-001`), the personas (`TASK-002`, `019`,
+Sixteen tasks are open, all in `P-XX` (see `TASKLIST.md`; it sets no order): the docs into Basic English (`TASK-001` and `TASK-022` to `TASK-026`, one part to a task), the personas (`TASK-002`, `019`,
 `020`, `021`), the restore of an Engine from a Snapshot (`TASK-014` to `017`, one group), and a MockBus and a long soak test (`TASK-003`, `012`).
