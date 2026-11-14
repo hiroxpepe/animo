@@ -272,6 +272,7 @@ classDiagram
     +List~Action~ actions
     +Commitment commitment
     +Binding binding
+    +float? sense_of_direction
   }
   class Persona {
     +string agent_id
@@ -285,6 +286,7 @@ classDiagram
     +Commitment commitment
     +Binding binding
     +Dictionary~string,NeedMeta~ needs_meta
+    +float? sense_of_direction
     +Persona DeepCopy()
   }
   class Needs {
@@ -453,19 +455,20 @@ classDiagram
 
 ### 6.2 JSON Key List (G16 match)
 
-| C# class      | JSON key      | Form                     |
-| ------------- | ------------- | ------------------------ |
-| `Root`        | —             | (root, no key)           |
-| `Kind`        | `kinds`       | array (plural)           |
-| `Persona`     | `personas`    | array (plural)           |
-| `Needs`       | `needs`       | object                   |
-| `Rates`       | `rates`       | object                   |
-| `Suppression` | `suppression` | object                   |
-| `Influence`   | `influences`  | array (plural)           |
-| `Action`      | `actions`     | array (plural)           |
-| `Commitment`  | `commitment`  | object                   |
-| `Binding`     | `binding`     | an object (one, alone)   |
-| `Threshold`   | `thresholds`  | array (inside `binding`) |
+| C# class      | JSON key             | Form                               |
+| ------------- | -------------------- | ---------------------------------- |
+| `Root`        | —                    | (root, no key)                     |
+| `Kind`        | `kinds`              | array (plural)                     |
+| `Persona`     | `personas`           | array (plural)                     |
+| `Needs`       | `needs`              | object                             |
+| `Rates`       | `rates`              | object                             |
+| `Suppression` | `suppression`        | object                             |
+| `Influence`   | `influences`         | array (plural)                     |
+| `Action`      | `actions`            | array (plural)                     |
+| `Commitment`  | `commitment`         | object                             |
+| `Binding`     | `binding`            | an object (one, alone)             |
+| `Threshold`   | `thresholds`         | array (inside `binding`)           |
+| (a number)    | `sense_of_direction` | number, on `Kind` and on `Persona` |
 
 ### 6.3 Fields That May Be Left Out
 
@@ -478,6 +481,7 @@ classDiagram
 | `binding.on_action_change`             | ✅                                    | engine default `animo_{agent_id}_{behavior}`                                                                                |
 | `binding.thresholds[].reset_threshold` | ✅                                    | `Math.Max(0.0, trigger_threshold - 5.0)` (Q-S11; held at a floor of 0, so the reset can never sit past reach — see §11.3.4) |
 | `kind_ids`                             | ✅                                    | empty array (no composition)                                                                                                |
+| `sense_of_direction`                   | ✅                                    | `0.5`, where no Kind and no Persona gives it (a number from 0.0 to 1.0)                                                     |
 | A Persona's own `rates`, and the rest  | ✅                                    | taken from the `Kind`                                                                                                       |
 
 ### 6.4 The schema_version, Brought Up to Date
@@ -485,6 +489,8 @@ classDiagram
 `"1.3"` → `"1.4"`. **This carries no break at all** (nothing that
 was there before stops working). It adds the `frustration` Need,
 and the `Lock` API.
+
+**v1.5 (the master's word, 2026-11-14, for `modio`).** `"1.4"` → `"1.5"`. **This carries no break at all.** It adds one number that may be left out, `sense_of_direction` (0.0 to 1.0), on a `Kind` and on a `Persona`, kept as a person's sense of direction is kept in the study of how people find their way (see `modio`, `docs/place_memory_design.md`, §10 and §11). A file of `"1.4"` is read as it is.
 
 ---
 
@@ -523,6 +529,7 @@ flowchart TB
 | Array (`influences`)               | the Persona's own order is kept; the last one given wins (Q-S20) — see note below          | the last one given wins, on value; the Persona's own order comes first                                      |
 | Array (`thresholds`)               | matched by the pair `(need, trigger_threshold)`, with a small allowed gap — see note below | (Q-S14 + Q-S43 + Q-S47) more than one threshold, on the same Need, is now allowed                           |
 | Dictionary (`needs_meta`)          | the last one given wins, key by key (by the Need's own name)                               | (Q-S30) a Persona's own `needs_meta` writes over a Kind's own, key by key                                   |
+| Number (`sense_of_direction`)      | the last one given wins (the kinds in order, then the Persona)                             | a value left out writes over nothing; where none gives it, 0.5 (§6.3)                                       |
 
 **On `actions` (v0.1.5, Q-S19):** start from `persona.actions[]`, in
 the order given; for each Kind action whose `id` does not show in
@@ -741,6 +748,7 @@ flowchart LR
 | Method      | `Unlock()`                                                   | release the lock; does nothing at all if not locked (v0.1.5)                                                                                                                                                                       | **🆕 v0.1.4**                                              |
 | Property    | `is_locked`                                                  | lock state (bool)                                                                                                                                                                                                                  | **🆕 v0.1.4**                                              |
 | Property    | `locked_behavior`                                            | locked action (string)                                                                                                                                                                                                             | **🆕 v0.1.4**                                              |
+| Property    | `sense_of_direction`                                         | the sense of direction of the composed Persona (0.0 to 1.0, read only; 0.5 where none gives it). `Modio` reads it (`modio`, `docs/place_memory_design.md`, §11)                                                                    | **🆕 v1.5**                                                |
 | Method      | `GetNeed(string need)`                                       | read the **effective** value of one Need (post-Influence-cascade per Q-S23). Returns `0.0` for unknown needs after a Warning. Read-only debug API; not for the hot path (use the cached `EffectiveNeeds` buffer in §15.4 instead). | **🆕 v0.1.5; its own sense fixed to `effective` in Q-S54** |
 | Method      | `GetBaseNeed(string need)`                                   | read the **base** (pre-cascade) value of one Need. Stands beside `GetNeed`; inspector tools display both layers. Returns `0.0` for unknown needs after a Warning. Read-only debug API.                                             | **🆕 v0.1.5 (Q-S54)**                                      |
 
@@ -1875,6 +1883,7 @@ flowchart TB
 | **A038**  | A check of `needs_meta[need].tier` — see note below                                                                                                                                                                                                                                                                                                        |                      |                                                      |
 | **A039**  | A Warning for two thresholds sitting close together — see note below                                                                                                                                                                                                                                                                                       |                      |                                                      |
 | **A040**  | Composed `actions[].id` must be its own, alone, within a Persona — see note below                                                                                                                                                                                                                                                                          |                      |                                                      |
+| **A041**  | `sense_of_direction`, where given, is in 0.0 to 1.0 — see note below                                                                                                                                                                                                                                                                                       | Error                | —                                                    |
 
 **More, on a few of the rules above:**
 
@@ -1885,6 +1894,7 @@ flowchart TB
 + **A038**: A check of `needs_meta[need].tier` (Q-S30 + Q-S41 + Q-S49 + Q-S57). **Stage 1 (raw, per-Persona/Kind)**: a tier outside `[1, 5]` ⇒ **Error**. **Stage 2 (composed)**: a `needs_meta` entry, whose Need is *neither* in composed `needs[]` *nor* pointed to by composed `actions[].need` *nor* pointed to by composed `influences[].source/target` *nor* pointed to by composed `binding.thresholds[].need` *nor* keyed by composed `rates` ⇒ **Warning** (the metadata truly has nothing pointing to it). **Stage 1**: a `needs_meta` entry writing over a standard Need's own tier, with a value that does not match §13.3 ⇒ **Warning** (the §13.3 value still wins; the mismatch is shown). The "in use" union grew, bit by bit: Q-S41 widened it past `needs[]` (adding actions/influences); Q-S49 added `binding.thresholds[].need` (a signal-only Need pattern); **Q-S57 adds `rates`** (a pure-rate Need pattern — a Need that only moves, by fading, and is read by UI, never used in a score or a threshold, say, a slow `poison`). The fixed list of "in use" sites is `needs[]` ∪ `actions[].need` ∪ `influences[].source/target` ∪ `binding.thresholds[].need` ∪ `rates.keys()`.             | Error / Warning      | **🆕 v0.1.5 (Q-S30)**; relaxed in Q-S41; thresholds added in Q-S49; rates added in Q-S57
 + **A039**: A Warning for two thresholds sitting close together (Q-S47, Stage 2). Two thresholds, on the same Need, with `trigger_threshold` values **at, or within, `1.0f`** of each other, show a Warning, so the writer can say whether this was truly meant. (v0.1.5, Q-S122, `<=` with both ends counted: a pair at 78.0 and 79.0 — a gap of exactly 1.0 — also fires. Before Q-S122, the example code wrote a strict `<`, but the true sense of "within 1.0f" counts both ends.) The `1.0f` window sits on the safe side — well above the point where a merge folds two into one (Q-S47's own EPSILON, `0.01f`), well below the gap a writer, in real use, tends to leave. A039 keeps a writer from, by accident, making two thresholds that are, in the type's own sense, apart, but, in real use, cannot be told apart (both firing within the same tick of the run).                                                                                                                                                                                                                                                                                                                                        | Warning              | **🆕 v0.1.5 (Q-S47)**
 + **A040**: Composed `actions[].id` must be its own, alone, within a Persona (Q-S113, Stage 2). Before Q-S113, only A009 (`actions[].id` not empty) stood guard over this field — that each was its own, alone, was taken for granted, but never checked. An LLM's own writer, writing `[{id: "Flee", need: "fear"}, {id: "Flee", need: "hunger"}]`, would slip past Stage 1, and reach the Engine, where `_cached_action_triggers[action.id] = expanded;` (Q-S46) quietly writes over the first entry, with the second, with no word given. Even harder still, the debug API `GetActionScore("Flee")`, and any ask about behavior, fold onto one of the two, with no way to tell which; this breaks how `expanded_action_change` Bus messages are sent on. Stage 2, since Composer's own cascade can bring in a doubled name that a look at the Persona alone would miss (a Kind gives `Flee`; the Persona writes over a different act, also named `Flee`).                                                                                                                                                                                                                                                         | **Error**            | **🆕 v0.1.5 (Q-S113)**
++ **A041**: `sense_of_direction` of a Kind and of a Persona, where given, is in 0.0 to 1.0 (the master's word, 2026-11-14, for `modio`). **Stage 1 (raw, per-Persona/Kind)**, as A038 is for a tier: a number outside 0.0 to 1.0, or a value that is not a number, is an **Error**. A value left out is no fault: it is 0.5 where no Kind and no Persona gives it (§6.3).
 
 ### 12.2 Validation Flow
 
