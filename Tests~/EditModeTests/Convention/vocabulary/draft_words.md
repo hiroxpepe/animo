@@ -12,7 +12,6 @@ form — a short form is put right in the code, and not kept here.
 + adverbs
 + algorithm
 + alias
-+ alignment
 + alloc
 + an
 + anchored
@@ -132,7 +131,6 @@ form — a short form is put right in the code, and not kept here.
 + ones
 + our
 + ours
-+ outward
 + pad
 + parameter
 + participle
@@ -157,7 +155,6 @@ form — a short form is put right in the code, and not kept here.
 + repo
 + reset
 + resets
-+ restyle
 + runner
 + runtime
 + sandbox
@@ -201,7 +198,6 @@ form — a short form is put right in the code, and not kept here.
 + typing
 + unchecked
 + uncountable
-+ unlabeled
 + unsure
 + untouched
 + usings
@@ -437,7 +433,6 @@ form — a short form is put right in the code, and not kept here.
 + vanish vanishes vanished vanishing
 + villager villagers
 + waste wastes wasted wasting wasteful
-+ whoever
 + widen widens widened widening
 + wrong wrongly
 + zombie zombies
@@ -541,7 +536,6 @@ form — a short form is put right in the code, and not kept here.
 + misspell misspells misspelled misspelling
 + remake remakes remade remaking
 + underneath
-+ infinite
 + bear bears bore bearing
 + flee flees fled fleeing
 + socialize socializes socialized socializing
