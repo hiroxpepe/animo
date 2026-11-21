@@ -6,32 +6,32 @@ change in as a commit.
 
 <!-- format: v1 | fields: status, id, title, phase -->
 
-+ [ ] TASK-001 [P-XX]: Put the first part of the old decisions paper into Basic English
-+ [ ] TASK-002 [P-XX]: Let a persona give a display name for a need or action
-+ [ ] TASK-003 [P-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
-+ [x] TASK-004 [P-04]: Move the true engine to netstandard2.1, for real Unity use
-+ [xx] TASK-005 [P-04]: Write a spec for the adapter layer — moved out, to modio
-+ [xx] TASK-006 [P-04]: Put that spec through a G review — moved out, to modio
-+ [x] TASK-007 [P-04]: Decide the public shape — settled, it is a property
-+ [xx] TASK-008 [P-04]: Build the adapter, by TDD — moved out, to modio
-+ [x] TASK-009 [P-05]: Give the goblin_scout persona a true threat action (dropped, see detail)
-+ [xx] TASK-010 [P-05]: Check a Germio rule can call it — moved out, to germio
-+ [xx] TASK-011 [P-05]: Wire one agent into stemic — moved out, to modio
-+ [ ] TASK-012 [P-XX]: Weigh a 100-agent, one-hour real Unity soak test
-+ [x] TASK-013 [P-XX]: Write the kind/persona pair for stemic's own two characters
-+ [ ] TASK-014 [P-XX]: Restore an Engine from a Snapshot, Needs and all
-+ [ ] TASK-015 [P-XX]: Restore a lock, so a held Behavior stays held
-+ [ ] TASK-016 [P-XX]: Turn down a Snapshot whose Needs do not match
-+ [ ] TASK-017 [P-XX]: Make no garbage on a Restore, the same bar as Live
-+ [x] TASK-018 [P-XX]: Point the contract tests at where the source files truly sit
-+ [ ] TASK-019 [P-XX]: Bring shiori and tanukichi up to the design spec
-+ [ ] TASK-020 [P-XX]: Run goblin_scout for a whole minute, and make all five show
-+ [ ] TASK-021 [P-XX]: Note that the first game's own plan asks for Needs the pair does not hold
-+ [ ] TASK-022 [P-XX]: Put the second part of the old decisions paper into Basic English
-+ [ ] TASK-023 [P-XX]: Put the third part of the old decisions paper into Basic English
-+ [ ] TASK-024 [P-XX]: Put the last part of the old decisions paper into Basic English
-+ [ ] TASK-025 [P-XX]: Put the long roadmap into Basic English
-+ [ ] TASK-026 [P-XX]: Put the papers on the state, the changes, the measures, and the monitor into Basic English
++ [ ] TASK-001 [PHASE-XX]: Put the first part of the old decisions paper into Basic English
++ [ ] TASK-002 [PHASE-XX]: Let a persona give a display name for a need or action
++ [ ] TASK-003 [PHASE-XX]: Add a MockBus to check a Lock-time Bus.Publish direct
++ [x] TASK-004 [PHASE-04]: Move the true engine to netstandard2.1, for real Unity use
++ [xx] TASK-005 [PHASE-04]: Write a spec for the adapter layer — moved out, to modio
++ [xx] TASK-006 [PHASE-04]: Put that spec through a G review — moved out, to modio
++ [x] TASK-007 [PHASE-04]: Decide the public shape — settled, it is a property
++ [xx] TASK-008 [PHASE-04]: Build the adapter, by TDD — moved out, to modio
++ [x] TASK-009 [PHASE-05]: Give the goblin_scout persona a true threat action (dropped, see detail)
++ [xx] TASK-010 [PHASE-05]: Check a Germio rule can call it — moved out, to germio
++ [xx] TASK-011 [PHASE-05]: Wire one agent into stemic — moved out, to modio
++ [ ] TASK-012 [PHASE-XX]: Weigh a 100-agent, one-hour real Unity soak test
++ [x] TASK-013 [PHASE-XX]: Write the kind/persona pair for stemic's own two characters
++ [ ] TASK-014 [PHASE-XX]: Restore an Engine from a Snapshot, Needs and all
++ [ ] TASK-015 [PHASE-XX]: Restore a lock, so a held Behavior stays held
++ [ ] TASK-016 [PHASE-XX]: Turn down a Snapshot whose Needs do not match
++ [ ] TASK-017 [PHASE-XX]: Make no garbage on a Restore, the same bar as Live
++ [x] TASK-018 [PHASE-XX]: Point the contract tests at where the source files truly sit
++ [ ] TASK-019 [PHASE-XX]: Bring shiori and tanukichi up to the design spec
++ [ ] TASK-020 [PHASE-XX]: Run goblin_scout for a whole minute, and make all five show
++ [ ] TASK-021 [PHASE-XX]: Note that the first game's own plan asks for Needs the pair does not hold
++ [ ] TASK-022 [PHASE-XX]: Put the second part of the old decisions paper into Basic English
++ [ ] TASK-023 [PHASE-XX]: Put the third part of the old decisions paper into Basic English
++ [ ] TASK-024 [PHASE-XX]: Put the last part of the old decisions paper into Basic English
++ [ ] TASK-025 [PHASE-XX]: Put the long roadmap into Basic English
++ [ ] TASK-026 [PHASE-XX]: Put the papers on the state, the changes, the measures, and the monitor into Basic English
 
 ## Detail
 
@@ -133,7 +133,7 @@ A later plan talk (this same day) dropped the "enemy" framing for
 characters with no fixed side at all. `goblin_scout` itself is left
 untouched (a true, standing example persona, not tied to any one
 game); TASK-013 below holds the true kind/persona work `stemic`'s
-own P-04 now calls for instead.
+own PHASE-04 now calls for instead.
 
 ### TASK-010
 
@@ -153,7 +153,7 @@ This asked for one `Agent` to be wired into `stemic` and checked by
 real play. Two things moved under it since:
 
 + **The joining up is `modio`'s own work**, not this engine's. See
-  P-04 in `ROADMAP.md`.
+  PHASE-04 in `ROADMAP.md`.
 + **The PoC is no longer one agent with the `goblin_scout` persona.**
   It is two, `place_curious` and `company_seeking`, built as a pair so
   that Maslow's own holding-back shows as the bond between them
@@ -164,7 +164,7 @@ a real `animo.json` file.
 
 ### TASK-012
 
-Not owed at all, but worth a true weigh once P-04/P-05 both close:
+Not owed at all, but worth a true weigh once PHASE-04/PHASE-05 both close:
 a 100-agent, one-hour real Unity soak test (too great a real ask
 for this true phase, and not this engine's own true worth right
 now — held here in case a later, real need calls for it).
